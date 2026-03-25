@@ -4,5 +4,5 @@ compatibility_date = "2024-01-01"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "news_db"
-database_id = "039ec6ab-8f14-4e79-8f02-021df67a6c18"
+database_name = "news_db_cms_originaux"
+database_id = "f9012ebc-7a9d-4b93-81d9-4eac600c40d2"

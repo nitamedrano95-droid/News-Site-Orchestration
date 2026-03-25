@@ -1,6 +1,0 @@
-# Proxy /api/* al worker de noticias
-/api/* https://cms-nuevos.sebastianvernis.workers.dev/api/:splat 200
-
-# RSS Feed
-/rss.xml  /api/rss/capitalpress  200
-/feed.xml /api/rss/capitalpress  200

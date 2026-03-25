@@ -4,6 +4,7 @@ import { Hono } from 'hono';
 import { checkAuth } from '../middleware/auth.js';
 import { articleSlugify } from '../utils/helpers.js';
 import { publishToFBIndividual } from '../cron/facebook.js';
+import { uploadToR2 } from '../utils/html.js';
 
 const cms = new Hono();
 
@@ -153,6 +154,23 @@ cms.post('/publish', async (c) => {
     ).bind(id).first();
     if (!article) return c.json({ error: 'Artículo no encontrado' }, 404);
 
+    // Procesar imagen a través de R2 para que sea públicamente accessible
+    let processedImageUrl = '';
+    if (article.URL_IMAGEN && article.URL_IMAGEN.trim() !== '') {
+      console.log(`[CMS] Procesando imagen: ${article.URL_IMAGEN.substring(0, 80)}...`);
+      try {
+        const r2Url = await uploadToR2(article.URL_IMAGEN.trim(), c.env);
+        if (r2Url) {
+          processedImageUrl = r2Url;
+          console.log(`[CMS] Imagen subida a R2: ${r2Url.substring(0, 80)}`);
+        } else {
+          console.log(`[CMS] No se pudo subir imagen a R2, usando fallback vacío`);
+        }
+      } catch (imgErr) {
+        console.error(`[CMS] Error procesando imagen: ${imgErr.message}`);
+      }
+    }
+
     const baseSlug = article.SLUG || articleSlugify(article.TITULO);
 
     // Verificar si ya existe un registro publicado con este SLUG (evita duplicados)
@@ -164,8 +182,7 @@ cms.post('/publish', async (c) => {
       const now       = new Date().toISOString();
       const sitiosStr = sitios.join(',');
       const shouldPublishToFB = Boolean(fb_requerido);
-      const isFeatured = (article.DESTACADO || 0) === 1 &&
-        (article.URL_IMAGEN && article.URL_IMAGEN.trim() !== '');
+      const isFeatured = (article.DESTACADO || 0) === 1 && processedImageUrl !== '';
 
       await c.env.DB.prepare(`
         UPDATE ARTICULOS_PARAFRASEADOS SET
@@ -176,7 +193,7 @@ cms.post('/publish', async (c) => {
       `).bind(
         article.TITULO, article.CONTENIDO || '', article.DESCRIPCION || '',
         (article.CATEGORIA || 'NACIONAL').toUpperCase(), now,
-        article.URL_IMAGEN || '', sitiosStr, isFeatured ? 1 : 0, shouldPublishToFB ? 1 : 0, existingPara.ID
+        processedImageUrl, sitiosStr, isFeatured ? 1 : 0, shouldPublishToFB ? 1 : 0, existingPara.ID
       ).run();
 
       await c.env.DB.prepare(
@@ -189,8 +206,7 @@ cms.post('/publish', async (c) => {
     const now       = new Date().toISOString();
     const sitiosStr = sitios.join(',');
     const shouldPublishToFB = Boolean(fb_requerido);
-    const isFeatured = (article.DESTACADO || 0) === 1 &&
-      (article.URL_IMAGEN && article.URL_IMAGEN.trim() !== '');
+    const isFeatured = (article.DESTACADO || 0) === 1 && processedImageUrl !== '';
 
     // Marcar CMS como publicado
     await c.env.DB.prepare(
@@ -209,7 +225,7 @@ cms.post('/publish', async (c) => {
       paraId, article.TITULO, baseSlug,
       article.CONTENIDO || '', article.DESCRIPCION || '',
       (article.CATEGORIA || 'NACIONAL').toUpperCase(), now,
-      article.URL_IMAGEN || '', sitiosStr, isFeatured ? 1 : 0, shouldPublishToFB ? 1 : 0
+      processedImageUrl, sitiosStr, isFeatured ? 1 : 0, shouldPublishToFB ? 1 : 0
     ).run();
 
     // DISTRIBUCIÓN: Insertar en cada tabla ARTICULOS_SITIO_{SLUG}
@@ -234,7 +250,7 @@ cms.post('/publish', async (c) => {
               ID_PARAFRASEADO: paraId,
               TITULO: article.TITULO,
               SLUG: baseSlug,
-              URL_IMAGEN: article.URL_IMAGEN || ''
+              URL_IMAGEN: processedImageUrl
             }, siteSlug);
 
             if (fbResult.success) {
