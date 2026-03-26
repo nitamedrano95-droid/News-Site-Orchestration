@@ -1,50 +1,48 @@
-/* ========================================
-   Bitácora Urbana - Admin CMS Script
-   ======================================== */
-
 const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:8781/api' : '/api';
-const STORAGE_KEY = 'cms_articles_bitacoraurbana';
-const TOKEN_KEY = 'cms_token_bitacoraurbana';
-const SESSION_KEY = 'cms_session_bitacoraurbana';
+const STORAGE_KEY = 'cms_articles_noticiasintegra';
+const TOKEN_KEY = 'cms_token_noticiasintegra';
+const SESSION_KEY = 'cms_session_noticiasintegra';
 
 let articles = [];
 let currentToken = '';
+let currentView = 'table';
 
-// ===== INIT =====
+const CATEGORY_COLORS = {
+    'nacional': { bg: '#dc3545', gradient: 'linear-gradient(135deg, #dc3545, #c82333)' },
+    'politica': { bg: '#007bff', gradient: 'linear-gradient(135deg, #007bff, #0056b3)' },
+    'economia': { bg: '#28a745', gradient: 'linear-gradient(135deg, #28a745, #1e7e34)' },
+    'deportes': { bg: '#fd7e14', gradient: 'linear-gradient(135deg, #fd7e14, #e85d04)' },
+    'cultura': { bg: '#6f42c1', gradient: 'linear-gradient(135deg, #6f42c1, #5a32a3)' },
+    'tecnologia': { bg: '#17a2b8', gradient: 'linear-gradient(135deg, #17a2b8, #138496)' }
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
     await checkAuth();
     loadArticles();
     setupEventListeners();
 });
 
-// ===== AUTH =====
 async function checkAuth() {
     const session = sessionStorage.getItem(SESSION_KEY);
     if (!session) {
         window.location.href = 'login.html';
         return;
     }
-
     try {
         const token = sessionStorage.getItem(TOKEN_KEY);
-        if (!token || token.length !== 64) {
-            throw new Error('Token inválido');
-        }
+        if (!token || token.length !== 64) throw new Error('Token invalido');
         currentToken = token;
         document.getElementById('auth-check').style.display = 'none';
         document.getElementById('admin-app').style.display = 'flex';
         displayToken();
     } catch (error) {
-        console.error('Auth error:', error);
         window.location.href = 'login.html';
     }
 }
 
 function displayToken() {
     const tokenDisplay = document.getElementById('current-token');
-    if (tokenDisplay) {
-        tokenDisplay.textContent = currentToken.substring(0, 32) + '...';
-    }
+    if (tokenDisplay) tokenDisplay.textContent = currentToken.substring(0, 32) + '...';
 }
 
 async function logout() {
@@ -53,33 +51,23 @@ async function logout() {
     window.location.href = 'login.html';
 }
 
-// ===== NAVIGATION =====
 function showView(viewName) {
-    // Update nav items
     document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.remove('active');
-        if (item.dataset.view === viewName) {
-            item.classList.add('active');
-        }
+        if (item.dataset.view === viewName) item.classList.add('active');
     });
-
-    // Update views
-    document.querySelectorAll('.view').forEach(view => {
-        view.classList.remove('active');
-    });
+    document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
     document.getElementById('view-' + viewName).classList.add('active');
 
-    // Update title
     const titles = {
         'dashboard': 'Dashboard',
-        'articles': 'Artículos',
-        'new-article': 'Crear Artículo',
-        'categories': 'Categorías',
-        'settings': 'Configuración'
+        'articles': 'Articulos',
+        'new-article': 'Crear Articulo',
+        'categories': 'Categorias',
+        'settings': 'Configuracion'
     };
     document.getElementById('page-title').textContent = titles[viewName] || 'Dashboard';
 
-    // Refresh data based on view
     if (viewName === 'articles') {
         renderArticlesTable();
     } else if (viewName === 'dashboard') {
@@ -91,30 +79,95 @@ function showView(viewName) {
     }
 }
 
-// ===== ARTICLES CRUD =====
+function setArticlesView(view) {
+    currentView = view;
+    const gridContainer = document.getElementById('articles-grid');
+    const tableContainer = gridContainer.nextElementSibling;
+    const tableBtn = document.getElementById('view-table-btn');
+    const gridBtn = document.getElementById('view-grid-btn');
+
+    if (view === 'table') {
+        gridContainer.style.display = 'none';
+        tableContainer.style.display = 'block';
+        tableBtn.style.background = 'var(--primary-color)';
+        tableBtn.style.color = '#fff';
+        gridBtn.style.background = 'transparent';
+        gridBtn.style.color = 'var(--text-secondary)';
+    } else {
+        gridContainer.style.display = 'grid';
+        tableContainer.style.display = 'none';
+        gridBtn.style.background = 'var(--primary-color)';
+        gridBtn.style.color = '#fff';
+        tableBtn.style.background = 'transparent';
+        tableBtn.style.color = 'var(--text-secondary)';
+        renderArticlesGrid();
+    }
+}
+
+function renderArticlesGrid() {
+    const container = document.getElementById('articles-grid');
+    if (!container) return;
+    
+    const searchTerm = document.getElementById('search-articles')?.value.toLowerCase() || '';
+    const filtered = articles.filter(a => 
+        a.title.toLowerCase().includes(searchTerm) ||
+        (a.category && a.category.toLowerCase().includes(searchTerm))
+    );
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:40px;">No hay articulos para mostrar.</p>';
+        return;
+    }
+
+    container.innerHTML = filtered.map(article => generateArticleCard(article)).join('');
+}
+
+function generateArticleCard(article) {
+    const catColor = CATEGORY_COLORS[article.category] || { bg: '#6c757d', gradient: 'linear-gradient(135deg, #6c757d, #545b62)' };
+    const siteInitial = article.title ? article.title.substring(0, 2).toUpperCase() : '??';
+    const imageUrl = article.imageUrl || '';
+
+    return `
+        <div class="article-card" onclick="editArticle('${article.id}')">
+            <div class="card-image">
+                ${imageUrl 
+                    ? `<img src="${imageUrl}" alt="${article.title}" onerror="this.parentElement.innerHTML='<div class=\\'card-placeholder\\' style=\\'background:${catColor.gradient}\\'><span>${siteInitial}</span></div>'">`
+                    : `<div class="card-placeholder" style="background:${catColor.gradient}"><span>${siteInitial}</span></div>`
+                }
+            </div>
+            <div class="card-content">
+                <span class="card-category" style="background:${catColor.bg}20;color:${catColor.bg}">${article.category || 'General'}</span>
+                <h3 class="card-title">${article.title || 'Sin titulo'}</h3>
+                <p class="card-excerpt">${article.excerpt ? article.excerpt.substring(0, 60) + '...' : ''}</p>
+                <div class="card-meta">
+                    <span class="card-author"><i class="fas fa-user"></i> ${article.author || 'Redaccion'}</span>
+                    <span class="card-date">${formatDate(article.createdAt)}</span>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
 function loadArticles() {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
         articles = JSON.parse(stored);
     } else {
-        // Sample articles
-        articles = [
-            {
-                id: '1',
-                title: 'Informe especial: El futuro de la tecnología en México',
-                slug: 'informe-especial-tecnologia',
-                excerpt: 'Un análisis profundo sobre cómo la innovación está transformando diversos sectores del país',
-                content: 'El panorama tecnológico en México ha experimentado una transformación sin precedentes...',
-                category: 'nacional',
-                author: 'Redacción',
-                imageUrl: 'https://placehold.co/800x500/004a99/ffffff?text=Tecnologia',
-                status: 'published',
-                featured: true,
-                tags: ['tecnología', 'innovación', 'méxico'],
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            }
-        ];
+        articles = [{
+            id: '1',
+            title: 'Informe especial: El futuro de la tecnologia en Mexico',
+            slug: 'informe-especial-tecnologia',
+            excerpt: 'Un analisis profundo sobre como la innovacion esta transformando diversos sectores del pais',
+            content: 'El panorama tecnologico en Mexico ha experimentado una transformacion sin precedentes...',
+            category: 'nacional',
+            author: 'Redaccion',
+            imageUrl: 'https://placehold.co/800x500/004a99/ffffff?text=Tecnologia',
+            status: 'published',
+            featured: true,
+            tags: ['tecnologia', 'innovacion', 'mexico'],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        }];
         saveArticles();
     }
     updateDashboard();
@@ -132,7 +185,7 @@ function renderArticlesTable() {
     const searchTerm = document.getElementById('search-articles')?.value.toLowerCase() || '';
     const filtered = articles.filter(a => 
         a.title.toLowerCase().includes(searchTerm) ||
-        a.category.toLowerCase().includes(searchTerm)
+        (a.category && a.category.toLowerCase().includes(searchTerm))
     );
 
     tbody.innerHTML = filtered.map(article => `
@@ -208,26 +261,25 @@ function editArticle(id) {
     document.getElementById('article-status').value = article.status;
     document.getElementById('article-featured').checked = article.featured || false;
 
-    document.getElementById('article-form-title').textContent = 'Editar Artículo';
+    document.getElementById('article-form-title').textContent = 'Editar Articulo';
     document.getElementById('btn-delete').style.display = 'block';
 
     showView('new-article');
 }
 
 function deleteArticle(id) {
-    if (!confirm('¿Está seguro de eliminar este artículo?')) return;
-    
+    if (!confirm('Esta seguro de eliminar este articulo?')) return;
     articles = articles.filter(a => a.id !== id);
     saveArticles();
     renderArticlesTable();
     updateDashboard();
-    showToast('Artículo eliminado correctamente', 'success');
+    showToast('Articulo eliminado correctamente', 'success');
 }
 
 function resetArticleForm() {
     document.getElementById('article-form').reset();
     document.getElementById('article-id').value = '';
-    document.getElementById('article-form-title').textContent = 'Crear Nuevo Artículo';
+    document.getElementById('article-form-title').textContent = 'Crear Nuevo Articulo';
     document.getElementById('btn-delete').style.display = 'none';
     generateSlug();
 }
@@ -235,7 +287,6 @@ function resetArticleForm() {
 function generateSlug() {
     const title = document.getElementById('article-title').value;
     const slugInput = document.getElementById('article-slug');
-    
     if (!slugInput.value || slugInput.value === 'se-genera-automaticamente') {
         const slug = title
             .toLowerCase()
@@ -247,7 +298,6 @@ function generateSlug() {
     }
 }
 
-// ===== DASHBOARD =====
 function updateDashboard() {
     const total = articles.length;
     const published = articles.filter(a => a.status === 'published').length;
@@ -268,15 +318,11 @@ function updateCategories() {
 
     ['nacional', 'politica', 'economia', 'deportes'].forEach(cat => {
         const el = document.getElementById('cat-' + cat + '-count');
-        if (el) {
-            el.textContent = (categories[cat] || 0) + ' artículos';
-        }
+        if (el) el.textContent = (categories[cat] || 0) + ' articulos';
     });
 }
 
-// ===== EVENT LISTENERS =====
 function setupEventListeners() {
-    // Navigation
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
@@ -284,17 +330,13 @@ function setupEventListeners() {
         });
     });
 
-    // Logout
     document.getElementById('logout-btn')?.addEventListener('click', logout);
-
-    // Article form
     document.getElementById('article-form')?.addEventListener('submit', handleArticleSubmit);
-
-    // Slug generation
     document.getElementById('article-title')?.addEventListener('input', generateSlug);
-
-    // Search
-    document.getElementById('search-articles')?.addEventListener('input', renderArticlesTable);
+    document.getElementById('search-articles')?.addEventListener('input', () => {
+        if (currentView === 'table') renderArticlesTable();
+        else renderArticlesGrid();
+    });
 }
 
 function handleArticleSubmit(e) {
@@ -320,17 +362,16 @@ function handleArticleSubmit(e) {
     if (id) {
         const index = articles.findIndex(a => a.id === id);
         articles[index] = article;
-        showToast('Artículo actualizado correctamente', 'success');
+        showToast('Articulo actualizado correctamente', 'success');
     } else {
         articles.push(article);
-        showToast('Artículo creado correctamente', 'success');
+        showToast('Articulo creado correctamente', 'success');
     }
 
     saveArticles();
     showView('articles');
 }
 
-// ===== UTILS =====
 function getCategoryColor(category) {
     const colors = {
         'nacional': 'danger',
@@ -345,25 +386,18 @@ function getCategoryColor(category) {
 
 function formatDate(dateString) {
     const date = new Date(dateString);
-    return date.toLocaleDateString('es-MX', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
-    });
+    return date.toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 function showToast(message, type = 'info') {
     const toast = document.getElementById('toast');
     toast.textContent = message;
     toast.className = 'toast show ' + type;
-    setTimeout(() => {
-        toast.classList.remove('show');
-    }, 3000);
+    setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
 function regenerateToken() {
-    if (!confirm('¿Está seguro de regenerar el token? El token anterior dejará de funcionar.')) return;
-    
+    if (!confirm('Esta seguro de regenerar el token?')) return;
     const newToken = generateToken();
     sessionStorage.setItem(TOKEN_KEY, newToken);
     currentToken = newToken;
@@ -386,12 +420,12 @@ function exportArticles() {
     a.download = 'articles-export.json';
     a.click();
     URL.revokeObjectURL(url);
-    showToast('Artículos exportados correctamente', 'success');
+    showToast('Articulos exportados correctamente', 'success');
 }
 
-// Expose functions globally
 window.showView = showView;
 window.editArticle = editArticle;
 window.deleteArticle = deleteArticle;
 window.regenerateToken = regenerateToken;
 window.exportArticles = exportArticles;
+window.setArticlesView = setArticlesView;

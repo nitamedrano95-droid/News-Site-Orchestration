@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - socialmexiconews - CMS</title>
+    <title>Dashboard - noticiasintegra - CMS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -21,9 +21,9 @@
     <div id="admin-app" style="display: none;">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="https://placehold.co/200x200/8e24aa/ffffff?text=So" alt="Logo" style="height:40px;width:auto;margin-right:10px;">
+                <img src="https://placehold.co/200x200/2e8b57/ffffff?text=In" alt="Logo" style="height:40px;width:auto;margin-right:10px;">
                 <i class="fas fa-city"></i>
-                <span>socialmexiconews</span>
+                <span>noticiasintegra</span>
             </div>
             <nav class="sidebar-nav">
                 <a href="#" class="nav-item active" data-view="dashboard">
@@ -128,20 +128,29 @@
             <!-- ARTICLES VIEW -->
             <div id="view-articles" class="view">
                 <div class="section-header">
-                    <h2>Gestión de Artículos</h2>
+                    <h2>Gestion de Articulos</h2>
                     <div class="actions">
-                        <input type="text" id="search-articles" class="search-input" placeholder="Buscar artículos...">
+                        <div class="view-toggle" style="display:flex;background:rgba(255,255,255,0.05);border-radius:6px;padding:2px;margin-right:10px;">
+                            <button id="view-table-btn" class="btn-toggle" onclick="setArticlesView('table')" style="padding:5px 10px;border:none;background:var(--primary-color);color:#fff;border-radius:4px;cursor:pointer;font-size:0.8rem;">
+                                <i class="fas fa-list"></i> Lista
+                            </button>
+                            <button id="view-grid-btn" class="btn-toggle" onclick="setArticlesView('grid')" style="padding:5px 10px;border:none;background:transparent;color:var(--text-secondary);border-radius:4px;cursor:pointer;font-size:0.8rem;">
+                                <i class="fas fa-th-large"></i> Miniaturas
+                            </button>
+                        </div>
+                        <input type="text" id="search-articles" class="search-input" placeholder="Buscar articulos...">
                         <button class="btn-primary" onclick="showView('new-article')">
-                            <i class="fas fa-plus"></i> Nuevo Artículo
+                            <i class="fas fa-plus"></i> Nuevo Articulo
                         </button>
                     </div>
                 </div>
+                <div id="articles-grid" class="articles-grid" style="display:none;"></div>
                 <div class="table-container">
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Título</th>
-                                <th>Categoría</th>
+                                <th>Titulo</th>
+                                <th>Categoria</th>
                                 <th>Autor</th>
                                 <th>Estado</th>
                                 <th>Fecha</th>
@@ -149,7 +158,6 @@
                             </tr>
                         </thead>
                         <tbody id="articles-body">
-                            <!-- Populated by JS -->
                         </tbody>
                     </table>
                 </div>
@@ -295,7 +303,7 @@
                     <h3>Información del Sitio</h3>
                     <div class="form-group">
                         <label>Nombre del Sitio</label>
-                        <input type="text" class="form-control" value="socialmexiconews" readonly>
+                        <input type="text" class="form-control" value="noticiasintegra" readonly>
                     </div>
                     <div class="form-group">
                         <label>Estado</label>
