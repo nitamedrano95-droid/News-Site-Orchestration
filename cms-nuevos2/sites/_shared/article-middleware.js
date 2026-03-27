@@ -120,11 +120,6 @@ export async function handleArticleRequest(context, siteSlug) {
      return new HTMLRewriter()
        .on('title', { element(el) { el.setInnerContent(title); } })
        .on('meta#page-desc', { element(el) { el.setAttribute('content', description); } })
-       .on('meta#og-title', { element(el) { el.setAttribute('content', title); } })
-       .on('meta#og-desc', { element(el) { el.setAttribute('content', description); } })
-       .on('meta#og-image', { element(el) { el.setAttribute('content', image); } })
-       .on('meta#og-url', { element(el) { el.setAttribute('content', canonicalUrl); } })
-       .on('meta[property="og:type"]', { element(el) { el.setAttribute('content', 'article'); } })
        .on('head', {
          element(el) {
            el.prepend(`

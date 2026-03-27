@@ -71,23 +71,23 @@ export const SITIOS_LIST = [
 export const ADMIN_UI_URL = 'https://cms-admin-nuevos2.pages.dev';
 
 export const SITE_DOMAIN_MAP = {
-  centronews:             'https://www.centronews.click',
+  centronews:             'https://www.centronews.buzz',
   noticias123:            'https://www.noticias123.click',
-  breakingcentermexico:   'https://www.breakingcentermexico.click',
-  alavistanoticias:       'https://www.alavistanoticias.click',
-  socialmexiconews:       'https://www.socialmexiconews.click',
-  tmznews:                'https://www.tmznews.click',
-  radioabc:               'https://www.radioabc.click',
-  noticiasintegra:        'https://www.noticiasintegra.click',
+  breakingcentermexico:   'https://www.breakingcenter.site',
+  alavistanoticias:       'https://www.alavistanoticias.online',
+  socialmexiconews:       'https://www.socialmexico.top',
+  tmznews:                'https://www.tmznews.lat',
+  radioabc:               'https://www.radioabc.space',
+  noticiasintegra:        'https://www.noticiasintegra.lat',
 };
 
 export const SITES_CONFIG = {
-  centronews:             { nombre: 'Centro News',                tagline: 'El centro de la noticia',             dominio: 'https://www.centronews.click'           },
+  centronews:             { nombre: 'Centro News',                tagline: 'El centro de la noticia',             dominio: 'https://www.centronews.buzz'           },
   noticias123:            { nombre: 'Noticias 123',                tagline: 'Todas las noticias en un solo lugar', dominio: 'https://www.noticias123.click'          },
-  breakingcentermexico:   { nombre: 'Breaking Center News Mexico', tagline: 'Breaking news en tiempo real',        dominio: 'https://www.breakingcentermexico.click'},
-  alavistanoticias:       { nombre: 'A la Vista Noticias',         tagline: 'Noticias al alcance de tu vista',    dominio: 'https://www.alavistanoticias.click'    },
-  socialmexiconews:       { nombre: 'Social Mexico News',          tagline: 'Noticias sociales de México',         dominio: 'https://www.socialmexiconews.click'   },
-  tmznews:                { nombre: 'TMZ News México',             tagline: 'La guía de entretenimiento',          dominio: 'https://www.tmznews.click'            },
-  radioabc:               { nombre: 'Radio ABC',                    tagline: 'Radio y noticias de México',           dominio: 'https://www.radioabc.click'           },
-  noticiasintegra:        { nombre: 'Noticias Integra',             tagline: 'Periodismo integral',                  dominio: 'https://www.noticiasintegra.click'   },
+  breakingcentermexico:   { nombre: 'Breaking Center News Mexico', tagline: 'Breaking news en tiempo real',        dominio: 'https://www.breakingcenter.site'     },
+  alavistanoticias:       { nombre: 'A la Vista Noticias',         tagline: 'Noticias al alcance de tu vista',    dominio: 'https://www.alavistanoticias.online'   },
+  socialmexiconews:       { nombre: 'Social Mexico News',          tagline: 'Noticias sociales de México',         dominio: 'https://www.socialmexico.top'        },
+  tmznews:                { nombre: 'TMZ News México',             tagline: 'La guía de entretenimiento',          dominio: 'https://www.tmznews.lat'             },
+  radioabc:               { nombre: 'Radio ABC',                   tagline: 'Radio y noticias de México',           dominio: 'https://www.radioabc.space'          },
+  noticiasintegra:        { nombre: 'Noticias Integra',             tagline: 'Periodismo integral',                  dominio: 'https://www.noticiasintegra.lat'     },
 };
