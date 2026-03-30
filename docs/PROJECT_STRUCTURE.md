@@ -6,7 +6,7 @@ NexoPress es una plataforma unificada para la gestion de **35 sitios de noticias
 
 | CMS | Worker | Sitios | Rol |
 |-----|--------|--------|-----|
-| **CMS Originaux** | `news-api` | 10 | Sistema principal |
+| **CMS Originaux** | `cms-originaux` | 10 | Sistema principal |
 | **CMS Nuevos** | `cms-nuevos` | 17 | Segunda generacion |
 | **CMS Nuevos 2** | `cms-nuevos2` | 8 | Tercera generacion |
 

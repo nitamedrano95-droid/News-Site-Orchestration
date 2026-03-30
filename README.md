@@ -23,7 +23,7 @@ El proyecto se basa en una arquitectura de **Worker Unificado** que gestiona tan
   - Publicación automática cada 3 horas por sitio
   - Filtro de **"Imagen Perfecta"**: Solo publica en Facebook si el artículo tiene una imagen original (evita imágenes de relleno)
   - Tokens de página permanentes (Never Expire)
-  - Soporte para 27 sitios independientes
+  - Soporte para 35 sitios independientes
 - **3 Dashboards Administrativos (CMS):**
   - **CMS Originaux** (10 sitios) — Sistema principal
   - **CMS Nuevos** (17 sitios) — Segunda generación
@@ -72,16 +72,16 @@ El proyecto se basa en una arquitectura de **Worker Unificado** que gestiona tan
 
 ### CMS Nuevos 2 (8 sitios) — Tercera Generación
 
-| # | Sitio | Slug |
-|---|-------|------|
-| 28 | Centro News | `centronews` |
-| 29 | Noticias 123 | `noticias123` |
-| 30 | Breaking Center News México | `breakingcenternews` |
-| 31 | A la Vista Noticias | `alavistanoticias` |
-| 32 | Social Mexico News | `socialmexiconews` |
-| 33 | TMZ News México | `tmznews` |
-| 34 | Radio ABC | `radioabc` |
-| 35 | Noticias Integra | `noticiasintegra` |
+| # | Sitio | Dominio | Slug |
+|---|-------|---------|------|
+| 28 | Centro News | https://www.centronews.online | `centronews` |
+| 29 | Noticias 123 | https://www.noticias123.online | `noticias123` |
+| 30 | Breaking Center News México | https://www.breakingcentermexico.news | `breakingcentermexico` |
+| 31 | A la Vista Noticias | https://www.alavistanoticias.news | `alavistanoticias` |
+| 32 | Social Mexico News | https://www.socialmexiconews.news | `socialmexiconews` |
+| 33 | TMZ News México | https://www.tmznews.mx | `tmznews` |
+| 34 | Radio ABC | https://www.radioabc.mx | `radioabc` |
+| 35 | Noticias Integra | https://www.noticiasintegra.news | `noticiasintegra` |
 
 ## 📚 Documentación
 
@@ -90,7 +90,6 @@ Para una guía detallada sobre el funcionamiento del sistema, consulta:
 | Documento | Descripción |
 |-----------|-------------|
 | [Índice Documental](./docs/INDEX.md) | Portal de toda la documentación |
-| [Guía para Agentes IA](./QWEN.md) | Guía completa para agentes de IA |
 | [Monitor de Sistema](./docs/SYSTEM_MONITOR.md) | Diagnóstico y monitoreo |
 | [Referencia de API](./docs/API_REFERENCE.md) | Endpoints y autenticación |
 | [Portal NexoPress](./nexopress-portal/README.md) | Portal de acceso a los 3 CMS |
@@ -98,55 +97,80 @@ Para una guía detallada sobre el funcionamiento del sistema, consulta:
 ## 🛠️ Estructura del Proyecto
 
 ```
-/home/sebastianvernis/cloudflare-news-project/
-├── public/admin/           # Dashboard de Administración (CMS Originaux)
-│   ├── views/              # Vistas HTML (dashboard, monitor, etc.)
-│   ├── js/                 # Lógica del CMS (router, auth, editor)
-│   └── css/                # Estilos del dashboard
-├── nexopress-portal/       # Portal de acceso unificado a los 3 CMS
-├── src/
-│   ├── index.js            # Worker Principal (API + Cron + FB Flow)
-│   ├── index_append.js     # Funciones adicionales
-│   └── schema.sql          # Schema completo de D1
-├── sites/
-│   ├── Estables/           # 10 sitios (CMS Originaux)
-│   └── Nuevos/             # 17 + 8 sitios (CMS Nuevos + CMS Nuevos 2)
-├── scripts/
-│   ├── setup/              # Scripts de configuración
-│   ├── deploy/             # Scripts de despliegue
-│   ├── verify/             # Scripts de verificación
-│   └── fixes/              # Scripts de mantenimiento
-├── docs/                   # Documentación técnica
-├── backups/archive/        # Archivo de backups y scripts obsoletos
-├── wrangler.toml           # Configuración de Cloudflare (referencia)
-└── package.json            # Dependencias del proyecto
+cloudflare-news-project/
+├── cms-originaux/              # CMS Principal (10 sitios)
+│   ├── src/                   # Worker source (API + Cron + FB)
+│   ├── sites/                  # 10 sitios Cloudflare Pages
+│   ├── public/admin/           # Dashboard SPA
+│   ├── scripts/                # Scripts de verificación y deployment
+│   ├── tools/                  # Herramientas (news-publisher, etc.)
+│   └── wrangler.toml          # Config: cms-originaux worker
+├── cms-nuevos/                # CMS Segunda Generación (17 sitios)
+│   ├── src/                   # Worker source
+│   ├── sites/                 # 17 sitios Cloudflare Pages
+│   ├── public/admin/          # Dashboard SPA
+│   ├── scripts/               # Scripts
+│   ├── tools/                 # Herramientas
+│   └── wrangler.toml         # Config: cms-nuevos worker
+├── cms-nuevos2/               # CMS Tercera Generación (8 sitios)
+│   ├── src/                  # Worker source
+│   ├── sites/                # 8 sitios Cloudflare Pages
+│   ├── public/admin/         # Dashboard SPA
+│   ├── scripts/              # Scripts
+│   ├── tools/                # Herramientas
+│   └── wrangler.toml        # Config: cms-nuevos2 worker
+├── nexopress-portal/          # Portal de acceso unificado
+└── docs/                      # Documentación técnica
 ```
 
 ## ⚙️ Configuración y Despliegue
 
-### Requisitos
-- Cloudflare CLI (`wrangler`)
-- Cuenta de OpenRouter (para la IA)
-- Tokens de acceso a páginas de Facebook (27 sitios)
+### Workers Desplegados
 
-### Despliegue del Worker (API)
+| Worker | D1 Database | KV Namespace | R2 Bucket |
+|--------|-------------|--------------|-----------|
+| `cms-originaux` | `news_db_cms_originaux` | `e6ceb0a1487d425f9c3dc69e3fed9145` | `cms-news` |
+| `cms-nuevos` | `news_db_cms_nuevos` | `c90aab3a89054141933a28d232e87b6c` | `cms-news` |
+| `cms-nuevos2` | `news_db_cms_nuevos2` | `0d0be3689d2342db8ad2a70070e1ecb3` | `cms-news` |
+
+### Despliegue de Workers
+
+**CMS Originaux:**
 ```bash
-cd src
+cd cms-originaux
+wrangler deploy --config wrangler.toml
+```
+
+**CMS Nuevos:**
+```bash
+cd cms-nuevos
+wrangler deploy --config wrangler.toml
+```
+
+**CMS Nuevos 2:**
+```bash
+cd cms-nuevos2
 wrangler deploy --config wrangler.toml
 ```
 
 ### Despliegue de Sitios Pages
 
-**Sitios Estables:**
+**CMS Originaux (10 sitios):**
 ```bash
-for site in radiocinconoticias centralmexico tvmexico cbnnoticias mexicoinformado nodoinformativo bitacoraurbana reportecentralmx verticenoticias noticiasobjetivo; do
-  cd sites/Estables/$site && wrangler pages deploy . --project-name=$site --branch=master && cd ../../..
-done
+cd cms-originaux/sites/[sitio]
+wrangler pages deploy . --project-name=[sitio] --branch=master
 ```
 
-**Nuevos Sitios:**
+**CMS Nuevos (17 sitios):**
 ```bash
-./scripts/deploy_new_sites.sh
+cd cms-nuevos/sites/[sitio]
+wrangler pages deploy . --project-name=[sitio] --branch=master
+```
+
+**CMS Nuevos 2 (8 sitios):**
+```bash
+cd cms-nuevos2/sites/[sitio]
+wrangler pages deploy . --project-name=[sitio] --branch=master
 ```
 
 ### Variables de Entorno Críticas (Secrets)
@@ -155,30 +179,23 @@ done
 - `OPENROUTER_API_KEY`: Para el parafraseo e ingesta con IA
 - `ADMIN_TOKEN`: Token maestro para administración de los CMS
 
-**Facebook Tokens (35 sitios):**
-```bash
-# Sitios Estables (10)
-wrangler secret put FB_TOKEN_RADIOCINCONOTICIAS --name news-api
-wrangler secret put FB_TOKEN_CENTRALMEXICO --name news-api
-wrangler secret put FB_TOKEN_TVMEXICO --name news-api
-wrangler secret put FB_TOKEN_CBNNOTICIAS --name news-api
-wrangler secret put FB_TOKEN_MEXICOINFORMADO --name news-api
-wrangler secret put FB_TOKEN_NODOINFORMATIVO --name news-api
-wrangler secret put FB_TOKEN_BITACORAURBANA --name news-api
-wrangler secret put FB_TOKEN_REPORTECENTRALMX --name news-api
-wrangler secret put FB_TOKEN_VERTICENOTICIAS --name news-api
-wrangler secret put FB_TOKEN_NOTICIASOBJETIVO --name news-api
+**Facebook Tokens por CMS:**
 
-# Nuevos Sitios (17)
-wrangler secret put FB_TOKEN_BOOMINFORMATIVO --name news-api
-wrangler secret put FB_TOKEN_CAPITALPRESS --name news-api
-wrangler secret put FB_TOKEN_DIARIOEXPRESS --name news-api
-# ... (ver QWEN.md para lista completa)
-```
-
-**Configuración automática de tokens:**
 ```bash
-python3 scripts/setup_fb_tokens.py
+# CMS Originaux (10 sitios)
+wrangler secret put FB_TOKEN_RADIOCINCONOTICIAS --name cms-originaux
+wrangler secret put FB_TOKEN_CENTRALMEXICO --name cms-originaux
+# ... (ver docs/FACEBOOK_TOKEN_SETUP.md para lista completa)
+
+# CMS Nuevos (17 sitios)
+wrangler secret put FB_TOKEN_BOOMINFORMATIVO --name cms-nuevos
+wrangler secret put FB_TOKEN_CAPITALPRESS --name cms-nuevos
+# ...
+
+# CMS Nuevos 2 (8 sitios)
+wrangler secret put FB_TOKEN_CENTRONEWS --name cms-nuevos2
+wrangler secret put FB_TOKEN_NOTICIAS123 --name cms-nuevos2
+# ...
 ```
 
 ## 📊 Monitoreo
@@ -193,53 +210,74 @@ El sistema incluye endpoints de diagnóstico protegidos:
 | `/api/cron/ingest` | POST | Dispara una ingesta manual de noticias |
 | `/api/cron/manual` | POST | Ejecuta el cron manualmente |
 
-**Portal NexoPress:** https://nexopress.sebastianvernis.space
-**Dashboard Originaux:** https://news-api.sebastianvernis.workers.dev/admin/#/monitor
-**Dashboard Nuevos:** https://cms-nuevos.sebastianvernis.workers.dev/admin/#/monitor
-**Dashboard Nuevos 2:** https://cms-nuevos2.sebastianvernis.workers.dev/admin/#/monitor
+**URLs de Dashboard:**
+
+| CMS | URL del CMS | Worker |
+|-----|-------------|--------|
+| **Portal NexoPress** | https://nexopress.sebastianvernis.space | - |
+| **CMS Originaux** | https://cms-originaux.sebastianvernis.workers.dev/admin/ | `cms-originaux` |
+| **CMS Nuevos** | https://cms-nuevos.sebastianvernis.workers.dev/admin/ | `cms-nuevos` |
+| **CMS Nuevos 2** | https://cms-nuevos2.sebastianvernis.workers.dev/admin/ | `cms-nuevos2` |
 
 ## 🔧 Comandos Útiles
 
 ### Desarrollo Local
 ```bash
-# Worker en local
-cd src && wrangler dev --config wrangler.toml
+# Worker CMS Originaux en local
+cd cms-originaux && wrangler dev --config wrangler.toml
 
-# Pages en local
-cd sites/Estables/[sitio] && wrangler pages dev .
+# Worker CMS Nuevos en local
+cd cms-nuevos && wrangler dev --config wrangler.toml
+
+# Worker CMS Nuevos 2 en local
+cd cms-nuevos2 && wrangler dev --config wrangler.toml
 ```
 
 ### Producción
 ```bash
-# Deploy del Worker
-cd src && wrangler deploy
+# Deploy CMS Originaux
+cd cms-originaux && wrangler deploy --config wrangler.toml
 
-# Deploy de un sitio
-cd sites/Estables/[sitio] && wrangler pages deploy . --project-name=[sitio] --branch=master
+# Deploy CMS Nuevos
+cd cms-nuevos && wrangler deploy --config wrangler.toml
+
+# Deploy CMS Nuevos 2
+cd cms-nuevos2 && wrangler deploy --config wrangler.toml
 
 # Ver logs en vivo
-wrangler tail --name news-api
+wrangler tail --name cms-originaux
+wrangler tail --name cms-nuevos
+wrangler tail --name cms-nuevos2
 ```
 
 ### Base de Datos
 ```bash
-# Query directa
-wrangler d1 execute news_db --command "SELECT COUNT(*) FROM ARTICULOS_PARAFRASEADOS" --remote
+# CMS Originaux
+wrangler d1 execute news_db_cms_originaux --command "SELECT COUNT(*) FROM ARTICULOS_PARAFRASEADOS" --remote
 
-# Backup
-wrangler d1 export news_db --output backup.sql --remote
+# CMS Nuevos
+wrangler d1 execute news_db_cms_nuevos --command "SELECT COUNT(*) FROM ARTICULOS_PARAFRASEADOS" --remote
+
+# CMS Nuevos 2
+wrangler d1 execute news_db_cms_nuevos2 --command "SELECT COUNT(*) FROM ARTICULOS_PARAFRASEADOS" --remote
 ```
 
 ### Verificación
 ```bash
-# Verificar 27 sitios
-python3 scripts/verify_27_sites.py
+# Ver estado del cron CMS Originaux
+curl -s https://cms-originaux.sebastianvernis.workers.dev/api/cron/status
 
-# Reporte de Facebook
-python3 scripts/fb_full_report.py
+# Ver estado del cron CMS Nuevos
+curl -s https://cms-nuevos.sebastianvernis.workers.dev/api/cron/status
 
-# Ver estado del cron
-curl -s https://news-api.sebastianvernis.workers.dev/api/cron/status
+# Ver estado del cron CMS Nuevos 2
+curl -s https://cms-nuevos2.sebastianvernis.workers.dev/api/cron/status
+
+# Ver artículos CMS Originaux
+curl -s "https://cms-originaux.sebastianvernis.workers.dev/api/articles?limit=5"
+
+# Ver Facebook Monitor CMS Originaux
+curl -s https://cms-originaux.sebastianvernis.workers.dev/api/facebook/monitor
 ```
 
 ## 🔐 Paneles CMS (Rutas internas)
@@ -256,38 +294,44 @@ Cada uno de los 3 CMS comparte la misma estructura de vistas SPA:
 | `#/sites` | Sitios | Gestión de sitios del CMS |
 | `#/users` | Usuarios | Gestión de usuarios y roles |
 
-**URLs de Acceso:**
-
-| CMS | URL | Sitios |
-|-----|-----|--------|
-| **Portal NexoPress** | https://nexopress.sebastianvernis.space | Punto de entrada |
-| **CMS Originaux** | https://news-api.sebastianvernis.workers.dev/admin/ | 10 sitios |
-| **CMS Nuevos** | https://cms-nuevos.sebastianvernis.workers.dev/admin/ | 17 sitios |
-| **CMS Nuevos 2** | https://cms-nuevos2.sebastianvernis.workers.dev/admin/ | 8 sitios |
-
 ## 📈 Estado del Proyecto
 
 | Componente | Estado | Descripción |
 |------------|--------|-------------|
-| **Workers API (x3)** | ✅ Operativos | 3 Workers independientes (Originaux, Nuevos, Nuevos 2) |
-| **10 Sitios Originaux** | ✅ Operativos | Todos desplegados y funcionando |
-| **17 Sitios Nuevos** | ✅ Operativos | Desplegados con CMS Nuevos |
-| **8 Sitios Nuevos 2** | ✅ Operativos | Desplegados con CMS Nuevos 2 |
-| **Base de Datos D1** | ✅ Configurada | Una DB por CMS, schema completo |
+| **cms-originaux Worker** | ✅ Operativo | 10 sitios - Cron cada 30 min |
+| **cms-nuevos Worker** | ✅ Operativo | 17 sitios - Cron cada 30 min |
+| **cms-nuevos2 Worker** | ✅ Operativo | 8 sitios - Cron cada 30 min |
+| **10 Sitios Originaux** | ✅ Operativos | Todos desplegados |
+| **17 Sitios Nuevos** | ✅ Operativos | Todos desplegados |
+| **8 Sitios Nuevos 2** | ✅ Operativos | Todos desplegados |
+| **D1 Databases** | ✅ Configuradas | Una DB por CMS |
+| **KV Namespaces** | ✅ Configurados | Uno por CMS |
+| **R2 Bucket** | ✅ Configurado | `cms-news` compartido |
 | **Portal NexoPress** | ✅ Operativo | Punto de entrada a los 3 CMS |
-| **Facebook Tokens** | ✅ Configurados | 24/35 con tokens activos |
 
 ## 📝 Scripts Disponibles
 
-| Script | Propósito |
-|--------|-----------|
-| `scripts/setup_fb_tokens.py` | Configurar tokens de Facebook interactivamente |
-| `scripts/verify_fb_tokens.py` | Verificar validez de tokens FB |
-| `scripts/verify_27_sites.py` | Verificación completa de los 27 sitios |
-| `scripts/deploy_new_sites.sh` | Despliegue automático de 17 nuevos sitios |
-| `scripts/fb_full_report.py` | Reporte completo de publicaciones en Facebook |
-| `scripts/reset_fb_timers.py` | Resetear timers de Facebook |
-| `scripts/force_reset_and_ingest.py` | Forzar reset y ingesta manual |
+### CMS Originaux
+```bash
+cd cms-originaux/scripts
+python3 verify_27_sites.py
+python3 verify_all_fb_tokens.py
+python3 fb_full_report.py
+```
+
+### CMS Nuevos
+```bash
+cd cms-nuevos/scripts
+python3 verify_27_sites.py
+python3 verify_all_fb_tokens.py
+```
+
+### CMS Nuevos 2
+```bash
+cd cms-nuevos2/scripts
+python3 verify_27_sites.py
+python3 verify_all_fb_tokens.py
+```
 
 ## 🏗️ Arquitectura
 
@@ -302,25 +346,33 @@ Cada uno de los 3 CMS comparte la misma estructura de vistas SPA:
             ▼                ▼                ▼
 ┌───────────────────┐ ┌──────────────────┐ ┌──────────────────┐
 │  CMS Originaux    │ │  CMS Nuevos      │ │  CMS Nuevos 2    │
-│  (news-api)       │ │  (cms-nuevos)    │ │  (cms-nuevos2)   │
-│  10 sitios        │ │  17 sitios       │ │  8 sitios        │
-│  API + Cron + FB  │ │  API + Cron + FB │ │  API + Cron + FB │
+│  (cms-originaux)  │ │  (cms-nuevos)    │ │  (cms-nuevos2)  │
+│  10 sitios        │ │  17 sitios       │ │  8 sitios       │
+│  API + Cron + FB  │ │  API + Cron + FB │ │  API + Cron + FB│
 └────────┬──────────┘ └────────┬─────────┘ └────────┬─────────┘
          │                     │                     │
          ▼                     ▼                     ▼
 ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
-│   D1 (DB)       │  │   R2 (Imgs)     │  │   KV (Caché)    │
-│   × 3 DBs       │  │   Compartido    │  │   × 3 KVs       │
+│ D1: news_db_    │  │ D1: news_db_    │  │ D1: news_db_   │
+│ cms_originaux   │  │ cms_nuevos      │  │ cms_nuevos2    │
+├─────────────────┤  ├─────────────────┤  ├─────────────────┤
+│ KV: e6ceb0a... │  │ KV: c90aab3a... │  │ KV: 0d0be368...│
+├─────────────────┤  ├─────────────────┤  ├─────────────────┤
+│ R2: cms-news    │  │ R2: cms-news    │  │ R2: cms-news   │
+│ (compartido)    │  │ (compartido)    │  │ (compartido)   │
 └─────────────────┘  └─────────────────┘  └─────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                 Cloudflare Pages (35 sitios)                    │
-│  Cada sitio tiene:                                              │
-│  - Frontend estático (HTML/CSS/JS)                              │
+│  cms-originaux/sites/  (10 sitios)                              │
+│  cms-nuevos/sites/    (17 sitios)                              │
+│  cms-nuevos2/sites/   (8 sitios)                               │
+│  Cada sitio:                                                   │
+│  - Frontend estático (HTML/CSS/JS)                             │
 │  - Functions para SSR (middleware de artículos)                 │
 │  - Open Graph meta tags dinámicas                               │
-│  - Dominio personalizado configurable                           │
+│  - Dominio personalizado configurable                          │
 └─────────────────────────────────────────────────────────────────┘
 ```
 

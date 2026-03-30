@@ -12,7 +12,7 @@ Plataforma de noticias multi-sitio con **35 sitios** distribuidos en **3 CMS ind
             ▼                ▼                ▼
      CMS Originaux      CMS Nuevos      CMS Nuevos 2
       10 sitios          17 sitios        8 sitios
-      (news-api)        (cms-nuevos)    (cms-nuevos2)
+       (cms-originaux)    (cms-nuevos)    (cms-nuevos2)
 ```
 
 Cada CMS es un Worker independiente con su propia base de datos D1, KV y cron jobs. El flujo es idéntico en los 3:
@@ -58,10 +58,10 @@ docs/migrations/  → Scripts SQL historicos
 | Servicio | URL |
 |----------|-----|
 | **Portal NexoPress** | https://nexopress.sebastianvernis.space |
-| **CMS Originaux** | https://news-api.sebastianvernis.workers.dev/admin/ |
+| **CMS Originaux** | https://cms-originaux.sebastianvernis.workers.dev/admin/ |
 | **CMS Nuevos** | https://cms-nuevos.sebastianvernis.workers.dev/admin/ |
 | **CMS Nuevos 2** | https://cms-nuevos2.sebastianvernis.workers.dev/admin/ |
-| **API Originaux** | https://news-api.sebastianvernis.workers.dev |
+| **API Originaux** | https://cms-originaux.sebastianvernis.workers.dev |
 | **API Nuevos** | https://cms-nuevos.sebastianvernis.workers.dev |
 | **API Nuevos 2** | https://cms-nuevos2.sebastianvernis.workers.dev |
 
