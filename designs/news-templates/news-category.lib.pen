@@ -1,0 +1,1144 @@
+{
+  "version": "2.9",
+  "children": [
+    {
+      "type": "frame",
+      "id": "gdeBk",
+      "x": 0,
+      "y": 0,
+      "name": "NexoPress — Category",
+      "reusable": true,
+      "width": 1440,
+      "fill": "#f5f5f5",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "2fJoe",
+          "name": "header",
+          "reusable": true,
+          "width": "fill_container",
+          "fill": "#1a1a2e",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "IKUDF",
+              "name": "headerTop",
+              "reusable": true,
+              "width": "fill_container",
+              "height": 64,
+              "padding": [
+                0,
+                80
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Ki5Zm",
+                  "name": "hLogo",
+                  "reusable": true,
+                  "fill": "#00d4aa",
+                  "content": "NexoPress",
+                  "fontFamily": "Playfair Display",
+                  "fontSize": 26,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "VVxOC",
+                  "name": "hNav",
+                  "reusable": true,
+                  "gap": 28,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "H6gFy",
+                      "name": "hNav1",
+                      "fill": "#cccccc",
+                      "content": "Economía",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "GaZqj",
+                      "name": "hNav2",
+                      "fill": "#cccccc",
+                      "content": "Política",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "fz7uz",
+                      "name": "hNav3",
+                      "fill": "#cccccc",
+                      "content": "Tecnología",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "IArGL",
+                      "name": "hNav4",
+                      "fill": "#cccccc",
+                      "content": "Deportes",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "hEf41",
+                  "name": "hActions",
+                  "reusable": true,
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "tvZC6",
+                      "name": "hSearchBtn",
+                      "width": 36,
+                      "height": 36,
+                      "fill": "#16213e",
+                      "cornerRadius": 6,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "YjkGx",
+                          "name": "hSearchIco",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "search",
+                          "iconFontFamily": "lucide",
+                          "fill": "#ffffff"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "OEFw5",
+                      "name": "hCta",
+                      "fill": "#00d4aa",
+                      "cornerRadius": 6,
+                      "padding": [
+                        10,
+                        20
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "UhDat",
+                          "name": "hCtaLabel",
+                          "fill": "#1a1a2e",
+                          "content": "Suscribirse",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Gj4mf",
+              "name": "hTicker",
+              "reusable": true,
+              "width": "fill_container",
+              "height": 38,
+              "fill": "#16213e",
+              "gap": 20,
+              "padding": [
+                0,
+                80
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "y1gDF",
+                  "name": "hTickerLbl",
+                  "reusable": true,
+                  "fill": "#00d4aa",
+                  "content": "MERCADOS",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "1VB88",
+                  "name": "hTickerDiv",
+                  "reusable": true,
+                  "width": 1,
+                  "height": 18,
+                  "fill": "#444444"
+                },
+                {
+                  "type": "frame",
+                  "id": "ssksK",
+                  "name": "hT1",
+                  "reusable": true,
+                  "fill": "#0d1626",
+                  "cornerRadius": 4,
+                  "gap": 5,
+                  "padding": [
+                    4,
+                    8
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "h8tHm",
+                      "name": "hT1a",
+                      "fill": "#ffffff",
+                      "content": "BTC",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "UCjtF",
+                      "name": "hT1b",
+                      "fill": "#cccccc",
+                      "content": "$65,420",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "ZSErQ",
+                      "name": "hT1c",
+                      "fill": "#00d4aa",
+                      "content": "+2.4%",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "S56DM",
+                  "name": "hT2",
+                  "reusable": true,
+                  "fill": "#0d1626",
+                  "cornerRadius": 4,
+                  "gap": 5,
+                  "padding": [
+                    4,
+                    8
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "cr5SE",
+                      "name": "hT2a",
+                      "fill": "#ffffff",
+                      "content": "USD/ARS",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "SHkum",
+                      "name": "hT2b",
+                      "fill": "#cccccc",
+                      "content": "$1,250",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "a0q8m",
+                      "name": "hT2c",
+                      "fill": "#e74c3c",
+                      "content": "-0.3%",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "SXGLH",
+          "name": "breadcrumb",
+          "width": "fill_container",
+          "height": 44,
+          "fill": "#ffffff",
+          "stroke": {
+            "align": "inside",
+            "thickness": {
+              "bottom": 1
+            },
+            "fill": "#e0e0e0"
+          },
+          "gap": 6,
+          "padding": [
+            0,
+            80
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "QQbtB",
+              "name": "bcHome",
+              "fill": "#666666",
+              "content": "Inicio",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "text",
+              "id": "u49IG",
+              "name": "bcSep",
+              "fill": "#999999",
+              "content": ">",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "text",
+              "id": "TqU6p",
+              "name": "bcCat",
+              "fill": "#00d4aa",
+              "content": "Economia",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "600"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "FAP6P",
+          "name": "catHero",
+          "reusable": true,
+          "width": "fill_container",
+          "height": 220,
+          "fill": "#00d4aa",
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            0,
+            80
+          ],
+          "justifyContent": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "OCAT8",
+              "name": "catHeroBadge",
+              "fill": "#00000022",
+              "cornerRadius": 999,
+              "padding": [
+                4,
+                12
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "vjqUZ",
+                  "name": "catHeroBadgeLbl",
+                  "fill": "#ffffff",
+                  "content": "CATEGORIA",
+                  "fontFamily": "Inter",
+                  "fontSize": 10,
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "gmqlo",
+              "name": "catHeroTitle",
+              "fill": "#ffffff",
+              "content": "Economia",
+              "fontFamily": "Playfair Display",
+              "fontSize": 48,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "93oxX",
+              "name": "catHeroDesc",
+              "fill": "#ffffff",
+              "content": "Noticias de finanzas, mercados y negocios globales",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "text",
+              "id": "9rLbB",
+              "name": "catHeroMeta",
+              "fill": "#ffffff",
+              "content": "245 articulos · Actualizado hace 5 min",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "1P135",
+          "name": "filterBar",
+          "width": "fill_container",
+          "height": 56,
+          "fill": "#ffffff",
+          "stroke": {
+            "align": "inside",
+            "thickness": {
+              "bottom": 1
+            },
+            "fill": "#e0e0e0"
+          },
+          "gap": 12,
+          "padding": [
+            0,
+            80
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "zwaEH",
+              "name": "filterLabel",
+              "fill": "#666666",
+              "content": "Ordenar por:",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "rIsW6",
+              "name": "filterBtnRecent",
+              "height": 36,
+              "fill": "#00d4aa",
+              "cornerRadius": 6,
+              "padding": [
+                8,
+                16
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "3KwZj",
+                  "name": "filterBtnRecentLbl",
+                  "fill": "#ffffff",
+                  "content": "Mas reciente",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "0E43s",
+              "name": "filterBtnPopular",
+              "height": 36,
+              "cornerRadius": 6,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "#e0e0e0"
+              },
+              "padding": [
+                8,
+                16
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "47waw",
+                  "name": "filterBtnPopularLbl",
+                  "fill": "#1a1a2e",
+                  "content": "Mas popular",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "aeQ8c",
+          "name": "mainArea",
+          "reusable": true,
+          "width": "fill_container",
+          "fill": "#f5f5f5",
+          "layout": "vertical",
+          "gap": 24,
+          "padding": [
+            40,
+            80
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "ZXvE6",
+              "name": "contentRow",
+              "width": "fill_container",
+              "gap": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "ucypk",
+                  "name": "articleColumn",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 20,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "9oLUt",
+                      "name": "featuredCard",
+                      "clip": true,
+                      "width": "fill_container",
+                      "fill": "#ffffff",
+                      "cornerRadius": 8,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#00000012",
+                        "offset": {
+                          "x": 0,
+                          "y": 2
+                        },
+                        "blur": 10
+                      },
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "jsDHt",
+                          "name": "featuredImg",
+                          "width": 320,
+                          "height": 220,
+                          "fill": "#16213e"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "2C52Z",
+                          "name": "featuredBody",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 10,
+                          "padding": [
+                            18,
+                            20
+                          ],
+                          "justifyContent": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "2N8MF",
+                              "name": "featuredTag",
+                              "fill": "#00d4aa",
+                              "cornerRadius": 999,
+                              "padding": [
+                                4,
+                                10
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "0lNb4",
+                                  "name": "featuredTagLbl",
+                                  "fill": "#ffffff",
+                                  "content": "ECONOMIA",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 10,
+                                  "fontWeight": "700"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "PT5Sh",
+                              "name": "featuredTitle",
+                              "fill": "#1a1a2e",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "La Reserva Federal mantiene tasas pese a presion inflacionaria",
+                              "lineHeight": 1.3,
+                              "fontFamily": "Playfair Display",
+                              "fontSize": 24,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "type": "text",
+                              "id": "NaXWe",
+                              "name": "featuredExcerpt",
+                              "fill": "#666666",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Los mercados reaccionaron con cautela ante el comunicado oficial del banco central.",
+                              "lineHeight": 1.5,
+                              "fontFamily": "Inter",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "kmZIb",
+                              "name": "featuredMeta",
+                              "gap": 8,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "Z8lOK",
+                                  "name": "featuredAuthor",
+                                  "fill": "#999999",
+                                  "content": "Carlos Mendez",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "DZmhm",
+                                  "name": "featuredDate",
+                                  "fill": "#999999",
+                                  "content": "· 30 Mar 2026",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "lILUr",
+                      "name": "articleGrid",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 16,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "9g9UT",
+                          "name": "card1",
+                          "width": "fill_container",
+                          "fill": "#ffffff",
+                          "cornerRadius": 8,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#ececec"
+                          },
+                          "layout": "vertical",
+                          "gap": 8,
+                          "padding": 16,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "NenxA",
+                              "name": "card1Title",
+                              "fill": "#1a1a2e",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Bitcoin supera los 50,000 dolares impulsado por ETFs institucionales",
+                              "lineHeight": 1.3,
+                              "fontFamily": "Playfair Display",
+                              "fontSize": 18,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "rm1RK",
+                          "name": "card2",
+                          "width": "fill_container",
+                          "fill": "#ffffff",
+                          "cornerRadius": 8,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#ececec"
+                          },
+                          "layout": "vertical",
+                          "gap": 8,
+                          "padding": 16,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "3Cg9K",
+                              "name": "card2Title",
+                              "fill": "#1a1a2e",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "FMI revisa al alza proyecciones de crecimiento para Latinoamerica",
+                              "lineHeight": 1.3,
+                              "fontFamily": "Playfair Display",
+                              "fontSize": 18,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "jymFf",
+                          "name": "card3",
+                          "width": "fill_container",
+                          "fill": "#ffffff",
+                          "cornerRadius": 8,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "#ececec"
+                          },
+                          "layout": "vertical",
+                          "gap": 8,
+                          "padding": 16,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "SUAiy",
+                              "name": "card3Title",
+                              "fill": "#1a1a2e",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Petroleo Brent alcanza maximos de 6 meses por tensiones geopoliticas",
+                              "lineHeight": 1.3,
+                              "fontFamily": "Playfair Display",
+                              "fontSize": 18,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "jxfz4",
+                  "name": "sidebar",
+                  "width": 320,
+                  "layout": "vertical",
+                  "gap": 20,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "k60Vk",
+                      "name": "weatherWidget",
+                      "width": "fill_container",
+                      "height": 120,
+                      "fill": "#1a1a2e",
+                      "cornerRadius": 8,
+                      "layout": "vertical",
+                      "gap": 4,
+                      "padding": 16,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ZLvdT",
+                          "name": "wCity",
+                          "fill": "#ffffff",
+                          "content": "Buenos Aires",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "xsYQB",
+                          "name": "wTemp",
+                          "fill": "#00d4aa",
+                          "content": "22C",
+                          "fontFamily": "Playfair Display",
+                          "fontSize": 34,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "p6Ov9",
+                      "name": "popularTagsWidget",
+                      "width": "fill_container",
+                      "fill": "#ffffff",
+                      "cornerRadius": 8,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "#e0e0e0"
+                      },
+                      "layout": "vertical",
+                      "gap": 10,
+                      "padding": 16,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "31hnA",
+                          "name": "tagsTitle",
+                          "fill": "#1a1a2e",
+                          "content": "Tags Populares",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "HIaMB",
+                          "name": "tagsWrap",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "ADk7f",
+                              "name": "tagChip1",
+                              "fill": "#f5f5f5",
+                              "cornerRadius": 999,
+                              "stroke": {
+                                "align": "inside",
+                                "thickness": 1,
+                                "fill": "#e0e0e0"
+                              },
+                              "padding": [
+                                6,
+                                12
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "LlRl4",
+                                  "name": "tagChip1Lbl",
+                                  "fill": "#666666",
+                                  "content": "mercados",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "FwFO2",
+                              "name": "tagChip2",
+                              "fill": "#f5f5f5",
+                              "cornerRadius": 999,
+                              "stroke": {
+                                "align": "inside",
+                                "thickness": 1,
+                                "fill": "#e0e0e0"
+                              },
+                              "padding": [
+                                6,
+                                12
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "qt1yW",
+                                  "name": "tagChip2Lbl",
+                                  "fill": "#666666",
+                                  "content": "reserva federal",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "BLJJD",
+                              "name": "tagChip3",
+                              "fill": "#f5f5f5",
+                              "cornerRadius": 999,
+                              "stroke": {
+                                "align": "inside",
+                                "thickness": 1,
+                                "fill": "#e0e0e0"
+                              },
+                              "padding": [
+                                6,
+                                12
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "tOpJ3",
+                                  "name": "tagChip3Lbl",
+                                  "fill": "#666666",
+                                  "content": "bitcoin",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "JJB81",
+              "name": "pagination",
+              "width": "fill_container",
+              "height": 80,
+              "gap": 16,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Ce3DZ",
+                  "name": "paginationInfo",
+                  "fill": "#666666",
+                  "content": "Mostrando 1-12 de 245 articulos",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "qoayk",
+                  "name": "loadMoreBtn",
+                  "height": 40,
+                  "fill": "#00d4aa",
+                  "cornerRadius": 6,
+                  "padding": [
+                    10,
+                    20
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "w9ZLA",
+                      "name": "loadMoreBtnLbl",
+                      "fill": "#ffffff",
+                      "content": "Cargar mas articulos",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "7D711",
+          "name": "footer",
+          "reusable": true,
+          "width": "fill_container",
+          "fill": "#1a1a2e",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "0so3U",
+              "name": "footerMain",
+              "reusable": true,
+              "width": "fill_container",
+              "gap": 48,
+              "padding": [
+                40,
+                80,
+                32,
+                80
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "mSS6a",
+                  "name": "footerBrand",
+                  "reusable": true,
+                  "width": 260,
+                  "layout": "vertical",
+                  "gap": 12,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "jaRpx",
+                      "name": "footerLogo",
+                      "reusable": true,
+                      "fill": "#00d4aa",
+                      "content": "NexoPress",
+                      "fontFamily": "Playfair Display",
+                      "fontSize": 22,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "8fkwf",
+                      "name": "footerDesc",
+                      "reusable": true,
+                      "fill": "#999999",
+                      "textGrowth": "fixed-width",
+                      "width": 220,
+                      "content": "El portal de noticias más completo de Latinoamérica.",
+                      "lineHeight": 1.6,
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "RKKJU",
+                  "name": "footerCol",
+                  "reusable": true,
+                  "layout": "vertical",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "asi8I",
+                      "name": "footerColTitle",
+                      "reusable": true,
+                      "fill": "#666666",
+                      "content": "SECCIONES",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "XNmW7",
+                      "name": "footerL1",
+                      "reusable": true,
+                      "fill": "#cccccc",
+                      "content": "Economía",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "tcUlW",
+                      "name": "footerL2",
+                      "reusable": true,
+                      "fill": "#cccccc",
+                      "content": "Política",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "wptug",
+                      "name": "footerL3",
+                      "reusable": true,
+                      "fill": "#cccccc",
+                      "content": "Tecnología",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "wwArD",
+                      "name": "footerL4",
+                      "reusable": true,
+                      "fill": "#cccccc",
+                      "content": "Deportes",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "RTFgZ",
+              "name": "footerLegal",
+              "reusable": true,
+              "width": "fill_container",
+              "stroke": {
+                "align": "inside",
+                "thickness": {
+                  "top": 1
+                },
+                "fill": "#333333"
+              },
+              "padding": [
+                16,
+                80
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "YFzaE",
+                  "name": "footerCopy",
+                  "reusable": true,
+                  "fill": "#666666",
+                  "content": "© 2026 NexoPress. Todos los derechos reservados.",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

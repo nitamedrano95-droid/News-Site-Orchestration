@@ -39,7 +39,7 @@
   - [x] Documentar tokens aplicados en componentes
   - [ ] Centralizar en sistema de variables Pencil (limitaciones técnicas detectadas)
   - [ ] Exportar tokens a CSS para implementación web
-- [ ] Crear pantalla de categoría (`news-category.pen`) - REVISAR SI ES NECESARIO
+- [x] Crear pantalla de categoría (`news-category.pen`)
 - [ ] Generar documentación de design tokens
 - [ ] Optimizar bundle size de imágenes AI
 - [ ] Validar accesibilidad (contrast, alt text para imágenes)

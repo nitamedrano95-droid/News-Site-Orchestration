@@ -1,0 +1,939 @@
+{
+  "version": "2.9",
+  "children": [
+    {
+      "type": "frame",
+      "id": "KuSi1",
+      "x": 0,
+      "y": 0,
+      "name": "NexoPress — Article",
+      "reusable": true,
+      "width": 1440,
+      "fill": "#f5f5f5",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "SjdxL",
+          "name": "header",
+          "reusable": true,
+          "width": "fill_container",
+          "fill": "#1a1a2e",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "VoKCG",
+              "name": "headerTop",
+              "reusable": true,
+              "width": "fill_container",
+              "height": 64,
+              "padding": [
+                0,
+                80
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "nGOIO",
+                  "name": "aLogo",
+                  "reusable": true,
+                  "fill": "#00d4aa",
+                  "content": "NexoPress",
+                  "fontFamily": "Playfair Display",
+                  "fontSize": 26,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "WRFP2",
+                  "name": "aNav",
+                  "reusable": true,
+                  "gap": 28,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "bNDXs",
+                      "name": "aNav1",
+                      "reusable": true,
+                      "fill": "#ffffff",
+                      "content": "Economía",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "WzX1p",
+                      "name": "aNav2",
+                      "reusable": true,
+                      "fill": "#cccccc",
+                      "content": "Política",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "F8l1f",
+                      "name": "aNav3",
+                      "reusable": true,
+                      "fill": "#cccccc",
+                      "content": "Tecnología",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "gniAi",
+                      "name": "aNav4",
+                      "reusable": true,
+                      "fill": "#cccccc",
+                      "content": "Deportes",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "N3XCN",
+                  "name": "aActions",
+                  "reusable": true,
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "qT0Aw",
+                      "name": "aSearchBtn",
+                      "reusable": true,
+                      "width": 36,
+                      "height": 36,
+                      "fill": "#16213e",
+                      "cornerRadius": 6,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "uZjjr",
+                          "name": "aSearchIco",
+                          "reusable": true,
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "search",
+                          "iconFontFamily": "lucide",
+                          "fill": "#ffffff"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "r2jaS",
+                      "name": "aCta",
+                      "reusable": true,
+                      "fill": "#00d4aa",
+                      "cornerRadius": 6,
+                      "padding": [
+                        10,
+                        20
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "IE5J6",
+                          "name": "aCtaLabel",
+                          "reusable": true,
+                          "fill": "#1a1a2e",
+                          "content": "Suscribirse",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "x319O",
+          "name": "breadcrumb",
+          "reusable": true,
+          "width": "fill_container",
+          "height": 44,
+          "fill": "#ffffff",
+          "stroke": {
+            "align": "inside",
+            "thickness": {
+              "bottom": 1
+            },
+            "fill": "#e0e0e0"
+          },
+          "gap": 6,
+          "padding": [
+            0,
+            80
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "EnOXC",
+              "name": "bcHome",
+              "reusable": true,
+              "fill": "#666666",
+              "content": "Inicio",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "icon_font",
+              "id": "TS0N5",
+              "name": "bcSep1",
+              "reusable": true,
+              "width": 14,
+              "height": 14,
+              "iconFontName": "chevron-right",
+              "iconFontFamily": "lucide",
+              "fill": "#999999"
+            },
+            {
+              "type": "text",
+              "id": "nrAgB",
+              "name": "bcCat",
+              "reusable": true,
+              "fill": "#00d4aa",
+              "content": "Economía",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "600"
+            },
+            {
+              "type": "icon_font",
+              "id": "aN9FG",
+              "name": "bcSep2",
+              "reusable": true,
+              "width": 14,
+              "height": 14,
+              "iconFontName": "chevron-right",
+              "iconFontFamily": "lucide",
+              "fill": "#999999"
+            },
+            {
+              "type": "text",
+              "id": "v7144",
+              "name": "bcArticle",
+              "reusable": true,
+              "fill": "#999999",
+              "content": "La Reserva Federal anuncia cambio histórico...",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "LsAaQ",
+          "name": "heroImg",
+          "reusable": true,
+          "width": "fill_container",
+          "height": 420,
+          "fill": "#1a1a2e",
+          "children": [
+            {
+              "type": "frame",
+              "id": "cSs8v",
+              "name": "heroOverlay",
+              "reusable": true,
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": {
+                "type": "gradient",
+                "gradientType": "linear",
+                "enabled": true,
+                "rotation": 180,
+                "size": {
+                  "height": 1
+                },
+                "colors": [
+                  {
+                    "color": "#00000000",
+                    "position": 0
+                  },
+                  {
+                    "color": "#000000CC",
+                    "position": 1
+                  }
+                ]
+              },
+              "layout": "vertical",
+              "gap": 16,
+              "padding": [
+                0,
+                80,
+                40,
+                80
+              ],
+              "justifyContent": "end",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Oz8xg",
+                  "name": "artTagRow",
+                  "reusable": true,
+                  "gap": 8,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "YbLce",
+                      "name": "artTag",
+                      "reusable": true,
+                      "fill": "#00d4aa",
+                      "cornerRadius": 9999,
+                      "padding": [
+                        5,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "WuRgK",
+                          "name": "artTagLbl",
+                          "reusable": true,
+                          "fill": "#1a1a2e",
+                          "content": "ECONOMÍA",
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "SnKfm",
+                  "name": "artHeroTitle",
+                  "fill": "#ffffff",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "La Reserva Federal anuncia cambio histórico en política monetaria: tasas en mínimos de la última década",
+                  "lineHeight": 1.2,
+                  "fontFamily": "Playfair Display",
+                  "fontSize": 38,
+                  "fontWeight": "700"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "9QBQj",
+          "name": "mainArea",
+          "reusable": true,
+          "width": "fill_container",
+          "fill": "#f5f5f5",
+          "gap": 48,
+          "padding": [
+            48,
+            80
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "Hx7Sl",
+              "name": "articleCol",
+              "reusable": true,
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "OYCpp",
+                  "name": "articleMeta",
+                  "reusable": true,
+                  "width": "fill_container",
+                  "gap": 16,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "FV2d1",
+                      "name": "metaAuthorAvatar",
+                      "reusable": true,
+                      "width": 40,
+                      "height": 40,
+                      "fill": "#00d4aa",
+                      "cornerRadius": 9999
+                    },
+                    {
+                      "type": "frame",
+                      "id": "TW1tj",
+                      "name": "metaAuthorInfo",
+                      "reusable": true,
+                      "layout": "vertical",
+                      "gap": 2,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "PbFc0",
+                          "name": "metaAuthorName",
+                          "fill": "#1a1a2e",
+                          "content": "Carlos Mendoza",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "sCHoV",
+                          "name": "metaAuthorRole",
+                          "fill": "#666666",
+                          "content": "Editor de Economía · 30 Mar 2026 · 8 min lectura",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "XshNr",
+                      "layoutPosition": "absolute",
+                      "x": 880,
+                      "y": 0,
+                      "name": "articleShare",
+                      "reusable": true,
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "emzat",
+                          "name": "shareBtn1",
+                          "reusable": true,
+                          "width": 32,
+                          "height": 32,
+                          "fill": "#e0e0e0",
+                          "cornerRadius": 6,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "CRDBT",
+                              "name": "shareIco1",
+                              "reusable": true,
+                              "width": 16,
+                              "height": 16,
+                              "iconFontName": "share-2",
+                              "iconFontFamily": "lucide",
+                              "fill": "#666666"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "qfZDt",
+                  "name": "articleLead",
+                  "reusable": true,
+                  "fill": "#1a1a2e",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "La Reserva Federal de Estados Unidos sorprendió a los mercados globales al anunciar una reducción sin precedentes en las tasas de interés, marcando un punto de inflexión en la política monetaria que podría redefinir el panorama económico mundial durante los próximos años.",
+                  "lineHeight": 1.7,
+                  "fontFamily": "Playfair Display",
+                  "fontSize": 20
+                },
+                {
+                  "type": "frame",
+                  "id": "yHHs7",
+                  "name": "articleDivider",
+                  "reusable": true,
+                  "width": "fill_container",
+                  "height": 1,
+                  "fill": "#e0e0e0"
+                },
+                {
+                  "type": "text",
+                  "id": "7fB1g",
+                  "name": "articleBody1",
+                  "reusable": true,
+                  "fill": "#333333",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "En una conferencia de prensa celebrada este miércoles, el presidente de la Fed, Jerome Powell, explicó que la decisión responde a señales claras de desaceleración en la economía global y a la necesidad de estimular el consumo interno en un contexto de incertidumbre geopolítica.\n\nLos mercados reaccionaron de inmediato: el índice S&P 500 cerró con una suba del 3.2%, mientras que el oro alcanzó máximos históricos al superar los $3,200 por onza. Las bolsas europeas y asiáticas también registraron ganancias significativas.",
+                  "lineHeight": 1.8,
+                  "fontFamily": "Inter",
+                  "fontSize": 17,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "hRkiw",
+                  "name": "articleQuote",
+                  "reusable": true,
+                  "width": "fill_container",
+                  "fill": "#f0faf8",
+                  "cornerRadius": 8,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": {
+                      "left": 4
+                    },
+                    "fill": "#00d4aa"
+                  },
+                  "layout": "vertical",
+                  "gap": 8,
+                  "padding": [
+                    20,
+                    24
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "0C0wK",
+                      "name": "quoteText",
+                      "fill": "#1a1a2e",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "\"Esta decisión representa un cambio estructural en nuestra estrategia. Estamos comprometidos con la estabilidad a largo plazo de la economía americana.\"",
+                      "lineHeight": 1.6,
+                      "fontFamily": "Playfair Display",
+                      "fontSize": 18,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "8ko8E",
+                      "name": "quoteAuthor",
+                      "fill": "#666666",
+                      "content": "— Jerome Powell, Presidente de la Reserva Federal",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "atzgq",
+              "name": "sidebar",
+              "reusable": true,
+              "width": 320,
+              "layout": "vertical",
+              "gap": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "3g3Lf",
+                  "name": "sidebarRelated",
+                  "reusable": true,
+                  "width": "fill_container",
+                  "fill": "#ffffff",
+                  "cornerRadius": 8,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#00000010",
+                    "offset": {
+                      "x": 0,
+                      "y": 2
+                    },
+                    "blur": 10
+                  },
+                  "layout": "vertical",
+                  "gap": 16,
+                  "padding": 20,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "5yu3d",
+                      "name": "sidebarRelTitle",
+                      "reusable": true,
+                      "fill": "#1a1a2e",
+                      "content": "Artículos Relacionados",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ZQ0d8",
+                      "name": "relDivider",
+                      "reusable": true,
+                      "width": "fill_container",
+                      "height": 1,
+                      "fill": "#e0e0e0"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "9lsBn",
+                      "name": "relItem1",
+                      "reusable": true,
+                      "width": "fill_container",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Mk3Yx",
+                          "name": "relImg1",
+                          "width": 64,
+                          "height": 48,
+                          "fill": "#d0d0d0",
+                          "cornerRadius": 4
+                        },
+                        {
+                          "type": "text",
+                          "id": "aJmBD",
+                          "name": "relText1",
+                          "fill": "#1a1a2e",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "BCE sigue los pasos de la Fed con anuncio de nuevas medidas expansivas",
+                          "lineHeight": 1.4,
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "a11IW",
+                      "name": "relItem2",
+                      "reusable": true,
+                      "width": "fill_container",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "ipq8s",
+                          "name": "relImg2",
+                          "reusable": true,
+                          "width": 64,
+                          "height": 48,
+                          "fill": "#d0d8e8",
+                          "cornerRadius": 4
+                        },
+                        {
+                          "type": "text",
+                          "id": "fDcd0",
+                          "name": "relText2",
+                          "reusable": true,
+                          "fill": "#1a1a2e",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Los bancos centrales del G7 coordinan respuesta ante la volatilidad",
+                          "lineHeight": 1.4,
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "0DsNx",
+                  "name": "sidebarTags",
+                  "reusable": true,
+                  "width": "fill_container",
+                  "fill": "#ffffff",
+                  "cornerRadius": 8,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#00000010",
+                    "offset": {
+                      "x": 0,
+                      "y": 2
+                    },
+                    "blur": 10
+                  },
+                  "layout": "vertical",
+                  "gap": 12,
+                  "padding": 20,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "LLal2",
+                      "name": "tagsTitle",
+                      "reusable": true,
+                      "fill": "#1a1a2e",
+                      "content": "Etiquetas",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "KqAXP",
+                      "name": "tagsRow",
+                      "reusable": true,
+                      "width": "fill_container",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Sg1DZ",
+                          "name": "tag1",
+                          "reusable": true,
+                          "fill": "#f0f0f0",
+                          "cornerRadius": 9999,
+                          "padding": [
+                            6,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "QMxKK",
+                              "name": "tag1Lbl",
+                              "reusable": true,
+                              "fill": "#333333",
+                              "content": "Reserva Federal",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "xDS0W",
+                          "name": "tag2",
+                          "reusable": true,
+                          "fill": "#f0f0f0",
+                          "cornerRadius": 9999,
+                          "padding": [
+                            6,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "IJ9ac",
+                              "name": "tag2Lbl",
+                              "reusable": true,
+                              "fill": "#333333",
+                              "content": "Tasas",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "8aCKf",
+                          "name": "tag3",
+                          "reusable": true,
+                          "fill": "#f0f0f0",
+                          "cornerRadius": 9999,
+                          "padding": [
+                            6,
+                            12
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "fjKMZ",
+                              "name": "tag3Lbl",
+                              "reusable": true,
+                              "fill": "#333333",
+                              "content": "Powell",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "3PhR3",
+          "name": "artFooter",
+          "reusable": true,
+          "width": "fill_container",
+          "fill": "#1a1a2e",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "SSxU6",
+              "name": "artFooterMain",
+              "reusable": true,
+              "width": "fill_container",
+              "gap": 48,
+              "padding": [
+                40,
+                80,
+                32,
+                80
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Ba0tu",
+                  "name": "artFooterBrand",
+                  "reusable": true,
+                  "width": 260,
+                  "layout": "vertical",
+                  "gap": 12,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "T2xhQ",
+                      "name": "artFooterLogo",
+                      "reusable": true,
+                      "fill": "#00d4aa",
+                      "content": "NexoPress",
+                      "fontFamily": "Playfair Display",
+                      "fontSize": 22,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "3rb4Z",
+                      "name": "artFooterDesc",
+                      "reusable": true,
+                      "fill": "#999999",
+                      "textGrowth": "fixed-width",
+                      "width": 220,
+                      "content": "El portal de noticias más completo de Latinoamérica.",
+                      "lineHeight": 1.6,
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "E8mFD",
+                  "name": "artFooterCol",
+                  "reusable": true,
+                  "layout": "vertical",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "iRsE3",
+                      "name": "artFooterColTitle",
+                      "reusable": true,
+                      "fill": "#666666",
+                      "content": "SECCIONES",
+                      "fontFamily": "Inter",
+                      "fontSize": 11,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "text",
+                      "id": "aLuco",
+                      "name": "artFooterL1",
+                      "reusable": true,
+                      "fill": "#cccccc",
+                      "content": "Economía",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "3pES6",
+                      "name": "artFooterL2",
+                      "reusable": true,
+                      "fill": "#cccccc",
+                      "content": "Política",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "CCHD4",
+                      "name": "artFooterL3",
+                      "reusable": true,
+                      "fill": "#cccccc",
+                      "content": "Tecnología",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "4jzWt",
+              "name": "artFooterLegal",
+              "reusable": true,
+              "width": "fill_container",
+              "stroke": {
+                "align": "inside",
+                "thickness": {
+                  "top": 1
+                },
+                "fill": "#333333"
+              },
+              "padding": [
+                16,
+                80
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "69nyv",
+                  "name": "artFooterCopy",
+                  "reusable": true,
+                  "fill": "#666666",
+                  "content": "© 2026 NexoPress. Todos los derechos reservados.",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
