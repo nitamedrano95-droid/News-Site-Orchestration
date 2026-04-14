@@ -1,6 +1,7 @@
 // src/cron/facebook.js — Publicación automática a Facebook (6 posts/día/página, timer 4h)
 
 import { SITIOS_LIST, SITE_DOMAIN_MAP } from '../config.js';
+import { decodeHTMLEntities } from '../utils/helpers.js';
 
 const FB_INTERVAL_MS = 4 * 60 * 60 * 1000; // 4 horas entre posts = 6 posts/día por página
 
@@ -41,7 +42,7 @@ export async function publishToFBIndividual(env, article, siteSlug) {
 
     // Prepare Facebook post
     const formData = new FormData();
-    formData.append('message', article.TITULO);
+    formData.append('message', decodeHTMLEntities(article.TITULO));
     formData.append('link', url);
     formData.append('access_token', token);
 
