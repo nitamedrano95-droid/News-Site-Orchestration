@@ -461,73 +461,183 @@ export async function scrapeArticleFromURL(url, env) {
 }
 
 // ============================================================
-// runRSSIngest — Ingesta artículos y distribuye proporcionalmente
+// extractLinksFromRSS — Extrae URLs de un feed RSS
+// ============================================================
+async function extractLinksFromRSS(feedUrl) {
+  try {
+    const res = await fetch(feedUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    const xml = await res.text();
+    const normalizedXml = xml.replace(/[\r\n]+/g, ' ');
+    const items = normalizedXml.match(/<(item|entry)>([\s\S]*?)<\/\1>/gi) || [];
+
+    const links = [];
+    for (const item of items) {
+      const linkMatch = item.match(/<link[^>]+href=["']([^"']+)["']/) || item.match(/<link>([\s\S]*?)<\/link>/);
+      if (linkMatch) {
+        links.push(linkMatch[1].trim());
+      }
+    }
+    return links;
+  } catch (e) {
+    RSS_ERR(`Error fetching RSS ${feedUrl}:`, e.message);
+    return [];
+  }
+}
+
+// ============================================================
+// scrapeSectionForLinks — Extrae URLs de una sección web
+// ============================================================
+async function scrapeSectionForLinks(sectionUrl) {
+  try {
+    const res = await fetch(sectionUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0)' }
+    });
+    if (!res.ok) return [];
+    const html = await res.text();
+    const domain = new URL(sectionUrl).origin;
+
+    const links = new Set();
+    const hrefRegex = /href=["']([^"'#?]+)["']/gi;
+    let m;
+
+    while ((m = hrefRegex.exec(html)) !== null) {
+      let href = m[1].trim();
+      if (href.startsWith('/')) href = domain + href;
+      if (!href.startsWith('http')) continue;
+
+      try {
+        const u = new URL(href);
+        if (u.origin !== domain) continue;
+        const path = u.pathname;
+
+        // Excluir paths cortos y páginas de navegación
+        if (path.length < 10) continue;
+        if (/\/(tag|autor|category|categoria|page|pagina|search|buscar|rss|feed)\//i.test(path)) continue;
+
+        links.add(href);
+      } catch { /* skip invalid */ }
+    }
+
+    return [...links].slice(0, 15); // máximo 15 candidatos
+  } catch (e) {
+    RSS_ERR(`Error scraping section ${sectionUrl}:`, e.message);
+    return [];
+  }
+}
+
+// ============================================================
+// runRSSIngest — Ingesta artículos por fuentes configurables
 // ============================================================
 export async function runRSSIngest(env) {
   console.log('[RSS INGEST] Starting RSS ingestion...');
 
-  const FEEDS = [
-    'https://www.jornada.com.mx/rss/edicion.xml?v=1',
-    'https://www.informador.mx/rss/mexico.xml',
-    'https://www.proceso.com.mx/rss/feed.html',
-    'https://expansion.mx/rss',
-    'https://www.reforma.com/rss/portada.xml',
-    'https://aristeguinoticias.com/feed/',
-    'https://www.infobae.com/arc/outboundfeeds/rss/?outputType=xml&section=mexico',
-    'https://rss.dw.com/xml/rss-esp-all',
-    'https://www.france24.com/es/rss',
-  ];
+  // Detectar si es primera ejecución
+  const lastIngestTimestamp = await env.ARTICLES_KV.get('last_ingest_timestamp');
+  const isFirstRun = !lastIngestTimestamp;
+  const MAX_ARTICLES = isFirstRun ? 15 : 4;
+
+  if (isFirstRun) {
+    RSS_LOG('First run detected — limiting to 15 articles');
+  } else {
+    RSS_LOG(`Continuing from last run (${new Date(parseInt(lastIngestTimestamp)).toISOString()})`);
+  }
+
+  // Cargar fuentes desde D1
+  let fuentesRows = [];
+  try {
+    const result = await env.DB.prepare(
+      'SELECT * FROM FUENTES WHERE ACTIVA = 1 ORDER BY SITIO_SLUG, ID'
+    ).all();
+    fuentesRows = result.results || [];
+  } catch (e) {
+    RSS_WARN('Error loading FUENTES from DB, falling back to hardcoded feeds:', e.message);
+    // Fallback: usar los feeds antiguos asignados a todos los sitios
+    const LEGACY_FEEDS = [
+      'https://www.jornada.com.mx/rss/edicion.xml?v=1',
+      'https://www.informador.mx/rss/mexico.xml',
+      'https://www.proceso.com.mx/rss/feed.html',
+      'https://expansion.mx/rss',
+      'https://www.reforma.com/rss/portada.xml',
+      'https://aristeguinoticias.com/feed/',
+      'https://www.infobae.com/arc/outboundfeeds/rss/?outputType=xml&section=mexico',
+      'https://rss.dw.com/xml/rss-esp-all',
+      'https://www.france24.com/es/rss',
+    ];
+    for (const feedUrl of LEGACY_FEEDS) {
+      fuentesRows.push({
+        SITIO_SLUG: null, // null = asignar a todos
+        NOMBRE: 'Legacy Feed',
+        URL: feedUrl,
+        TIPO: 'RSS',
+        CATEGORIA: 'NACIONAL'
+      });
+    }
+  }
+
+  const FUENTES_POR_SITIO = {};
+  for (const fuente of fuentesRows) {
+    if (!FUENTES_POR_SITIO[fuente.SITIO_SLUG]) {
+      FUENTES_POR_SITIO[fuente.SITIO_SLUG] = [];
+    }
+    FUENTES_POR_SITIO[fuente.SITIO_SLUG].push(fuente);
+  }
 
   const validSites = (SITIOS_LIST || []).filter(isValidSiteSlug);
-  const totalSites = validSites.length;
-  const MAX_ARTICLES = 4;
 
-  if (totalSites === 0) {
+  if (validSites.length === 0) {
     console.log('[RSS INGEST] No valid sites configured; skipping ingestion');
     return 0;
   }
-  
-  console.log(`[RSS INGEST] Total sites: ${totalSites}, Max articles per run: ${MAX_ARTICLES}`);
+
+  console.log(`[RSS INGEST] Total sites: ${validSites.length}, Fuentes: ${fuentesRows.length}, Max articles: ${MAX_ARTICLES}`);
 
   let articlesPublished = 0;
-  let sitesAssigned = 0;
   let urlsProcessed = 0;
   let urlsSkippedDuplicate = 0;
   let urlsSkippedNoImage = 0;
   let urlsSkippedShortContent = 0;
 
-  for (const feedUrl of FEEDS) {
+  // Procesar fuentes configuradas por sitio
+  for (const [siteSlug, fuentes] of Object.entries(FUENTES_POR_SITIO)) {
     if (articlesPublished >= MAX_ARTICLES) break;
 
-    try {
-      console.log('[RSS INGEST] Fetching feed:', feedUrl);
-      const res = await fetch(feedUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-      const xml = await res.text();
-      const normalizedXml = xml.replace(/[\r\n]+/g, ' ');
-      const items = normalizedXml.match(/<(item|entry)>([\s\S]*?)<\/\1>/gi) || [];
-      console.log('[RSS INGEST] Items found in feed:', items.length);
+    // Si siteSlug es null, asignar a todos los sitios (legacy)
+    const sitosDestino = siteSlug === 'null' || siteSlug === null ? validSites : [siteSlug];
 
-      for (const item of items) {
+    for (const fuente of fuentes) {
+      if (articlesPublished >= MAX_ARTICLES) break;
+
+      RSS_LOG(`Processing fuente: ${fuente.NOMBRE} (${fuente.TIPO}) → ${sitosDestino.join(',')}`);
+
+      let articleUrls = [];
+
+      // Extraer URLs según tipo de fuente
+      if (fuente.TIPO === 'RSS') {
+        articleUrls = await extractLinksFromRSS(fuente.URL);
+      } else {
+        articleUrls = await scrapeSectionForLinks(fuente.URL);
+      }
+
+      RSS_LOG(`Found ${articleUrls.length} candidate URLs from ${fuente.NOMBRE}`);
+
+      for (const link of articleUrls) {
         if (articlesPublished >= MAX_ARTICLES) break;
 
-        const titleMatch = item.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/) || item.match(/<title>([\s\S]*?)<\/title>/);
-        const linkMatch = item.match(/<link[^>]+href=["']([^"']+)["']/) || item.match(/<link>([\s\S]*?)<\/link>/);
-
-        if (!titleMatch || !linkMatch) continue;
-
-        const link = linkMatch[1].trim();
         urlsProcessed++;
 
         // Check duplicate
-        const urlExists = await env.DB.prepare('SELECT ID FROM ARTICULOS_PARAFRASEADOS WHERE SOURCE_URL = ?').bind(link).first();
+        const urlExists = await env.DB.prepare(
+          'SELECT ID FROM ARTICULOS_PARAFRASEADOS WHERE SOURCE_URL = ?'
+        ).bind(link).first();
+
         if (urlExists) {
           urlsSkippedDuplicate++;
           continue;
         }
 
-        // Scraping completo del artículo usando la función exportada
+        // Scraping completo del artículo
         const scrapedArticle = await scrapeArticleFromURL(link, env);
-        
+
         if (!scrapedArticle) {
           urlsSkippedNoImage++;
           continue;
@@ -536,26 +646,22 @@ export async function runRSSIngest(env) {
         const { title, content, imageUrl, url } = scrapedArticle;
 
         if (content.length < 200) {
-          console.log('[RSS INGEST] Skip: Content too short');
+          RSS_LOG('Skip: Content too short');
           urlsSkippedShortContent++;
           continue;
         }
 
-        // Insert article into DB
+        // Insert article into DB — asignar SOLO a los sitios de esta fuente
         try {
           const now = new Date().toISOString();
           const paraId = crypto.randomUUID();
           let slug = articleSlugify(title);
           if (!slug || slug.trim() === '') {
             slug = `articulo-${Date.now()}`;
-            console.log(`[RSS INGEST] Generated fallback slug for article: ${slug}`);
+            RSS_LOG(`Generated fallback slug: ${slug}`);
           }
 
-          const sitesToAssign = validSites;
-          if (sitesToAssign.length === 0) continue;
-
-          const sitiosDestino = sitesToAssign.join(',');
-          console.log(`[RSS INGEST] Assigning article to ALL ${sitesToAssign.length} sites`);
+          const sitiosDestinoStr = sitosDestino.join(',');
 
           const statements = [];
           statements.push(
@@ -563,13 +669,13 @@ export async function runRSSIngest(env) {
               INSERT INTO ARTICULOS_PARAFRASEADOS
                 (ID, TITULO_PARAFRASEADO, SLUG, CONTENIDO, DESCRIPCION_PARAFRASEADA,
                  CATEGORIA, AUTOR, FECHA_PUBLICACION, URL_IMAGEN, SOURCE_URL, ESTADO, SITIO_DESTINO)
-              VALUES (?, ?, ?, ?, ?, 'NACIONAL', 'NexoPress', ?, ?, ?, 'PUBLICADO', ?)
-            `).bind(paraId, title, slug, content, content.substring(0, 200), now, imageUrl, url, sitiosDestino)
+              VALUES (?, ?, ?, ?, ?, ?, 'NexoPress', ?, ?, ?, 'PUBLICADO', ?)
+            `).bind(paraId, title, slug, content, content.substring(0, 200), fuente.CATEGORIA || 'NACIONAL', now, imageUrl, url, sitiosDestinoStr)
           );
 
-          for (const siteSlug of sitesToAssign) {
+          for (const targetSite of sitosDestino) {
             const siteId = crypto.randomUUID();
-            const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+            const tableName = `ARTICULOS_SITIO_${targetSite.toUpperCase()}`;
             statements.push(
               env.DB.prepare(`
                 INSERT INTO ${tableName} (ID, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID)
@@ -580,26 +686,31 @@ export async function runRSSIngest(env) {
 
           await env.DB.batch(statements);
 
-          sitesAssigned += sitesToAssign.length;
-          console.log(`[RSS INGEST] ✓ Published: "${title.substring(0, 40)}..." to ${sitesToAssign.length} sites`);
+          RSS_LOG(`✓ Published: "${title.substring(0, 40)}..." to ${sitosDestino.length} site(s)`);
           articlesPublished++;
         } catch (dbErr) {
-          console.error('[RSS INGEST] DB Error:', dbErr.message);
+          RSS_ERR('DB Error:', dbErr.message);
         }
       }
-    } catch (e) {
-      console.error(`[RSS INGEST] Feed error ${feedUrl}:`, e.message);
     }
   }
 
   console.log(`[RSS INGEST] ===== SUMMARY =====`);
+  console.log(`[RSS INGEST] Run type: ${isFirstRun ? 'FIRST RUN (max 15)' : 'NORMAL (max 4)'}`);
   console.log(`[RSS INGEST] URLs processed: ${urlsProcessed}`);
   console.log(`[RSS INGEST] URLs skipped (duplicate): ${urlsSkippedDuplicate}`);
   console.log(`[RSS INGEST] URLs skipped (no image): ${urlsSkippedNoImage}`);
   console.log(`[RSS INGEST] URLs skipped (short content): ${urlsSkippedShortContent}`);
   console.log(`[RSS INGEST] Articles published: ${articlesPublished}`);
-  console.log(`[RSS INGEST] Site assignments: ${sitesAssigned}`);
+
+  // Guardar timestamp de esta ejecución para la próxima
+  if (articlesPublished > 0) {
+    const now = Date.now();
+    await env.ARTICLES_KV.put('last_ingest_timestamp', now.toString());
+    RSS_LOG(`Saved last_ingest_timestamp: ${new Date(now).toISOString()}`);
+  }
+
   console.log(`[RSS INGEST] Complete!`);
-  
+
   return articlesPublished;
 }
