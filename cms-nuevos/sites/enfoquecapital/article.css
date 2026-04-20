@@ -1,20 +1,20 @@
 /* Article Page Styles - Enfoque Capital Forest Theme */
 .article-page { 
     padding: 60px 0; 
-    background: var(--bg-pure); 
-    color: var(--text-dark); 
+    background: #1A1A1A; 
+    color: #FFFFFF; 
 }
 
 .article-full { 
     max-width: 800px; 
     margin: 0 auto; 
-    background: #FFFFFF; 
+    background: #1A1A1A; 
     padding: 0; 
 }
 
 .article-header { 
     margin-bottom: 40px; 
-    border-bottom: 1px solid #eaeaea; 
+    border-bottom: 1px solid #333333; 
     padding-bottom: 30px; 
 }
 
@@ -25,14 +25,14 @@
     margin-bottom: 12px;
 }
 .breadcrumb a { 
-    color: var(--accent-gold); 
+    color: #C5A059; 
     text-decoration: none; 
     font-size: 0.75rem; 
     text-transform: uppercase; 
     letter-spacing: 2px; 
 }
 .breadcrumb span { 
-    color: #ccc; 
+    color: #666666; 
     margin: 0 10px; 
 }
 
@@ -42,7 +42,7 @@
     font-size: 0.75rem; 
     font-weight: bold; 
     text-transform: uppercase; 
-    color: var(--accent-gold); 
+    color: #C5A059; 
     margin-bottom: 15px; 
     letter-spacing: 3px;
 }
@@ -52,7 +52,7 @@
     font-size: clamp(2.2rem, 5vw, 3.5rem); 
     line-height: 1.1; 
     margin-bottom: 25px; 
-    color: var(--bg-forest); 
+    color: #FFFFFF; 
 }
 
 .article-meta { 
@@ -60,13 +60,13 @@
     align-items: center; 
     gap: 20px; 
     font-size: 0.85rem; 
-    color: var(--text-muted); 
+    color: #888888; 
     text-transform: uppercase;
     letter-spacing: 1px;
     flex-wrap: wrap;
 }
 
-.article-meta .author { color: var(--text-dark); font-weight: bold; }
+.article-meta .author { color: #FFFFFF; font-weight: bold; }
 
 .article-image-wrapper { margin: 40px 0; }
 .article-image { 
@@ -80,7 +80,7 @@
 .article-content { 
     font-size: 1.15rem; 
     line-height: 1.8; 
-    color: var(--text-dark); 
+    color: #FFFFFF; 
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
@@ -91,18 +91,40 @@
     font-size: 2rem; 
     margin-top: 45px; 
     margin-bottom: 20px; 
-    color: var(--bg-forest); 
+    color: #FFFFFF; 
 }
 
 .article-quote { 
-    border-left: 3px solid var(--accent-gold); 
+    border-left: 3px solid #C5A059; 
     padding: 20px 40px; 
     margin: 40px 0; 
     font-family: 'Playfair Display', serif;
     font-style: italic; 
     font-size: 1.6rem; 
-    color: var(--text-muted); 
-    background: #fcfaf5;
+    color: #AAAAAA; 
+    background: #252525;
+}
+
+.article-footer {
+    margin-top:30px;
+    padding-top:20px;
+    border-top:1px solid #333333;
+}
+
+.article-share span {
+    font-weight:bold;
+    margin-right:10px;
+    color:#FFFFFF;
+}
+
+.article-share a {
+    color:#888888;
+    margin-right:8px;
+}
+
+.back-link {
+    color: #C5A059;
+    text-decoration: none;
 }
 
 @media (max-width: 900px) {

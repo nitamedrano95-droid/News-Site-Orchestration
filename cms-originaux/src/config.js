@@ -75,7 +75,7 @@ export const ALLOWED_ORIGINS = [
 // SITIOS_LIST — 10 sitios originales
 export const SITIOS_LIST = [
   'bitacoraurbana', 'cbnnoticias', 'centralmexico', 'mexicoinformado',
-  'nodoinformativo', 'noticiasObjetivo', 'radiocinconoticias', 'reportecentralmx',
+  'nodoinformativo', 'noticiasobjetivo', 'radiocinconoticias', 'reportecentralmx',
   'tvmexico', 'verticenoticias',
 ];
 
