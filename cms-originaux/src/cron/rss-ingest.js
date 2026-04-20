@@ -487,42 +487,66 @@ async function extractLinksFromRSS(feedUrl) {
 // ============================================================
 // scrapeSectionForLinks — Extrae URLs de una sección web
 // ============================================================
-async function scrapeSectionForLinks(sectionUrl) {
-  try {
-    const res = await fetch(sectionUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0)' }
-    });
-    if (!res.ok) return [];
-    const html = await res.text();
-    const domain = new URL(sectionUrl).origin;
+async function scrapeSectionForLinks(sectionUrl, maxRetries = 3) {
+  const CHROME_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36';
 
-    const links = new Set();
-    const hrefRegex = /href=["']([^"'#?]+)["']/gi;
-    let m;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const res = await fetch(sectionUrl, {
+        headers: {
+          'User-Agent': CHROME_UA,
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'es-MX,es;q=0.9',
+          'Referer': new URL(sectionUrl).origin,
+        }
+      });
+      if (!res.ok) {
+        RSS_WARN(`Attempt ${attempt + 1}/${maxRetries}: HTTP ${res.status} from ${sectionUrl}`);
+        if (attempt < maxRetries - 1) await new Promise(r => setTimeout(r, 2000));
+        continue;
+      }
 
-    while ((m = hrefRegex.exec(html)) !== null) {
-      let href = m[1].trim();
-      if (href.startsWith('/')) href = domain + href;
-      if (!href.startsWith('http')) continue;
+      const html = await res.text();
+      const domain = new URL(sectionUrl).origin;
 
-      try {
-        const u = new URL(href);
-        if (u.origin !== domain) continue;
-        const path = u.pathname;
+      const links = new Set();
+      const hrefRegex = /href=["']([^"'#?]+)["']/gi;
+      let m;
 
-        // Excluir paths cortos y páginas de navegación
-        if (path.length < 10) continue;
-        if (/\/(tag|autor|category|categoria|page|pagina|search|buscar|rss|feed)\//i.test(path)) continue;
+      while ((m = hrefRegex.exec(html)) !== null) {
+        let href = m[1].trim();
+        if (href.startsWith('/')) href = domain + href;
+        if (!href.startsWith('http')) continue;
 
-        links.add(href);
-      } catch { /* skip invalid */ }
+        try {
+          const u = new URL(href);
+          if (u.origin !== domain) continue;
+          const path = u.pathname;
+
+          // Excluir paths muy cortos y páginas de navegación
+          if (path.length < 8) continue;
+          if (/\/(tag|search|buscar|rss|feed|sitemap|robots|author|contribuidor)\//i.test(path)) continue;
+          if (/\.(css|js|xml|json|jpg|png|gif)$/i.test(path)) continue;
+
+          links.add(href);
+        } catch { /* skip invalid */ }
+      }
+
+      const result = [...links].slice(0, 15);
+      if (result.length > 0) {
+        RSS_LOG(`Scrape successful: extracted ${result.length} links from ${sectionUrl}`);
+        return result;
+      }
+
+      RSS_WARN(`No links extracted from ${sectionUrl}, attempt ${attempt + 1}/${maxRetries}`);
+      if (attempt < maxRetries - 1) await new Promise(r => setTimeout(r, 2000));
+    } catch (e) {
+      RSS_WARN(`Error scraping section ${sectionUrl} (attempt ${attempt + 1}/${maxRetries}):`, e.message);
+      if (attempt < maxRetries - 1) await new Promise(r => setTimeout(r, 2000));
     }
-
-    return [...links].slice(0, 15); // máximo 15 candidatos
-  } catch (e) {
-    RSS_ERR(`Error scraping section ${sectionUrl}:`, e.message);
-    return [];
   }
+
+  return [];
 }
 
 // ============================================================
