@@ -53,6 +53,19 @@ export async function handleArticleRequest(context, siteSlug) {
       return await next();
     }
 
+    const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+    try {
+      const siteAssignment = await env.DB.prepare(
+        `SELECT ID_PARAFRASEADO FROM ${tableName} WHERE ID_PARAFRASEADO = ? LIMIT 1`
+      ).bind(article.para_id).first();
+
+      if (!siteAssignment) {
+        return await next();
+      }
+    } catch (_) {
+      return await next();
+    }
+
     if (article.canonical_slug && article.canonical_slug !== requestedSlug) {
       const redirectUrl = new URL(url.href);
       redirectUrl.searchParams.set('slug', article.canonical_slug);
