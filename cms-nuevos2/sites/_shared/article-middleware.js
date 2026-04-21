@@ -1,4 +1,4 @@
-async function resolveArticleBySlug(db, slug) {
+async function resolveArticleBySlug(db, slug, siteSlug) {
   let article = await db.prepare(
     "SELECT ID as para_id, SLUG as canonical_slug, LEGACY_SLUG as legacy_slug, TITULO_PARAFRASEADO as title, DESCRIPCION_PARAFRASEADA as desc, URL_IMAGEN as image FROM ARTICULOS_PARAFRASEADOS WHERE SLUG = ? LIMIT 1"
   ).bind(slug).first();
@@ -25,6 +25,15 @@ async function resolveArticleBySlug(db, slug) {
     isCMS = Boolean(article);
   }
 
+  if (!article && siteSlug) {
+    const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+    try {
+      article = await db.prepare(
+        `SELECT ID_PARAFRASEADO as para_id, SLUG as canonical_slug, SLUG as legacy_slug, TITULO as title, DESCRIPCION as desc, IMAGEN as image FROM ${tableName} WHERE SLUG = ? LIMIT 1`
+      ).bind(slug).first();
+    } catch (_) {}
+  }
+
   return { article, isCMS };
 }
 
@@ -48,7 +57,7 @@ export async function handleArticleRequest(context, siteSlug) {
   try {
     if (!env.DB) return await next();
 
-    const { article } = await resolveArticleBySlug(env.DB, requestedSlug);
+    const { article } = await resolveArticleBySlug(env.DB, requestedSlug, siteSlug);
     if (!article) {
       return await next();
     }
