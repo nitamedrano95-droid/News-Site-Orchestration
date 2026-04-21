@@ -25,15 +25,6 @@ async function resolveArticleBySlug(db, slug, siteSlug) {
     isCMS = Boolean(article);
   }
 
-  if (!article && siteSlug) {
-    const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
-    try {
-      article = await db.prepare(
-        `SELECT ID_PARAFRASEADO as para_id, SLUG as canonical_slug, SLUG as legacy_slug, TITULO as title, DESCRIPCION as desc, IMAGEN as image FROM ${tableName} WHERE SLUG = ? LIMIT 1`
-      ).bind(slug).first();
-    } catch (_) {}
-  }
-
   return { article, isCMS };
 }
 
