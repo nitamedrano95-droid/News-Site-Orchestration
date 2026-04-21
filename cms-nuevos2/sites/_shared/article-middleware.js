@@ -105,8 +105,6 @@ export async function handleArticleRequest(context, siteSlug) {
 
     const image = normalizeImageUrl(article.image || '/logo.png');
 
-    const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
-
     try {
       await env.DB.prepare(`
         UPDATE ${tableName}
