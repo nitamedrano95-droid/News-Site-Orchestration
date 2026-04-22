@@ -41,5 +41,5 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    console.log('Bitácora Urbana - Site loaded successfully');
+    console.log('Social México News - Site loaded successfully');
 });

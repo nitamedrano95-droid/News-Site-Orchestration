@@ -485,7 +485,7 @@ async function extractLinksFromRSS(feedUrl) {
 }
 
 // ============================================================
-// scrapeSectionForLinks — Extrae URLs de una sección web
+// scrapeSectionForLinks — Extrae URLs de una sección web (soporta HTML estático y JSON incrustado)
 // ============================================================
 async function scrapeSectionForLinks(sectionUrl, maxRetries = 3) {
   const CHROME_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36';
@@ -508,11 +508,11 @@ async function scrapeSectionForLinks(sectionUrl, maxRetries = 3) {
 
       const html = await res.text();
       const domain = new URL(sectionUrl).origin;
-
       const links = new Set();
+
+      // Estrategia 1: Extraer URLs de atributos href
       const hrefRegex = /href=["']([^"'#?]+)["']/gi;
       let m;
-
       while ((m = hrefRegex.exec(html)) !== null) {
         let href = m[1].trim();
         if (href.startsWith('/')) href = domain + href;
@@ -523,13 +523,43 @@ async function scrapeSectionForLinks(sectionUrl, maxRetries = 3) {
           if (u.origin !== domain) continue;
           const path = u.pathname;
 
-          // Excluir paths muy cortos y páginas de navegación
           if (path.length < 8) continue;
-          if (/\/(tag|search|buscar|rss|feed|sitemap|robots|author|contribuidor)\//i.test(path)) continue;
-          if (/\.(css|js|xml|json|jpg|png|gif)$/i.test(path)) continue;
+          if (/\/(tag|search|buscar|rss|feed|sitemap|robots|author|contribuidor|page|pagina)\//i.test(path)) continue;
+          if (/\.(css|js|xml|json|jpg|png|gif|webp)$/i.test(path)) continue;
 
           links.add(href);
         } catch { /* skip invalid */ }
+      }
+
+      // Estrategia 2: Extraer URLs de data-* attributes (algunos sitios dinámicos)
+      const dataUrlRegex = /data-(?:href|url|link)=["']([^"']+)["']/gi;
+      while ((m = dataUrlRegex.exec(html)) !== null) {
+        let href = m[1].trim();
+        if (href.startsWith('/')) href = domain + href;
+        if (!href.startsWith('http')) continue;
+        try {
+          new URL(href); // validate
+          links.add(href);
+        } catch { }
+      }
+
+      // Estrategia 3: Extraer URLs de JSON incrustado (Next.js, Nuxt, etc)
+      const jsonMatches = html.match(/"(?:url|href|link|article)"\s*:\s*"([^"]+)"/gi);
+      if (jsonMatches) {
+        for (const match of jsonMatches) {
+          const urlMatch = match.match(/"([^"]+)"/);
+          if (urlMatch) {
+            let href = urlMatch[1];
+            if (!href.startsWith('http')) {
+              if (href.startsWith('/')) href = domain + href;
+              else continue;
+            }
+            try {
+              const u = new URL(href);
+              if (u.origin === domain) links.add(href);
+            } catch { }
+          }
+        }
       }
 
       const result = [...links].slice(0, 15);
