@@ -605,7 +605,11 @@ export async function runRSSIngest(env) {
     fuentesRows = result.results || [];
   } catch (e) {
     RSS_WARN('Error loading FUENTES from DB, falling back to hardcoded feeds:', e.message);
-    // Fallback: usar los feeds antiguos asignados a todos los sitios
+  }
+
+  // Fallback a feeds legacy si la tabla no existe o no tiene fuentes activas
+  if (fuentesRows.length === 0) {
+    RSS_WARN('No active FUENTES found, falling back to hardcoded feeds');
     const LEGACY_FEEDS = [
       'https://www.jornada.com.mx/rss/edicion.xml?v=1',
       'https://www.informador.mx/rss/mexico.xml',
