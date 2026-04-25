@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Enfoque Mexicano</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f0f2f5;
+      color: #1c1e21;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    header {
+      background: linear-gradient(135deg, #116381 0%, #2f6384 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+    h1 { font-size: 2em; margin-bottom: 10px; }
+    .subtitle { opacity: 0.9; font-size: 0.95em; }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .card h2 {
+      font-size: 1.5em;
+      margin-bottom: 10px;
+      color: #116381;
+    }
+    .card p {
+      color: #65676b;
+      margin-bottom: 15px;
+    }
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #116381;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.95em;
+    }
+    .btn:hover { background: #0d4a5e; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    .stat {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .stat-value {
+      font-size: 2.5em;
+      font-weight: 700;
+      color: #116381;
+      margin-bottom: 5px;
+    }
+    .stat-label {
+      color: #65676b;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Panel Administrativo</h1>
+      <p class="subtitle">Enfoque Mexicano</p>
+    </header>
+    
+    <div class="stats" id="stats">
+      <div class="stat">
+        <div class="stat-value">-</div>
+        <div class="stat-label">Artículos</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">-</div>
+        <div class="stat-label">Categorías</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">-</div>
+        <div class="stat-label">Vistas Hoy</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">-</div>
+        <div class="stat-label">Usuarios</div>
+      </div>
+    </div>
+    
+    <div class="cards">
+      <div class="card">
+        <h2>📝 Artículos</h2>
+        <p>Crear, editar y eliminar artículos de tu sitio.</p>
+        <button class="btn" onclick="alert('Función no disponible en demo')">Gestionar Artículos</button>
+      </div>
+      
+      <div class="card">
+        <h2>🏷️ Categorías</h2>
+        <p>Organiza tu contenido en categorías.</p>
+        <button class="btn" onclick="alert('Función no disponible en demo')">Gestionar Categorías</button>
+      </div>
+      
+      <div class="card">
+        <h2>⚙️ Configuración</h2>
+        <p>Personaliza tu sitio y configuración general.</p>
+        <button class="btn" onclick="alert('Función no disponible en demo')">Ir a Configuración</button>
+      </div>
+      
+      <div class="card">
+        <h2>📊 Análisis</h2>
+        <p>Visualiza estadísticas y métricas de tu sitio.</p>
+        <button class="btn" onclick="alert('Función no disponible en demo')">Ver Análisis</button>
+      </div>
+      
+      <div class="card">
+        <h2>👥 Usuarios</h2>
+        <p>Gestiona permisos y usuarios del sitio.</p>
+        <button class="btn" onclick="alert('Función no disponible en demo')">Gestionar Usuarios</button>
+      </div>
+      
+      <div class="card">
+        <h2>🔒 Facebook</h2>
+        <p>Autorizar páginas de Facebook para publicar.</p>
+        <a href="/admin/oauth-authorize-all.html" class="btn">Autorizar Facebook</a>
+      </div>
+    </div>
+    
+    <div style="background: white; padding: 20px; border-radius: 8px; text-align: center; color: #65676b;">
+      <p>Panel administrativo en desarrollo • v1.0</p>
+      <p>© 2026 Enfoque Mexicano</p>
+    </div>
+  </div>
+  
+  <script>
+    // Cargar estadísticas del API
+    document.addEventListener('DOMContentLoaded', function() {
+      const siteSlug = 'enfoquemexicano';
+      
+      fetch(`https://cms-nuevos3.workers.dev/api/stats?site=${siteSlug}`)
+        .then(res => res.json())
+        .then(data => {
+          const stats = document.querySelectorAll('.stat-value');
+          stats[0].textContent = data.articles || '0';
+          stats[1].textContent = data.categories || '0';
+          stats[2].textContent = data.viewsToday || '0';
+          stats[3].textContent = data.users || '0';
+        })
+        .catch(err => console.log('Stats no disponibles:', err));
+    });
+  </script>
+</body>
+</html>

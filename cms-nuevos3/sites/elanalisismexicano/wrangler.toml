@@ -1,0 +1,16 @@
+name = "elanalisismexicano"
+type = "javascript"
+account_id = "TODO_REPLACE_WITH_ACCOUNT_ID"
+workers_dev = true
+
+[env.production]
+routes = [
+  { pattern = "elanalisismexicano.top", zone_id = "TODO_REPLACE_WITH_ZONE_ID" }
+]
+
+[build]
+command = "npm install"
+watch_paths = ["src/**/*.js"]
+
+[build.upload]
+format = "modules"
