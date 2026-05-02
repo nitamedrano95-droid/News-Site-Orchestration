@@ -3,7 +3,7 @@
 import { SITIOS_LIST, SITE_DOMAIN_MAP } from '../config.js';
 import { decodeHTMLEntities } from '../utils/helpers.js';
 
-const FB_INTERVAL_MS = 4 * 60 * 60 * 1000; // 4 horas entre posts = 6 posts/día por página
+const FB_INTERVAL_MS = 2 * 60 * 60 * 1000; // 2 horas entre posts = 12 posts/día por página
 
 // ============================================================
 // publishToFBIndividual — Publica un artículo a Facebook
@@ -19,7 +19,8 @@ export async function publishToFBIndividual(env, article, siteSlug) {
       return { success: false, error: `Site ${siteSlug} not found or Facebook inactive` };
     }
 
-    const token = env[site.FACEBOOK_TOKEN_SECRET];
+    // Intenta leer token de D1 (obtenido via OAuth) primero, fallback a env var (manualmente configurado)
+    const token = site.FACEBOOK_PAGE_TOKEN || env[site.FACEBOOK_TOKEN_SECRET];
     if (!token) {
       return { success: false, error: `Missing Facebook token for ${siteSlug}` };
     }
@@ -59,7 +60,7 @@ export async function publishToFBIndividual(env, article, siteSlug) {
 
     if (fbResponse.ok && fbResult.id) {
       console.log(`[FB] ✓ Published to ${siteSlug}: ${fbResult.id}`);
-      return { success: true, post_id: fbResult.id };
+      return { success: true, post_id: fbResult.id, page_id: site.FACEBOOK_PAGE_ID };
     } else {
       const errorMsg = fbResult.error?.message || 'Unknown Facebook API error';
       console.error(`[FB] ✗ Failed to publish to ${siteSlug}: ${errorMsg}`);
@@ -102,7 +103,7 @@ export async function processFBTimer(env) {
         continue;
       }
 
-      const article = await env.DB.prepare(`
+      let article = await env.DB.prepare(`
         SELECT
           s.ID as SITIO_ID,
           s.ID_PARAFRASEADO,
@@ -121,6 +122,34 @@ export async function processFBTimer(env) {
         ORDER BY s.FECHA_ASIGNACION ASC
         LIMIT 1
       `).first();
+
+      if (!article) {
+        article = await env.DB.prepare(`
+          SELECT
+            s.ID as SITIO_ID,
+            s.ID_PARAFRASEADO,
+            p.TITULO_PARAFRASEADO as TITULO,
+            p.SLUG,
+            p.URL_IMAGEN
+          FROM ${tableName} s
+          JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
+          WHERE s.FB_PUBLICADO = 1
+            AND s.FB_FECHA < datetime('now', '-1 day')
+            AND p.URL_IMAGEN IS NOT NULL
+            AND p.URL_IMAGEN != ''
+            AND p.URL_IMAGEN NOT LIKE '%logo.png'
+            AND p.URL_IMAGEN NOT LIKE '%fallback%'
+            AND p.SLUG IS NOT NULL
+            AND p.SLUG != ''
+          ORDER BY s.FB_FECHA ASC
+          LIMIT 1
+        `).first();
+        
+        if (article) {
+          await env.DB.prepare(`UPDATE ${tableName} SET FB_PUBLICADO = 0 WHERE ID = ?`).bind(article.SITIO_ID).run();
+          console.log(`[FB TIMER] ${siteSlug}: re-publicando artículo antiguo`);
+        }
+      }
 
       if (!article) {
         console.log(`[FB TIMER] ${siteSlug}: skipped (no pending articles)`);
@@ -143,6 +172,38 @@ export async function processFBTimer(env) {
 
         // Update timer in KV
         await env.ARTICLES_KV.put(kvKey, now.toString());
+
+        // Notify engagement engine
+        if (fbResult.post_id && env.ENGAGEMENT_ENGINE_URL) {
+          try {
+            const payload = {
+              facebook_post_id: fbResult.post_id,
+              page_id: fbResult.page_id
+            };
+            
+            // Try primary URL first, then fallback to URL2
+            const urls = [env.ENGAGEMENT_ENGINE_URL, env.ENGAGEMENT_ENGINE_URL2].filter(Boolean);
+            
+            for (const baseUrl of urls) {
+              try {
+                await fetch(`${baseUrl}/webhook/publish`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'x-webhook-secret': env.ENGAGEMENT_WEBHOOK_SECRET || ''
+                  },
+                  body: JSON.stringify(payload)
+                });
+                console.log(`[ENGAGEMENT] Notified ${baseUrl}`);
+                break;
+              } catch (e) {
+                console.error(`[ENGAGEMENT] Failed ${baseUrl}:`, e.message);
+              }
+            }
+          } catch (e) {
+            console.error(`[ENGAGEMENT] Notification failed for ${siteSlug}:`, e.message);
+          }
+        }
 
         console.log(`[FB TIMER] ${siteSlug}: published successfully (${fbResult.post_id})`);
         stats.success++;

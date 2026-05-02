@@ -1,0 +1,34 @@
+name = "cms-nuevos3"
+main = "src/index.js"
+compatibility_date = "2023-12-01"
+workers_dev = true
+
+[vars]
+ENVIRONMENT = "production"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "news_db_cms_nuevos3"
+database_id = "18583adc-e878-4e0d-929d-62000fa1d81c"
+
+[[kv_namespaces]]
+binding = "ARTICLES_KV"
+id = "fbf21fb75f5647a8966858d199b44e0b"
+
+[[r2_buckets]]
+binding = "UPLOADS"
+bucket_name = "cms-news"
+
+[triggers]
+crons = ["*/30 * * * *"]
+
+[observability]
+enabled = false
+
+[observability.logs]
+enabled = true
+persist = true
+invocation_logs = true
+
+[ai]
+binding = "AI"

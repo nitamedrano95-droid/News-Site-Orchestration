@@ -392,4 +392,105 @@ facebook.post('/update-recent/:siteSlug', async (c) => {
   }
 });
 
+// ── OAuth Batch — Reautorizar TODAS las páginas del CMS ──
+
+facebook.get('/oauth/start-all', async (c) => {
+  const authHeader = c.req.header('Authorization');
+  const authParam = c.req.query('auth');
+  const authToken = authHeader?.replace('Bearer ', '') || authParam;
+
+  if (!authToken) {
+    return c.json({ error: 'Unauthorized: no auth token' }, 401);
+  }
+
+  const sessionKey = `session_${authToken}`;
+  const sessionExists = await c.env.ARTICLES_KV.get(sessionKey);
+  if (!sessionExists) {
+    return c.json({ error: 'Session expired or invalid' }, 401);
+  }
+
+  const origin = new URL(c.req.url).origin;
+  const sitios = SITIOS_LIST.map(slug => ({
+    slug,
+    url: `${origin}/api/facebook/oauth/start?siteSlug=${slug}&auth=${authToken}`
+  }));
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Reautorizando todas las páginas...</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; padding: 2rem; background: #f9fafb; }
+    .container { max-width: 600px; margin: 0 auto; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    h1 { color: #1f2937; margin-bottom: 1rem; }
+    .status { background: #f0fdf4; border: 1px solid #86efac; padding: 1rem; border-radius: 8px; margin: 1rem 0; }
+    .sitios { list-style: none; padding: 0; }
+    .sitios li { padding: 0.5rem 0; color: #6b7280; }
+    .sitios li.done { color: #10b981; }
+    .sitios li.done::before { content: "✓ "; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔄 Reautorizando todas las páginas...</h1>
+    <div class="status"><strong>Estado:</strong> <span id="status">Cargando...</span></div>
+    <h2>Sitios en proceso:</h2>
+    <ul class="sitios" id="sitios-list">
+      ${sitios.map(s => `<li id="sitio-${s.slug}">${s.slug}</li>`).join('')}
+    </ul>
+  </div>
+  <script>
+    const sitios = ${JSON.stringify(sitios)};
+    let completed = 0;
+    function updateStatus() {
+      const percent = Math.round((completed / sitios.length) * 100);
+      document.getElementById('status').textContent = percent + '% completado (' + completed + '/' + sitios.length + ')';
+      if (completed === sitios.length) {
+        document.querySelector('.status').innerHTML = '<strong style="color: #10b981;">✓ Todos los sitios han sido autorizados</strong>';
+      }
+    }
+    function markDone(slug) {
+      const el = document.getElementById('sitio-' + slug);
+      if (el) el.classList.add('done');
+      completed++;
+      updateStatus();
+    }
+    let popupIndex = 0;
+    function openNextPopup() {
+      if (popupIndex >= sitios.length) return;
+      const sitio = sitios[popupIndex];
+      const popup = window.open(sitio.url, 'oauth-' + sitio.slug, 'width=600,height=700');
+      const checkInterval = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(checkInterval);
+          markDone(sitio.slug);
+          popupIndex++;
+          setTimeout(openNextPopup, 1000);
+        }
+      }, 500);
+    }
+    openNextPopup();
+  </script>
+</body>
+</html>`;
+
+  return c.html(html);
+});
+
+facebook.post('/update-token', async (c) => {
+  const { slug, token } = await c.req.json();
+  if (!slug || !token) return c.json({ success: false, error: 'Missing slug or token' }, 400);
+  try {
+    const result = await c.env.DB.prepare(`
+      UPDATE SITIOS SET FACEBOOK_PAGE_TOKEN = ?, FACEBOOK_TOKEN_UPDATED_AT = datetime('now') WHERE SLUG = ?
+    `).bind(token, slug).run();
+    return result.meta?.changes > 0 
+      ? c.json({ success: true, slug })
+      : c.json({ success: false, error: 'Site not found' }, 404);
+  } catch (e) {
+    return c.json({ success: false, error: e.message }, 500);
+  }
+});
+
 export default facebook;

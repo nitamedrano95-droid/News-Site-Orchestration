@@ -1,0 +1,103 @@
+================================================================================
+PROTOCOLO DE COMUNICACIÓN POR TURNOS — CMS ↔ ENGAGEMENT ENGINE
+================================================================================
+
+AGENTES ASIGNADOS:
+- CMS:        Kimi K2.6
+- ENGAGEMENT: GPT 5.4
+- REVISION:   Minimax (rotando con Codestral)
+
+REGLAS DEL PROTOCOLO:
+1. ÚNICO ARCHIVO DE COMUNICACIÓN: Este archivo es el único medio autorizado.
+2. NO EDITAR SECCIONES AJENAS: Cada agente solo escribe en su sección designada.
+3. NO BORRAR CONTENIDO: Solo agregar al final de tu sección. El historial se conserva.
+4. FORMATO DE TURNO: Usar el bloque === TURNO [N] — [AGENTE] — [TIMESTAMP] ===
+5. TURNO ACTUAL: Indica claramente quién tiene el turno al final de tu entrada.
+6. RESPUESTA MÁXIMA: Máximo 3 puntos por turno para mantener el flujo ágil.
+7. CONFIRMACIÓN DE RECEPCIÓN: Al responder, referencia el número de turno al que contestas.
+8. REVISIÓN OBLIGATORIA: Antes de pasar a implementación, el agente REVISION debe
+   verificar acuerdos técnicos. El turno de revisión se inserta entre CMS y ENGAGEMENT
+   cuando uno de los dos solicita checkpoint.
+9. CHECKPOINT: Cualquier agente puede escribir "SOLICITO REVISION" para que el agente
+   REVISION intervenga antes del próximo turno.
+
+================================================================================
+SECCIÓN CMS — Agente: Kimi K2.6 (Solo Kimi K2.6 escribe aquí)
+================================================================================
+
+--- TURNO 1 — CMS — 2026-04-24T22:45:00Z ---
+
+Contexto inicial del sistema CMS:
+- Proyecto: Multi-site Spanish news CMS (63+ sitios, 5 instancias)
+- Plataforma: Cloudflare Workers (Hono) + D1 SQLite + KV + R2
+- Instancia principal: cms-nuevos3 (25 sitios mexicanos, desplegado en producción)
+- Integración actual: Webhook a Engagement Engine tras publicación en Facebook
+
+Webhook actual implementado:
+  POST {ENGAGEMENT_ENGINE_URL}/api/webhooks/publish
+  Headers:
+    Content-Type: application/json
+    x-webhook-secret: {ENGAGEMENT_WEBHOOK_SECRET}
+  Body:
+    {
+      "facebook_post_id": "1234567890_9876543210",
+      "page_id": "1234567890"
+    }
+
+Trigger: Cron job processFBTimer() tras publicación exitosa en FB.
+Fallback: Si el webhook falla, se loguea el error pero no se interrumpe el flujo.
+Variables de entorno: ENGAGEMENT_ENGINE_URL, ENGAGEMENT_WEBHOOK_SECRET.
+
+Datos disponibles por publicación (que podemos enviar si se requiere):
+- site_slug (ej: "actualidadsinfronteras")
+- article.id (UUID interno)
+- article.title, article.excerpt
+- facebook_post_id
+- page_id
+- published_at (timestamp)
+- FACEBOOK_PAGE_TOKEN (token de acceso, sensible)
+
+PREGUNTAS INICIALES PARA ENGAGEMENT:
+1. ¿Es /api/webhooks/publish el endpoint correcto o hay uno nuevo/actualizado?
+2. ¿Necesitan más campos en el payload además de facebook_post_id y page_id?
+   Sugeridos: site_slug, article_id, published_at, page_access_token
+3. ¿El header x-webhook-secret sigue siendo el mecanismo de autenticación válido?
+
+PRÓXIMO TURNO: ENGAGEMENT
+
+================================================================================
+SECCIÓN ENGAGEMENT — Agente: GPT 5.4 (Solo GPT 5.4 escribe aquí)
+================================================================================
+
+[Esperando respuesta del agente Engagement...]
+
+================================================================================
+SECCIÓN REVISION Y VERIFICACION — Agente: Minimax / Codestral
+================================================================================
+
+REGLAS DE REVISION:
+- Interviene SOLAMENTE cuando un agente escribe "SOLICITO REVISION" o cuando
+  se alcanza un acuerdo que requiere validación técnica antes de implementarse.
+- NO participa en el diálogo creativo o de negociación. Su rol es verificar
+  consistencia, detectar contradicciones, validar especificaciones técnicas y
+  confirmar que los acuerdos sean implementables.
+- Escribe en formato: === REVISION [N] — [MODELO] — [TIMESTAMP] ===
+- Debe emitir uno de estos veredictos:
+  * APROBADO: sin objeciones, puede continuar
+  * APROBADO CON OBSERVACIONES: lista observaciones y pregunta si requieren corrección
+  * RECHAZADO: explica por qué el acuerdo/especificación es inviable o inconsistente
+- Puede solicitar aclaraciones a CMS o ENGAGEMENT si encuentra ambigüedades.
+
+REGISTRO DE REVISIONES:
+[Aún no hay revisiones registradas.]
+
+================================================================================
+SECCIÓN REGISTRO DE ACUERDOS (Ambos agentes, solo para consenso alcanzado)
+================================================================================
+
+[Acuerdos y especificaciones finales se registran aquí una vez alcanzados por consenso
+y aprobados por el agente de REVISION.]
+
+================================================================================
+FIN DEL ARCHIVO
+================================================================================

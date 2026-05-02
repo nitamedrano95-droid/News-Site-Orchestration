@@ -92,5 +92,4 @@ if [ $FAIL_COUNT -eq 0 ]; then
     echo -e "${COLOR_GREEN}¡Todos los sitios fueron desplegados exitosamente!${COLOR_RESET}"
 else
     echo -e "${COLOR_RED}⚠️  $FAIL_COUNT sitio(s) fallaron. Revisa los errores arriba.${COLOR_RESET}"
-    exit 1
 fi

@@ -1,0 +1,279 @@
+:root {
+  --primary: #0e7490;
+  --secondary: #2dd4bf;
+  --light: #99f6e4;
+  --bg: #ecfeff;
+  --text: #134e4a;
+  --header: #0e7490;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.6;
+}
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+#site-preloader {
+  position: fixed; inset: 0; background: var(--bg); z-index: 99999;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; transition: opacity 0.5s, visibility 0.5s;
+}
+#site-preloader.hidden { opacity: 0; visibility: hidden; }
+.category-tag {
+  display: inline-block; background: var(--light); color: var(--primary);
+  padding: 4px 14px; border-radius: 20px; font-size: 0.75em;
+  font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;
+}
+.btn-primary {
+  display: inline-block; padding: 12px 28px; background: var(--primary);
+  color: #fff; text-decoration: none; border-radius: 6px;
+  font-weight: 700; transition: all 0.3s; border: 2px solid var(--primary); margin-top: 8px;
+}
+.btn-primary:hover { background: transparent; color: var(--primary); }
+.section-title {
+  font-size: 1.5em; margin-bottom: 24px; color: var(--text);
+  font-weight: 800; position: relative; padding-bottom: 10px;
+}
+.section-title::after {
+  content: ''; position: absolute; bottom: 0; left: 0;
+  width: 50px; height: 4px; background: var(--primary); border-radius: 2px;
+}
+.tag {
+  display: inline-block; background: var(--light); color: var(--primary);
+  padding: 3px 10px; border-radius: 12px; font-size: 0.7em;
+  font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+}
+.site-footer {
+  background: var(--text); color: rgba(255,255,255,0.85);
+  padding: 50px 20px 30px; text-align: center; margin-top: 60px;
+}
+.site-footer p { margin-bottom: 12px; }
+.site-footer a { color: var(--light); text-decoration: none; font-weight: 600; }
+.legal-page { max-width: 800px; margin: 40px auto; padding: 0 24px; line-height: 1.8; }
+.legal-page h1 { font-size: 2.2rem; margin-bottom: 8px; color: var(--text); }
+.legal-page h2 { font-size: 1.3rem; margin: 28px 0 10px; color: var(--primary); }
+.legal-page p, .legal-page li { color: #4b5563; font-size: 1rem; }
+.legal-page ul { padding-left: 22px; }
+@media (max-width: 768px) { .container { padding: 0 16px; } }
+.hero-borderless { padding: 0; margin: 0; }
+.borderless-image { height: 50vh; min-height: 300px; background: linear-gradient(135deg, #0e749040, #2dd4bf30); display: flex; align-items: center; justify-content: center; color: rgba(0,0,0,0.3); font-size: 1.2em; }
+.borderless-content { padding: 50px 24px; text-align: center; max-width: 700px; margin: 0 auto; }
+.borderless-content h1 { font-size: 2.5em; font-weight: 800; margin-bottom: 12px; }
+.borderless-content p { font-size: 1.05em; color: #4b5563; }
+.borderless-grid { display: grid; gap: 0; margin: 40px 0; }
+.bl-card { background: #fff; }
+.bl-card.full { grid-column: span 2; }
+.bl-card.full .bl-img { height: 350px; background: #0e7490; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.6); }
+.bl-card.full .bl-body { padding: 40px 24px; text-align: center; }
+.bl-card.half { padding: 40px 24px; border-top: 1px solid #0e749020; }
+.bl-card.half h3 { font-size: 1.2em; margin: 8px 0; }
+.bl-card.half p { color: #4b5563; }
+@media (max-width: 768px) { .bl-card.full { grid-column: span 1; } }
+
+/* Gradients & Transparency */
+
+.hero-focus .hero-image,
+.hero-express .express-image,
+.hero-default .hero-image {
+  background: linear-gradient(135deg, #0e749025 0%, #2dd4bf35 50%, #99f6e420 100%) !important;
+}
+
+.hero-dna .helix-bar {
+  background: linear-gradient(90deg, #0e7490, #2dd4bf) !important;
+  opacity: 0.6;
+}
+
+.hero-pulse {
+  background: linear-gradient(180deg, #ecfeff 0%, #0e749008 50%, #ecfeff 100%);
+}
+
+.hero-globe .globe-ring {
+  border: 1px solid #0e749018;
+  background: radial-gradient(circle, #99f6e415 0%, transparent 70%);
+}
+
+.hero-aztec .step {
+  background: linear-gradient(90deg, #0e7490, #2dd4bf) !important;
+}
+
+.hero-analysis .chart-bars {
+  background: linear-gradient(180deg, #0e749010 0%, #0e749005 100%);
+}
+
+.hero-instant .clock-face {
+  background: radial-gradient(circle, #0e749010 0%, transparent 70%);
+}
+
+.hero-bridge .bridge-connector {
+  background: linear-gradient(90deg, #0e7490, #2dd4bf);
+}
+
+.hero-bold .bold-content {
+  background: linear-gradient(135deg, #0e749012 0%, #99f6e415 100%);
+}
+
+.hero-observer .panorama-bar {
+  background: linear-gradient(90deg, #0e7490, #2dd4bf, #99f6e4, #0e7490);
+}
+
+.hero-observer .observer-horizon {
+  background: linear-gradient(to bottom, #0e749012, transparent);
+}
+
+.hero-plus .layer {
+  background: linear-gradient(90deg, #0e7490, #2dd4bf) !important;
+}
+
+.hero-borderless .borderless-image {
+  background: linear-gradient(135deg, #0e749035 0%, #2dd4bf25 50%, #99f6e415 100%) !important;
+}
+
+.hero-breaking .breaking-banner {
+  background: linear-gradient(90deg, #dc2626, #ef4444) !important;
+}
+
+.hero-republic .republic-emblem {
+  background: linear-gradient(135deg, #0e749015, #2dd4bf10);
+}
+
+.hero-finance .finance-ticker .t-item {
+  background: linear-gradient(135deg, #fff 0%, #0e749008 100%);
+}
+
+.hero-monitor .m-card {
+  background: linear-gradient(135deg, #fff 0%, #0e749006 100%);
+}
+
+.hero-prophet .rays .ray {
+  background: linear-gradient(to right, transparent, #99f6e4, transparent);
+}
+
+.hero-prophet {
+  background: radial-gradient(circle at center, #0e749008 0%, transparent 60%);
+}
+
+.hero-radio .wave-container .wave {
+  background: linear-gradient(to top, #0e7490, #2dd4bf) !important;
+}
+
+.hero-perspective .perspective-vanish {
+  background: linear-gradient(180deg, #0e749008, transparent);
+}
+
+.hero-community .m-tile {
+  background: linear-gradient(135deg, #0e7490, #2dd4bf) !important;
+}
+
+/* Card improvements */
+.col-card, .pair-card, .rhythm-card, .world-card,
+.aztec-card, .an-card, .feed-item, .bridge-card,
+.bold-card, .obs-card, .plus-card, .bl-card,
+.break-card, .rep-card, .news-card, .fin-card,
+.mon-card, .pro-card, .sum-card, .rad-card,
+.persp-card, .comm-card, .express-card, .d-article,
+.entry, .brief-item, .news-item, .world-card {
+  background: linear-gradient(135deg, #fff 0%, #0e749004 100%);
+  backdrop-filter: blur(4px);
+}
+
+/* Button gradient */
+.btn-primary {
+  background: linear-gradient(135deg, #0e7490 0%, #2dd4bf 100%);
+  border: none;
+  box-shadow: 0 4px 14px #0e749030;
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, #2dd4bf 0%, #0e7490 100%);
+  color: #fff;
+  box-shadow: 0 6px 20px #0e749040;
+}
+
+/* Section subtle backgrounds */
+.latest-grid,
+.timeline-vertical,
+.rhythm-grid,
+.world-grid,
+.express-grid,
+.daily-brief,
+.aztec-grid,
+.analysis-grid,
+.instant-feed,
+.bridge-grid,
+.diary-entries,
+.bold-grid,
+.observer-grid,
+.plus-grid,
+.borderless-grid,
+.breaking-grid,
+.republic-grid,
+.news-grid,
+.finance-grid,
+.monitor-grid,
+.prophet-grid,
+.summary-grid,
+.radio-grid,
+.persp-grid,
+.comm-grid,
+.paired-grid,
+.featured-columns,
+.daily-columns,
+.content-grid {
+  position: relative;
+}
+
+/* Footer gradient */
+.site-footer {
+  background: linear-gradient(180deg, #134e4a 0%, #0e7490 100%);
+}
+
+/* Header glass effect */
+header {
+  backdrop-filter: blur(12px);
+  background: linear-gradient(135deg, #0e7490ee 0%, #2dd4bfdd 100%) !important;
+}
+
+/* Tag enhancements */
+.tag, .category-tag {
+  background: linear-gradient(135deg, #99f6e4 0%, #2dd4bf30 100%);
+  border: 1px solid #0e749020;
+}
+
+/* Image placeholders with subtle patterns */
+.hero-image span,
+.card-img span,
+.rhythm-img span,
+.world-img span,
+.az-img span,
+.pair-img span,
+.ex-img span,
+.lead-image span,
+.bold-img span,
+.obs-img span,
+.plus-img span,
+.bl-img span,
+.break-img span,
+.rep-img span,
+.pro-img span,
+.persp-img span,
+.comm-mosaic span {
+  background: linear-gradient(45deg, #0e749010 25%, transparent 25%, transparent 50%, #0e749010 50%, #0e749010 75%, transparent 75%, transparent);
+  background-size: 20px 20px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Smooth transitions */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Hover glow effects */
+.col-card:hover, .pair-card:hover, .rhythm-card:hover, .world-card:hover,
+.aztec-card:hover, .an-card:hover, .bridge-card:hover, .bold-card:hover,
+.obs-card:hover, .plus-card:hover, .break-card:hover, .rep-card:hover,
+.news-card:hover, .fin-card:hover, .pro-card:hover, .sum-card:hover,
+.rad-card:hover, .persp-card:hover, .comm-card:hover, .express-card:hover {
+  box-shadow: 0 8px 30px #0e749020, 0 2px 8px rgba(0,0,0,0.08);
+}

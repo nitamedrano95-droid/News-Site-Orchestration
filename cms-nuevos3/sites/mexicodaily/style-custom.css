@@ -1,0 +1,286 @@
+:root {
+  --primary: #0369a1;
+  --secondary: #38bdf8;
+  --light: #bae6fd;
+  --bg: #f0f9ff;
+  --text: #0c4a6e;
+  --header: #0284c7;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Merriweather', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.6;
+}
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+#site-preloader {
+  position: fixed; inset: 0; background: var(--bg); z-index: 99999;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; transition: opacity 0.5s, visibility 0.5s;
+}
+#site-preloader.hidden { opacity: 0; visibility: hidden; }
+.category-tag {
+  display: inline-block; background: var(--light); color: var(--primary);
+  padding: 4px 14px; border-radius: 20px; font-size: 0.75em;
+  font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;
+}
+.btn-primary {
+  display: inline-block; padding: 12px 28px; background: var(--primary);
+  color: #fff; text-decoration: none; border-radius: 6px;
+  font-weight: 700; transition: all 0.3s; border: 2px solid var(--primary); margin-top: 8px;
+}
+.btn-primary:hover { background: transparent; color: var(--primary); }
+.section-title {
+  font-size: 1.5em; margin-bottom: 24px; color: var(--text);
+  font-weight: 800; position: relative; padding-bottom: 10px;
+}
+.section-title::after {
+  content: ''; position: absolute; bottom: 0; left: 0;
+  width: 50px; height: 4px; background: var(--primary); border-radius: 2px;
+}
+.tag {
+  display: inline-block; background: var(--light); color: var(--primary);
+  padding: 3px 10px; border-radius: 12px; font-size: 0.7em;
+  font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+}
+.site-footer {
+  background: var(--text); color: rgba(255,255,255,0.85);
+  padding: 50px 20px 30px; text-align: center; margin-top: 60px;
+}
+.site-footer p { margin-bottom: 12px; }
+.site-footer a { color: var(--light); text-decoration: none; font-weight: 600; }
+.legal-page { max-width: 800px; margin: 40px auto; padding: 0 24px; line-height: 1.8; }
+.legal-page h1 { font-size: 2.2rem; margin-bottom: 8px; color: var(--text); }
+.legal-page h2 { font-size: 1.3rem; margin: 28px 0 10px; color: var(--primary); }
+.legal-page p, .legal-page li { color: #4b5563; font-size: 1rem; }
+.legal-page ul { padding-left: 22px; }
+@media (max-width: 768px) { .container { padding: 0 16px; } }
+.hero-daily { padding: 50px 0 30px; border-bottom: 3px solid var(--primary); margin-bottom: 30px; }
+.date-badge { display: inline-block; background: var(--primary); color: #fff; padding: 6px 16px; border-radius: 4px; font-size: 0.8em; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+.daily-header h1 { font-size: 2.8em; font-weight: 800; margin-bottom: 4px; }
+.daily-header .edition { font-size: 1.1em; color: #4b5563; font-style: italic; margin-bottom: 24px; }
+.daily-lead { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: center; }
+.lead-image { height: 300px; background: linear-gradient(135deg, #0369a120, #38bdf830); display: flex; align-items: center; justify-content: center; color: rgba(0,0,0,0.25); border-radius: 8px; }
+.lead-text h2 { font-size: 1.8em; font-weight: 700; margin-bottom: 12px; line-height: 1.25; }
+.lead-text p { color: #4b5563; font-size: 1.05em; }
+.daily-columns { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; margin: 40px 0; }
+.d-col.main { border-right: 1px solid #0369a120; padding-right: 30px; }
+.d-article { padding: 20px 0; border-bottom: 1px solid #0369a115; }
+.d-article:first-child { padding-top: 0; }
+.d-article h3 { font-size: 1.4em; margin-bottom: 10px; }
+.d-article h4 { font-size: 1.1em; margin-bottom: 6px; }
+.d-article p { color: #4b5563; font-size: 0.95em; }
+.daily-brief { margin: 40px 0; }
+.brief-list { display: flex; flex-direction: column; gap: 14px; }
+.brief-item { display: flex; gap: 16px; align-items: flex-start; background: #fff; padding: 18px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+.brief-num { font-size: 1.4em; font-weight: 800; color: var(--primary); line-height: 1; }
+.brief-item p { color: #4b5563; font-size: 0.95em; }
+@media (max-width: 768px) { .daily-lead { grid-template-columns: 1fr; } .daily-columns { grid-template-columns: 1fr; } .d-col.main { border-right: none; padding-right: 0; } }
+
+/* Gradients & Transparency */
+
+.hero-focus .hero-image,
+.hero-express .express-image,
+.hero-default .hero-image {
+  background: linear-gradient(135deg, #0369a125 0%, #38bdf835 50%, #bae6fd20 100%) !important;
+}
+
+.hero-dna .helix-bar {
+  background: linear-gradient(90deg, #0369a1, #38bdf8) !important;
+  opacity: 0.6;
+}
+
+.hero-pulse {
+  background: linear-gradient(180deg, #f0f9ff 0%, #0369a108 50%, #f0f9ff 100%);
+}
+
+.hero-globe .globe-ring {
+  border: 1px solid #0369a118;
+  background: radial-gradient(circle, #bae6fd15 0%, transparent 70%);
+}
+
+.hero-aztec .step {
+  background: linear-gradient(90deg, #0369a1, #38bdf8) !important;
+}
+
+.hero-analysis .chart-bars {
+  background: linear-gradient(180deg, #0369a110 0%, #0369a105 100%);
+}
+
+.hero-instant .clock-face {
+  background: radial-gradient(circle, #0369a110 0%, transparent 70%);
+}
+
+.hero-bridge .bridge-connector {
+  background: linear-gradient(90deg, #0369a1, #38bdf8);
+}
+
+.hero-bold .bold-content {
+  background: linear-gradient(135deg, #0369a112 0%, #bae6fd15 100%);
+}
+
+.hero-observer .panorama-bar {
+  background: linear-gradient(90deg, #0369a1, #38bdf8, #bae6fd, #0369a1);
+}
+
+.hero-observer .observer-horizon {
+  background: linear-gradient(to bottom, #0369a112, transparent);
+}
+
+.hero-plus .layer {
+  background: linear-gradient(90deg, #0369a1, #38bdf8) !important;
+}
+
+.hero-borderless .borderless-image {
+  background: linear-gradient(135deg, #0369a135 0%, #38bdf825 50%, #bae6fd15 100%) !important;
+}
+
+.hero-breaking .breaking-banner {
+  background: linear-gradient(90deg, #dc2626, #ef4444) !important;
+}
+
+.hero-republic .republic-emblem {
+  background: linear-gradient(135deg, #0369a115, #38bdf810);
+}
+
+.hero-finance .finance-ticker .t-item {
+  background: linear-gradient(135deg, #fff 0%, #0369a108 100%);
+}
+
+.hero-monitor .m-card {
+  background: linear-gradient(135deg, #fff 0%, #0369a106 100%);
+}
+
+.hero-prophet .rays .ray {
+  background: linear-gradient(to right, transparent, #bae6fd, transparent);
+}
+
+.hero-prophet {
+  background: radial-gradient(circle at center, #0369a108 0%, transparent 60%);
+}
+
+.hero-radio .wave-container .wave {
+  background: linear-gradient(to top, #0369a1, #38bdf8) !important;
+}
+
+.hero-perspective .perspective-vanish {
+  background: linear-gradient(180deg, #0369a108, transparent);
+}
+
+.hero-community .m-tile {
+  background: linear-gradient(135deg, #0369a1, #38bdf8) !important;
+}
+
+/* Card improvements */
+.col-card, .pair-card, .rhythm-card, .world-card,
+.aztec-card, .an-card, .feed-item, .bridge-card,
+.bold-card, .obs-card, .plus-card, .bl-card,
+.break-card, .rep-card, .news-card, .fin-card,
+.mon-card, .pro-card, .sum-card, .rad-card,
+.persp-card, .comm-card, .express-card, .d-article,
+.entry, .brief-item, .news-item, .world-card {
+  background: linear-gradient(135deg, #fff 0%, #0369a104 100%);
+  backdrop-filter: blur(4px);
+}
+
+/* Button gradient */
+.btn-primary {
+  background: linear-gradient(135deg, #0369a1 0%, #38bdf8 100%);
+  border: none;
+  box-shadow: 0 4px 14px #0369a130;
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, #38bdf8 0%, #0369a1 100%);
+  color: #fff;
+  box-shadow: 0 6px 20px #0369a140;
+}
+
+/* Section subtle backgrounds */
+.latest-grid,
+.timeline-vertical,
+.rhythm-grid,
+.world-grid,
+.express-grid,
+.daily-brief,
+.aztec-grid,
+.analysis-grid,
+.instant-feed,
+.bridge-grid,
+.diary-entries,
+.bold-grid,
+.observer-grid,
+.plus-grid,
+.borderless-grid,
+.breaking-grid,
+.republic-grid,
+.news-grid,
+.finance-grid,
+.monitor-grid,
+.prophet-grid,
+.summary-grid,
+.radio-grid,
+.persp-grid,
+.comm-grid,
+.paired-grid,
+.featured-columns,
+.daily-columns,
+.content-grid {
+  position: relative;
+}
+
+/* Footer gradient */
+.site-footer {
+  background: linear-gradient(180deg, #0c4a6e 0%, #0284c7 100%);
+}
+
+/* Header glass effect */
+header {
+  backdrop-filter: blur(12px);
+  background: linear-gradient(135deg, #0284c7ee 0%, #38bdf8dd 100%) !important;
+}
+
+/* Tag enhancements */
+.tag, .category-tag {
+  background: linear-gradient(135deg, #bae6fd 0%, #38bdf830 100%);
+  border: 1px solid #0369a120;
+}
+
+/* Image placeholders with subtle patterns */
+.hero-image span,
+.card-img span,
+.rhythm-img span,
+.world-img span,
+.az-img span,
+.pair-img span,
+.ex-img span,
+.lead-image span,
+.bold-img span,
+.obs-img span,
+.plus-img span,
+.bl-img span,
+.break-img span,
+.rep-img span,
+.pro-img span,
+.persp-img span,
+.comm-mosaic span {
+  background: linear-gradient(45deg, #0369a110 25%, transparent 25%, transparent 50%, #0369a110 50%, #0369a110 75%, transparent 75%, transparent);
+  background-size: 20px 20px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Smooth transitions */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Hover glow effects */
+.col-card:hover, .pair-card:hover, .rhythm-card:hover, .world-card:hover,
+.aztec-card:hover, .an-card:hover, .bridge-card:hover, .bold-card:hover,
+.obs-card:hover, .plus-card:hover, .break-card:hover, .rep-card:hover,
+.news-card:hover, .fin-card:hover, .pro-card:hover, .sum-card:hover,
+.rad-card:hover, .persp-card:hover, .comm-card:hover, .express-card:hover {
+  box-shadow: 0 8px 30px #0369a120, 0 2px 8px rgba(0,0,0,0.08);
+}

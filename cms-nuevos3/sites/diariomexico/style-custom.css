@@ -1,0 +1,279 @@
+:root {
+  --primary: #374151;
+  --secondary: #9ca3af;
+  --light: #e5e7eb;
+  --bg: #f9fafb;
+  --text: #111827;
+  --header: #374151;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Old Standard TT', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.6;
+}
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+#site-preloader {
+  position: fixed; inset: 0; background: var(--bg); z-index: 99999;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; transition: opacity 0.5s, visibility 0.5s;
+}
+#site-preloader.hidden { opacity: 0; visibility: hidden; }
+.category-tag {
+  display: inline-block; background: var(--light); color: var(--primary);
+  padding: 4px 14px; border-radius: 20px; font-size: 0.75em;
+  font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;
+}
+.btn-primary {
+  display: inline-block; padding: 12px 28px; background: var(--primary);
+  color: #fff; text-decoration: none; border-radius: 6px;
+  font-weight: 700; transition: all 0.3s; border: 2px solid var(--primary); margin-top: 8px;
+}
+.btn-primary:hover { background: transparent; color: var(--primary); }
+.section-title {
+  font-size: 1.5em; margin-bottom: 24px; color: var(--text);
+  font-weight: 800; position: relative; padding-bottom: 10px;
+}
+.section-title::after {
+  content: ''; position: absolute; bottom: 0; left: 0;
+  width: 50px; height: 4px; background: var(--primary); border-radius: 2px;
+}
+.tag {
+  display: inline-block; background: var(--light); color: var(--primary);
+  padding: 3px 10px; border-radius: 12px; font-size: 0.7em;
+  font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+}
+.site-footer {
+  background: var(--text); color: rgba(255,255,255,0.85);
+  padding: 50px 20px 30px; text-align: center; margin-top: 60px;
+}
+.site-footer p { margin-bottom: 12px; }
+.site-footer a { color: var(--light); text-decoration: none; font-weight: 600; }
+.legal-page { max-width: 800px; margin: 40px auto; padding: 0 24px; line-height: 1.8; }
+.legal-page h1 { font-size: 2.2rem; margin-bottom: 8px; color: var(--text); }
+.legal-page h2 { font-size: 1.3rem; margin: 28px 0 10px; color: var(--primary); }
+.legal-page p, .legal-page li { color: #4b5563; font-size: 1rem; }
+.legal-page ul { padding-left: 22px; }
+@media (max-width: 768px) { .container { padding: 0 16px; } }
+.hero-newspaper { padding: 40px 0 30px; border-bottom: 3px double var(--text); margin-bottom: 30px; }
+.masthead { text-align: center; margin-bottom: 24px; }
+.masthead h1 { font-size: 3em; font-weight: 800; text-transform: uppercase; letter-spacing: 4px; }
+.masthead-date { font-size: 0.9em; color: #6b7280; font-style: italic; }
+.headline { text-align: center; max-width: 800px; margin: 0 auto; }
+.headline h2 { font-size: 2em; font-weight: 700; line-height: 1.2; margin-bottom: 10px; }
+.headline .byline { font-size: 0.85em; color: #6b7280; font-style: italic; }
+.news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; margin: 40px 0; }
+.news-card { background: #fff; padding: 24px; border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border-top: 2px solid var(--primary); }
+.news-card.main { grid-column: span 2; }
+.news-card h2 { font-size: 1.5em; margin-bottom: 12px; }
+.news-card h3 { font-size: 1.1em; margin-bottom: 8px; }
+.news-card p { color: #4b5563; font-size: 0.95em; }
+@media (max-width: 768px) { .news-card.main { grid-column: span 1; } }
+
+/* Gradients & Transparency */
+
+.hero-focus .hero-image,
+.hero-express .express-image,
+.hero-default .hero-image {
+  background: linear-gradient(135deg, #37415125 0%, #9ca3af35 50%, #e5e7eb20 100%) !important;
+}
+
+.hero-dna .helix-bar {
+  background: linear-gradient(90deg, #374151, #9ca3af) !important;
+  opacity: 0.6;
+}
+
+.hero-pulse {
+  background: linear-gradient(180deg, #f9fafb 0%, #37415108 50%, #f9fafb 100%);
+}
+
+.hero-globe .globe-ring {
+  border: 1px solid #37415118;
+  background: radial-gradient(circle, #e5e7eb15 0%, transparent 70%);
+}
+
+.hero-aztec .step {
+  background: linear-gradient(90deg, #374151, #9ca3af) !important;
+}
+
+.hero-analysis .chart-bars {
+  background: linear-gradient(180deg, #37415110 0%, #37415105 100%);
+}
+
+.hero-instant .clock-face {
+  background: radial-gradient(circle, #37415110 0%, transparent 70%);
+}
+
+.hero-bridge .bridge-connector {
+  background: linear-gradient(90deg, #374151, #9ca3af);
+}
+
+.hero-bold .bold-content {
+  background: linear-gradient(135deg, #37415112 0%, #e5e7eb15 100%);
+}
+
+.hero-observer .panorama-bar {
+  background: linear-gradient(90deg, #374151, #9ca3af, #e5e7eb, #374151);
+}
+
+.hero-observer .observer-horizon {
+  background: linear-gradient(to bottom, #37415112, transparent);
+}
+
+.hero-plus .layer {
+  background: linear-gradient(90deg, #374151, #9ca3af) !important;
+}
+
+.hero-borderless .borderless-image {
+  background: linear-gradient(135deg, #37415135 0%, #9ca3af25 50%, #e5e7eb15 100%) !important;
+}
+
+.hero-breaking .breaking-banner {
+  background: linear-gradient(90deg, #dc2626, #ef4444) !important;
+}
+
+.hero-republic .republic-emblem {
+  background: linear-gradient(135deg, #37415115, #9ca3af10);
+}
+
+.hero-finance .finance-ticker .t-item {
+  background: linear-gradient(135deg, #fff 0%, #37415108 100%);
+}
+
+.hero-monitor .m-card {
+  background: linear-gradient(135deg, #fff 0%, #37415106 100%);
+}
+
+.hero-prophet .rays .ray {
+  background: linear-gradient(to right, transparent, #e5e7eb, transparent);
+}
+
+.hero-prophet {
+  background: radial-gradient(circle at center, #37415108 0%, transparent 60%);
+}
+
+.hero-radio .wave-container .wave {
+  background: linear-gradient(to top, #374151, #9ca3af) !important;
+}
+
+.hero-perspective .perspective-vanish {
+  background: linear-gradient(180deg, #37415108, transparent);
+}
+
+.hero-community .m-tile {
+  background: linear-gradient(135deg, #374151, #9ca3af) !important;
+}
+
+/* Card improvements */
+.col-card, .pair-card, .rhythm-card, .world-card,
+.aztec-card, .an-card, .feed-item, .bridge-card,
+.bold-card, .obs-card, .plus-card, .bl-card,
+.break-card, .rep-card, .news-card, .fin-card,
+.mon-card, .pro-card, .sum-card, .rad-card,
+.persp-card, .comm-card, .express-card, .d-article,
+.entry, .brief-item, .news-item, .world-card {
+  background: linear-gradient(135deg, #fff 0%, #37415104 100%);
+  backdrop-filter: blur(4px);
+}
+
+/* Button gradient */
+.btn-primary {
+  background: linear-gradient(135deg, #374151 0%, #9ca3af 100%);
+  border: none;
+  box-shadow: 0 4px 14px #37415130;
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, #9ca3af 0%, #374151 100%);
+  color: #fff;
+  box-shadow: 0 6px 20px #37415140;
+}
+
+/* Section subtle backgrounds */
+.latest-grid,
+.timeline-vertical,
+.rhythm-grid,
+.world-grid,
+.express-grid,
+.daily-brief,
+.aztec-grid,
+.analysis-grid,
+.instant-feed,
+.bridge-grid,
+.diary-entries,
+.bold-grid,
+.observer-grid,
+.plus-grid,
+.borderless-grid,
+.breaking-grid,
+.republic-grid,
+.news-grid,
+.finance-grid,
+.monitor-grid,
+.prophet-grid,
+.summary-grid,
+.radio-grid,
+.persp-grid,
+.comm-grid,
+.paired-grid,
+.featured-columns,
+.daily-columns,
+.content-grid {
+  position: relative;
+}
+
+/* Footer gradient */
+.site-footer {
+  background: linear-gradient(180deg, #111827 0%, #374151 100%);
+}
+
+/* Header glass effect */
+header {
+  backdrop-filter: blur(12px);
+  background: linear-gradient(135deg, #374151ee 0%, #9ca3afdd 100%) !important;
+}
+
+/* Tag enhancements */
+.tag, .category-tag {
+  background: linear-gradient(135deg, #e5e7eb 0%, #9ca3af30 100%);
+  border: 1px solid #37415120;
+}
+
+/* Image placeholders with subtle patterns */
+.hero-image span,
+.card-img span,
+.rhythm-img span,
+.world-img span,
+.az-img span,
+.pair-img span,
+.ex-img span,
+.lead-image span,
+.bold-img span,
+.obs-img span,
+.plus-img span,
+.bl-img span,
+.break-img span,
+.rep-img span,
+.pro-img span,
+.persp-img span,
+.comm-mosaic span {
+  background: linear-gradient(45deg, #37415110 25%, transparent 25%, transparent 50%, #37415110 50%, #37415110 75%, transparent 75%, transparent);
+  background-size: 20px 20px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Smooth transitions */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Hover glow effects */
+.col-card:hover, .pair-card:hover, .rhythm-card:hover, .world-card:hover,
+.aztec-card:hover, .an-card:hover, .bridge-card:hover, .bold-card:hover,
+.obs-card:hover, .plus-card:hover, .break-card:hover, .rep-card:hover,
+.news-card:hover, .fin-card:hover, .pro-card:hover, .sum-card:hover,
+.rad-card:hover, .persp-card:hover, .comm-card:hover, .express-card:hover {
+  box-shadow: 0 8px 30px #37415120, 0 2px 8px rgba(0,0,0,0.08);
+}
