@@ -1,0 +1,375 @@
+/* ============================================
+   SPACING & BORDER IMPROVEMENTS
+   Better padding, gaps, and visual separation
+   ============================================ */
+
+/* Main content breathing room */
+.main-content {
+    padding-top: 32px;
+    padding-bottom: 60px;
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        padding-top: 20px;
+        padding-bottom: 40px;
+    }
+}
+
+/* Section separation with subtle border */
+section + section,
+.section-label,
+h2.section-title {
+    margin-top: 48px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border-color);
+}
+
+@media (max-width: 768px) {
+    section + section,
+    .section-label,
+    h2.section-title {
+        margin-top: 32px;
+        padding-top: 24px;
+    }
+}
+
+/* Improved section title styling */
+.section-title {
+    font-size: 1.8em;
+    margin-bottom: 32px;
+    font-weight: 800;
+    position: relative;
+    padding-bottom: 14px;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60px;
+    height: 4px;
+    background: var(--site-primary);
+    border-radius: 2px;
+}
+
+/* News grid improvements */
+.news-grid {
+    gap: 32px;
+    padding: 0 8px;
+}
+
+@media (max-width: 768px) {
+    .news-grid {
+        gap: 24px;
+        padding: 0 4px;
+    }
+}
+
+/* Card content padding improvements */
+.news-card .news-content {
+    padding: 24px;
+}
+
+.news-card .news-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1.35;
+    margin-bottom: 10px;
+    color: var(--text-color);
+}
+
+.news-card .news-desc {
+    font-size: 0.92rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+.news-card .news-category {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--site-primary);
+    margin-bottom: 10px;
+    display: inline-block;
+    padding: 4px 12px;
+    background: var(--site-light);
+    border-radius: 20px;
+}
+
+/* Card image wrapper improvements */
+.card-img-wrap {
+    overflow: hidden;
+    border-radius: 12px 12px 0 0;
+}
+
+/* Hero card improvements */
+.hero-card {
+    border-radius: 16px;
+    margin-bottom: 32px;
+}
+
+.hero-card img {
+    border-radius: 16px;
+}
+
+/* Magazine layout specific improvements */
+.magazine-layout {
+    padding: 0 20px;
+}
+
+.magazine-hero {
+    gap: 4px;
+    border-radius: 20px;
+    margin-bottom: 56px;
+}
+
+.magazine-sidebar {
+    gap: 2px;
+}
+
+.side-item {
+    padding: 24px;
+    gap: 20px;
+}
+
+.side-item img {
+    border-radius: 12px;
+    width: 120px;
+    height: 90px;
+}
+
+.side-content h4 {
+    font-size: 1rem;
+    line-height: 1.4;
+}
+
+/* Split layout improvements */
+.split-right {
+    padding: 80px 56px;
+}
+
+.editorial-card {
+    padding: 28px 0;
+    gap: 28px;
+}
+
+.editorial-card:last-child {
+    padding-bottom: 0;
+}
+
+/* Bento grid improvements */
+.bento-grid {
+    gap: 20px;
+    padding: 0 20px;
+}
+
+.bento-main {
+    border-radius: 28px;
+}
+
+.bento-sub {
+    border-radius: 24px;
+}
+
+.bento-rest {
+    gap: 28px;
+    padding: 0 20px 56px;
+}
+
+.bento-mini {
+    border-radius: 20px;
+}
+
+.bento-mini img {
+    border-radius: 20px 20px 0 0;
+}
+
+.mini-body {
+    padding: 20px;
+}
+
+/* Masonry improvements */
+.masonry-wall {
+    padding: 0 20px;
+    column-gap: 28px;
+}
+
+.masonry-brick {
+    margin-bottom: 28px;
+    border-radius: 12px;
+}
+
+.brick-body {
+    padding: 24px;
+}
+
+/* List layout improvements */
+.list-layout {
+    padding: 0 20px;
+}
+
+.list-featured {
+    border-radius: 16px;
+    margin-bottom: 56px;
+}
+
+.list-featured img {
+    border-radius: 16px 16px 0 0;
+}
+
+.featured-body {
+    padding: 36px;
+}
+
+.list-item {
+    padding: 32px 0;
+    gap: 28px;
+}
+
+.list-img {
+    border-radius: 12px;
+    width: 180px;
+    height: 130px;
+}
+
+/* Cinematic improvements */
+.cinematic-hero {
+    border-radius: 0 0 24px 24px;
+    margin-bottom: 56px;
+}
+
+.cinematic-grid {
+    gap: 32px;
+    padding: 0 20px 56px;
+}
+
+.cine-card {
+    border-radius: 16px;
+}
+
+.cine-img {
+    border-radius: 16px 16px 0 0;
+}
+
+.cine-body {
+    padding: 28px;
+}
+
+/* Newspaper improvements */
+.newspaper-masthead {
+    padding: 48px 24px;
+    margin-bottom: 40px;
+}
+
+.newspaper-headline {
+    padding: 0 24px 40px;
+}
+
+.newspaper-headline img {
+    border-radius: 16px;
+}
+
+.newspaper-subheads {
+    gap: 40px;
+    padding: 0 24px 40px;
+}
+
+.newspaper-columns {
+    gap: 28px;
+    padding: 0 24px 56px;
+}
+
+.column-item {
+    padding: 20px 0;
+}
+
+/* Bold layout improvements */
+.bold-hero-row {
+    gap: 24px;
+    padding: 0 20px;
+    margin-bottom: 56px;
+}
+
+.bold-hero {
+    border-radius: 16px;
+    min-height: 450px;
+}
+
+.bold-grid {
+    gap: 40px;
+    padding: 0 20px 56px;
+}
+
+.bold-card {
+    border-radius: 16px;
+    border-top-width: 5px;
+}
+
+.bold-img-wrap {
+    border-radius: 16px 16px 0 0;
+    height: 300px;
+}
+
+.bold-card-body {
+    padding: 28px;
+}
+
+/* Category page improvements */
+.category-page {
+    padding: 24px 8px 48px;
+}
+
+.category-header {
+    margin: 20px 0 32px;
+    padding: 32px 24px;
+    background: linear-gradient(135deg, var(--site-primary)08, var(--site-secondary)08);
+    border-radius: 16px;
+    border-left: 4px solid var(--site-primary);
+}
+
+#cat-grid {
+    gap: 32px;
+}
+
+/* Footer spacing */
+.site-footer {
+    margin-top: 80px;
+    padding: 60px 24px 40px;
+}
+
+/* Responsive padding adjustments */
+@media (max-width: 768px) {
+    .news-grid,
+    .bento-grid,
+    .bento-rest,
+    .masonry-wall,
+    .list-layout,
+    .cinematic-grid,
+    .bold-hero-row,
+    .bold-grid {
+        padding: 0 12px;
+    }
+    
+    .news-card .news-content,
+    .brick-body,
+    .mini-body,
+    .cine-body,
+    .bold-card-body {
+        padding: 16px;
+    }
+    
+    .featured-body {
+        padding: 24px;
+    }
+    
+    .split-right {
+        padding: 40px 24px;
+    }
+    
+    .site-footer {
+        padding: 40px 16px 32px;
+    }
+}

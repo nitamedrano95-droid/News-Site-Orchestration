@@ -1,37 +1,62 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>We News Mexico - Tus noticias, tu voz</title>
-  <meta name="description" content="Tus noticias, tu voz">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23db2777'/%3E%3Ctext x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'%3EW%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style-custom.css">
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>wenewsmexico - News</title>
+    <meta content="News site" name="description"/>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <link href="style.css" rel="stylesheet"/>
+    <link href="style-custom.css" rel="stylesheet"/>
+    <link rel="alternate" type="application/rss+xml" title="wenewsmexico RSS" href="/rss.xml"/>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <meta name="theme-color" content="#db2777">
 </head>
 <body>
-  <div id="site-preloader"></div>
-  <div id="site-header"></div>
-  <main class="container">
-    <section class="hero-community">
-    <div class="mosaic">
-      <div class="m-tile"></div><div class="m-tile"></div><div class="m-tile"></div>
-      <div class="m-tile"></div><div class="m-tile"></div><div class="m-tile"></div>
-    </div>
-    <div class="community-content">
-      <h1>Tus noticias, tu voz, tu Mexico</h1>
-      <p>Informacion construida entre todos.</p>
-    </div>
-  </section>
-    <section class="comm-grid">
-    <article class="comm-card main"><div class="comm-mosaic"><div class="c-tile"></div><div class="c-tile"></div><div class="c-tile"></div><div class="c-tile"></div></div><div class="comm-body"><span class="tag">Comunidad</span><h3>La voz de todos en una noticia</h3><p>Informacion construida entre todos.</p></div></article>
-    <article class="comm-card"><div class="comm-body"><span class="tag">Participa</span><h3>Tu opinion cuenta</h3><p>Comparte tu perspectiva.</p></div></article>
-    <article class="comm-card"><div class="comm-body"><span class="tag">Colabora</span><h3>Envia tu reporte</h3><p>Sé parte del equipo.</p></div></article>
-    <article class="comm-card"><div class="comm-body"><span class="tag">Conecta</span><h3>Red de informantes</h3><p>La red que informa.</p></div></article>
-  </section>
-  </main>
-  <div id="site-footer"></div>
-  <script src="components.js"></script>
+    <div id="site-preloader"><div class="loader"></div></div>
+    <div id="site-header"></div>
+    
+    <main class="main-content">
+    </main>
+
+    <div id="site-footer"></div>
+    
+    <script src="pwa-manager.js"></script>
+    <script src="components.js"></script>
+    <script>
+    (async function(){
+        const apiUrl = 'https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=wenewsmexico&limit=12';
+        let articles = [];
+        try {
+            const res = await fetch(apiUrl);
+            if(!res.ok) throw new Error('Network');
+            const data = await res.json();
+            articles = data.articles || [];
+        } catch(e) {
+            if (window.PWAManager) articles = await PWAManager.getLocalArticles();
+        }
+        if(!articles?.length) return;
+        const hero = articles.slice(0, 2);
+        const grid = articles.slice(2);
+        const container = document.querySelector('.main-content');
+        if(container) {
+            container.innerHTML = '<div class="bold-hero-row">' + hero.map((a, i) =>
+                '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="bold-hero ' + (i === 0 ? 'hero-primary' : 'hero-secondary') + '">' +
+                '<img src="' + (a.imageUrl || 'https://placehold.co/' + (i===0 ? '800x600' : '600x400') + '/db2777/ffffff?text=News') + '" alt="' + a.title + '">' +
+                '<div class="bold-overlay"><span class="bold-cat">' + (a.category || 'Noticias') + '</span>' +
+                '<h2>' + a.title + '</h2><p>' + (a.desc ? a.desc.substring(0, i===0 ? 200 : 100) + '...' : '') + '</p></div></a>'
+            ).join('') + '</div>' +
+            '<h2 class="bold-section-title">Noticias Destacadas</h2><div class="bold-grid">' + grid.map(a =>
+                '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="bold-card">' +
+                '<div class="bold-img-wrap"><img src="' + (a.imageUrl || 'https://placehold.co/600x400/db2777/ffffff?text=News') + '" alt="' + a.title + '"></div>' +
+                '<div class="bold-card-body"><span class="bold-cat">' + (a.category || 'Noticias') + '</span>' +
+                '<h3>' + a.title + '</h3><p>' + (a.desc ? a.desc.substring(0, 140) + '...' : '') + '</p></div></a>'
+            ).join('') + '</div>';
+        }
+    })();
+    </script>
 </body>
 </html>

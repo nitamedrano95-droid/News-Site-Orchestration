@@ -1,0 +1,75 @@
+:root {
+    --text-color: #333333;
+    --text-muted: #666666;
+    --border-color: #e8e8e8;
+    --card-bg: #ffffff;
+    --background-color: #f4f7f6;
+    --site-primary: #be123c;
+    --site-secondary: #fda4af;
+
+    --font-primary: 'Inter', sans-serif;
+    --font-secondary: 'Space Grotesk', sans-serif;
+
+    --space-xs: 0.25rem; --space-sm: 0.5rem; --space-md: 1rem;
+    --space-lg: 1.5rem; --space-xl: 2rem; --space-2xl: 3rem;
+
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 20px rgba(0,0,0,0.12);
+
+    --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--font-primary); background: var(--background-color); color: var(--text-color); line-height: 1.6; }
+img { max-width: 100%; height: auto; display: block; }
+a { color: inherit; text-decoration: none; transition: all 0.3s ease; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 var(--space-lg); }
+
+@media (max-width: 768px) {
+    .container { padding: 0 var(--space-md); }
+    .category-page { padding: 30px var(--space-md); }
+}
+
+/* ===== LAYOUT STYLES ===== */
+
+/* ===== CINEMATIC LAYOUT ===== */
+.cinematic-hero { height: 70vh; background-size: cover; background-position: center; position: relative; display: flex; align-items: flex-end; margin-bottom: 48px; }
+.cinematic-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.2) 100%); }
+.cinematic-content { position: relative; z-index: 2; max-width: 800px; padding: 60px; color: white; }
+.cinematic-cat { display: inline-block; padding: 4px 14px; background: var(--site-primary); color: white; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; border-radius: 20px; margin-bottom: 16px; }
+.cinematic-content h1 { font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 800; line-height: 1.15; margin-bottom: 16px; }
+.cinematic-content p { font-size: 1.1rem; opacity: 0.85; line-height: 1.7; margin-bottom: 24px; }
+.cinematic-btn { display: inline-block; padding: 14px 32px; background: var(--site-primary); color: white; font-weight: 700; text-decoration: none; border-radius: 8px; transition: all 0.3s ease; }
+.cinematic-btn:hover { background: var(--site-secondary); transform: translateY(-2px); }
+.cinematic-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; max-width: 1400px; margin: 0 auto; padding: 0 24px 48px; }
+.cine-card { background: var(--card-bg); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); transition: all 0.35s ease; display: block; }
+.cine-card:hover { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(0,0,0,0.15); }
+.cine-img { position: relative; height: 220px; overflow: hidden; }
+.cine-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+.cine-card:hover .cine-img img { transform: scale(1.06); }
+.cine-img-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.6), transparent); opacity: 0; transition: opacity 0.3s ease; }
+.cine-card:hover .cine-img-overlay { opacity: 1; }
+.cine-body { padding: 24px; }
+.cine-cat { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--site-primary); margin-bottom: 8px; display: block; }
+.cine-body h3 { font-size: 1.2rem; font-weight: 700; line-height: 1.35; margin-bottom: 8px; color: var(--text-color); }
+.cine-body p { font-size: 0.95rem; color: var(--text-muted); line-height: 1.55; }
+@media (max-width: 768px) { .cinematic-content { padding: 32px; } }
+
+/* ===== CATEGORY PAGE ===== */
+.category-page { padding: 40px 24px; max-width: 1400px; margin: 0 auto; }
+.category-header { margin-bottom: 32px; }
+.category-badge { display: inline-block; padding: 4px 14px; background: var(--site-primary); color: white; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; border-radius: 20px; margin-bottom: 12px; }
+
+/* ===== MOBILE SPACING FIXES ===== */
+@media (max-width: 600px) {
+    .cinematic-grid { padding-left: var(--space-md) !important; padding-right: var(--space-md) !important; }
+    .cinematic-content { padding: 30px var(--space-md); }
+    .bold-overlay { padding: 20px; }
+    .split-right { padding: 30px var(--space-md); }
+    .hero-text { padding: 24px var(--space-md); }
+    .newspaper-masthead { padding: 30px var(--space-md); }
+    .featured-body { padding: 24px; }
+    .editorial-card { gap: 16px; padding-bottom: 24px; }
+}

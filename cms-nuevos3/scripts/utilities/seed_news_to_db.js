@@ -11,7 +11,9 @@ const path = require('path');
 const { NewsProcessor } = require('./news-downloader');
 
 // Configuración de mapeo de categorías a sitios
+// Incluye sitios cms-originaux (10) + cms-nuevos3 (25)
 const SITE_TARGETS = {
+  // cms-originaux
   'politica': ['cbnnoticias', 'centralmexico', 'noticiasobjetivo'],
   'economia': ['cbnnoticias', 'mexicoinformado', 'reportecentralmx'],
   'deportes': ['radiocinconoticias', 'tvmexico', 'verticenoticias'],
@@ -19,7 +21,17 @@ const SITE_TARGETS = {
   'nacional': ['cbnnoticias', 'centralmexico', 'mexicoinformado', 'noticiasobjetivo'],
   'internacional': ['cbnnoticias', 'nodoinformativo', 'reportecentralmx'],
   'ciencia': ['nodoinformativo', 'verticenoticias', 'mexicoinformado'],
-  'entretenimiento': ['radiocinconoticias', 'tvmexico', 'verticenoticias']
+  'entretenimiento': ['radiocinconoticias', 'tvmexico', 'verticenoticias'],
+  
+  // cms-nuevos3 — distribución por temática
+  'nacional-cms3': ['actualidadsinfronteras', 'nacionalinstante', 'noticiasalinstante', 'monitorrepublicano', 'mexicoenresumen', 'mexicodaily'],
+  'politica-cms3': ['politicasalvajealminuto', 'pulsorepublicanonoticias', 'republicamx', 'elanalisismexicano', 'adnmexicano', 'elobservadorrepublicano'],
+  'economia-cms3': ['financemarketsmx', 'mexicoandtheworld', 'mexicoplus'],
+  'deportes-cms3': ['radioredmx', 'wenewsmexico', 'aztecamexiconoticias'],
+  'tecnologia-cms3': ['enfoquemexicano', 'expresomexicano', 'mexicannewsoftheworld'],
+  'cultura-cms3': ['diariomexicano', 'diariomexico', 'perspectivamexicana', 'elprofetamexicano'],
+  'internacional-cms3': ['actualidadsinfronteras', 'mexicoandtheworld', 'mexicannewsoftheworld'],
+  'entretenimiento-cms3': ['radioredmx', 'wenewsmexico', 'aztecamexiconoticias', 'elprofetamexicano']
 };
 
 // Configuración
@@ -72,7 +84,7 @@ const SQLGenerator = {
     
     for (const article of articles) {
       const sites = SITE_TARGETS[article.category] || ['cbnnoticias'];
-      const primarySite = sites[0];
+      const sitesDestino = sites.join(',');
       
       const sql = `
 INSERT INTO ARTICULOS_PARAFRASEADOS (
@@ -88,7 +100,7 @@ INSERT INTO ARTICULOS_PARAFRASEADOS (
   '${Utils.escapeSQL(article.author)}',
   '${Utils.formatDate(article.publishedAt)}',
   '${Utils.escapeSQL(article.imageUrl)}',
-  '${primarySite}',
+  '${sitesDestino}',
   0,
   0,
   'PUBLICADO'

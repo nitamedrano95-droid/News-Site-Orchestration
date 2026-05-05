@@ -1,0 +1,76 @@
+:root {
+    --text-color: #333333;
+    --text-muted: #666666;
+    --border-color: #e8e8e8;
+    --card-bg: #ffffff;
+    --background-color: #f4f7f6;
+    --site-primary: #1d4ed8;
+    --site-secondary: #22d3ee;
+
+    --font-primary: 'Inter', sans-serif;
+    --font-secondary: 'Space Grotesk', sans-serif;
+
+    --space-xs: 0.25rem; --space-sm: 0.5rem; --space-md: 1rem;
+    --space-lg: 1.5rem; --space-xl: 2rem; --space-2xl: 3rem;
+
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 20px rgba(0,0,0,0.12);
+
+    --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--font-primary); background: var(--background-color); color: var(--text-color); line-height: 1.6; }
+img { max-width: 100%; height: auto; display: block; }
+a { color: inherit; text-decoration: none; transition: all 0.3s ease; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 var(--space-lg); }
+
+@media (max-width: 768px) {
+    .container { padding: 0 var(--space-md); }
+    .category-page { padding: 30px var(--space-md); }
+}
+
+/* ===== LAYOUT STYLES ===== */
+
+/* ===== BOLD MODERN LAYOUT ===== */
+.bold-hero-row { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; max-width: 1400px; margin: 0 auto 48px; padding: 0 24px; }
+.bold-hero { position: relative; overflow: hidden; border-radius: 8px; display: block; min-height: 400px; }
+.bold-hero img { width: 100%; height: 100%; object-fit: cover; position: absolute; transition: transform 0.6s ease; }
+.bold-hero:hover img { transform: scale(1.04); }
+.bold-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 40px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); color: white; }
+.bold-overlay h2 { font-size: clamp(1.5rem, 2.5vw, 2.2rem); font-weight: 800; line-height: 1.2; margin: 12px 0; }
+.bold-overlay p { font-size: 1rem; opacity: 0.85; line-height: 1.6; }
+.bold-cat { display: inline-block; padding: 4px 14px; background: var(--site-primary); color: white; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; border-radius: 20px; }
+.hero-secondary { min-height: 300px; }
+.hero-secondary .bold-overlay h2 { font-size: 1.3rem; }
+.bold-section-title { max-width: 1400px; margin: 0 auto 24px; padding: 0 24px; font-size: 1.6rem; font-weight: 800; color: var(--text-color); }
+.bold-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px; max-width: 1400px; margin: 0 auto; padding: 0 24px 48px; }
+.bold-card { background: var(--card-bg); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08); transition: all 0.35s ease; display: block; border-top: 4px solid var(--site-primary); }
+.bold-card:hover { transform: translateY(-6px); box-shadow: 0 12px 36px rgba(0,0,0,0.12); border-top-color: var(--site-secondary); }
+.bold-img-wrap { height: 280px; overflow: hidden; }
+.bold-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+.bold-card:hover .bold-img-wrap img { transform: scale(1.05); }
+.bold-card-body { padding: 24px; }
+.bold-card-body .bold-cat { margin-bottom: 10px; }
+.bold-card-body h3 { font-size: 1.25rem; font-weight: 700; line-height: 1.35; margin-bottom: 10px; color: var(--text-color); }
+.bold-card-body p { font-size: 0.95rem; color: var(--text-muted); line-height: 1.55; }
+@media (max-width: 900px) { .bold-hero-row { grid-template-columns: 1fr; } .bold-grid { grid-template-columns: 1fr; } }
+
+/* ===== CATEGORY PAGE ===== */
+.category-page { padding: 40px 24px; max-width: 1400px; margin: 0 auto; }
+.category-header { margin-bottom: 32px; }
+.category-badge { display: inline-block; padding: 4px 14px; background: var(--site-primary); color: white; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; border-radius: 20px; margin-bottom: 12px; }
+
+/* ===== MOBILE SPACING FIXES ===== */
+@media (max-width: 600px) {
+    .bold-hero-row, .bold-section-title, .bold-grid { padding-left: var(--space-md) !important; padding-right: var(--space-md) !important; }
+    .cinematic-content { padding: 30px var(--space-md); }
+    .bold-overlay { padding: 20px; }
+    .split-right { padding: 30px var(--space-md); }
+    .hero-text { padding: 24px var(--space-md); }
+    .newspaper-masthead { padding: 30px var(--space-md); }
+    .featured-body { padding: 24px; }
+    .editorial-card { gap: 16px; padding-bottom: 24px; }
+}

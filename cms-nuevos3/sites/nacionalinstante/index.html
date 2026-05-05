@@ -1,41 +1,62 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nacional al Instante - Noticias en tiempo real</title>
-  <meta name="description" content="Noticias en tiempo real">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue|Inter:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23be123c'/%3E%3Ctext x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'%3EN%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style-custom.css">
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>nacionalinstante - News</title>
+    <meta content="News site" name="description"/>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <link href="style.css" rel="stylesheet"/>
+    <link href="style-custom.css" rel="stylesheet"/>
+    <link rel="alternate" type="application/rss+xml" title="nacionalinstante RSS" href="/rss.xml"/>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <meta name="theme-color" content="#be123c">
 </head>
 <body>
-  <div id="site-preloader"></div>
-  <div id="site-header"></div>
-  <main class="container">
-    <section class="hero-instant">
-    <div class="clock-face">
-      <div class="hand hour"></div>
-      <div class="hand minute"></div>
-    </div>
-    <div class="instant-content">
-      <span class="live-badge">AHORA</span>
-      <h1>Noticias en tiempo real, sin demora</h1>
-      <p>La informacion fluye tan rapido como ocurre.</p>
-    </div>
-  </section>
-    <section class="instant-feed">
-    <h2 class="section-title">Tiempo Real</h2>
-    <div class="feed-list">
-      <div class="feed-item urgent"><span class="feed-time">Ahora</span><h4>Noticia de ultimo momento en desarrollo</h4></div>
-      <div class="feed-item"><span class="feed-time">Hace 15m</span><h4>Actualizacion de informacion oficial</h4></div>
-      <div class="feed-item"><span class="feed-time">Hace 30m</span><h4>Reacciones de actores politicos</h4></div>
-      <div class="feed-item"><span class="feed-time">Hace 45m</span><h4>Primeros datos confirmados</h4></div>
-    </div>
-  </section>
-  </main>
-  <div id="site-footer"></div>
-  <script src="components.js"></script>
+    <div id="site-preloader"><div class="loader"></div></div>
+    <div id="site-header"></div>
+    
+    <main class="main-content">
+    </main>
+
+    <div id="site-footer"></div>
+    
+    <script src="pwa-manager.js"></script>
+    <script src="components.js"></script>
+    <script>
+    (async function(){
+        const apiUrl = 'https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=nacionalinstante&limit=12';
+        let articles = [];
+        try {
+            const res = await fetch(apiUrl);
+            if(!res.ok) throw new Error('Network');
+            const data = await res.json();
+            articles = data.articles || [];
+        } catch(e) {
+            if (window.PWAManager) articles = await PWAManager.getLocalArticles();
+        }
+        if(!articles?.length) return;
+        const featured = articles[0];
+        const list = articles.slice(1);
+        const container = document.querySelector('.main-content');
+        if(container) {
+            container.innerHTML = '<div class="list-layout">' +
+                '<a href="/articulo/?slug=' + encodeURIComponent(featured.slug) + '" class="list-featured">' +
+                '<img src="' + (featured.imageUrl || 'https://placehold.co/1200x500/be123c/ffffff?text=News') + '" alt="' + featured.title + '">' +
+                '<div class="featured-body"><span class="featured-cat">' + (featured.category || 'Noticias') + '</span>' +
+                '<h1>' + featured.title + '</h1><p>' + (featured.desc ? featured.desc.substring(0, 300) + '...' : '') + '</p></div></a>' +
+                '<div class="article-list">' + list.map((a, i) =>
+                    '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="list-item">' +
+                    '<span class="list-num">' + String(i+1).padStart(2, '0') + '</span>' +
+                    '<div class="list-img"><img src="' + (a.imageUrl || 'https://placehold.co/200x150/be123c/ffffff?text=News') + '" alt="' + a.title + '"></div>' +
+                    '<div class="list-body"><span class="list-cat">' + (a.category || 'Noticias') + '</span>' +
+                    '<h3>' + a.title + '</h3><p>' + (a.desc ? a.desc.substring(0, 140) + '...' : '') + '</p></div></a>'
+                ).join('') + '</div></div>';
+        }
+    })();
+    </script>
 </body>
 </html>

@@ -180,16 +180,16 @@ async function publishCleanedArticles(jsonFile) {
   
   function extractSitesFromCategory(category) {
     const siteMap = {
-      'POLITICA': 'noticiasobjetivo,mexicoinformado,nodoinformativo',
-      'NACIONAL': 'mexicoinformado,cbnnoticias,centralmexico',
-      'INTERNACIONAL': 'noticiasobjetivo,verticenoticias',
-      'ECONOMIA': 'mexicoinformado,reportecentralmx',
-      'DEPORTES': 'cbnnoticias,tvmexico',
-      'TECNOLOGIA': 'bitacoraurbana,nodoinformativo',
-      'ENTRETENIMIENTO': 'radiocinconoticias,tvmexico',
-      'SALUD': 'mexicoinformado,cbnnoticias',
-      'CIENCIA': 'bitacoraurbana,nodoinformativo',
-      'CULTURA': 'radiocinconoticias,centralmexico'
+      'POLITICA': 'noticiasobjetivo,mexicoinformado,nodoinformativo,politicasalvajealminuto,pulsorepublicanonoticias,republicamx,elanalisismexicano,adnmexicano,elobservadorrepublicano',
+      'NACIONAL': 'mexicoinformado,cbnnoticias,centralmexico,actualidadsinfronteras,nacionalinstante,noticiasalinstante,monitorrepublicano,mexicoenresumen,mexicodaily',
+      'INTERNACIONAL': 'noticiasobjetivo,verticenoticias,actualidadsinfronteras,mexicoandtheworld,mexicannewsoftheworld',
+      'ECONOMIA': 'mexicoinformado,reportecentralmx,financemarketsmx,mexicoandtheworld,mexicoplus',
+      'DEPORTES': 'cbnnoticias,tvmexico,radioredmx,wenewsmexico,aztecamexiconoticias',
+      'TECNOLOGIA': 'bitacoraurbana,nodoinformativo,enfoquemexicano,expresomexicano,mexicannewsoftheworld',
+      'ENTRETENIMIENTO': 'radiocinconoticias,tvmexico,radioredmx,wenewsmexico,aztecamexiconoticias,elprofetamexicano',
+      'SALUD': 'mexicoinformado,cbnnoticias,actualidadsinfronteras,mexicoplus',
+      'CIENCIA': 'bitacoraurbana,nodoinformativo,enfoquemexicano,mexicannewsoftheworld',
+      'CULTURA': 'radiocinconoticias,centralmexico,diariomexicano,diariomexico,perspectivamexicana,elprofetamexicano'
     };
     return siteMap[category] || 'noticiasobjetivo,mexicoinformado';
   }

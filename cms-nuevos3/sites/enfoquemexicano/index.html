@@ -1,48 +1,70 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Enfoque Mexicano - Perspectiva nacional</title>
-  <meta name="description" content="Perspectiva nacional">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900|Inter:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%231e40af'/%3E%3Ctext x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'%3EE%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style-custom.css">
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Enfoque Mexicano - News</title>
+    <meta content="News site" name="description"/>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <link href="style.css" rel="stylesheet"/>
+    <link href="style-custom.css" rel="stylesheet"/>
+    <link rel="alternate" type="application/rss+xml" title="Enfoque Mexicano RSS" href="/rss.xml"/>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <meta name="theme-color" content="#1e40af">
 </head>
 <body>
-  <div id="site-preloader"></div>
-  <div id="site-header"></div>
-  <main class="container">
-    <section class="hero-focus">
-    <div class="focus-ring"></div>
-    <div class="hero-content">
-      <span class="category-tag">Portada</span>
-      <h1>Titulo principal con enfoque claro y directo</h1>
-      <p class="excerpt">Resumen que capta la esencia del acontecimiento mas importante del dia.</p>
-      <a href="#" class="btn-primary">Leer completo</a>
-    </div>
-    <div class="hero-image"><span>Imagen destacada</span></div>
-  </section>
-    <section class="featured-columns">
-    <article class="col-card featured">
-      <div class="card-img"><span>Imagen</span></div>
-      <div class="card-body"><span class="tag">Nacional</span><h3>Historia principal del dia</h3><p>Analisis completo del evento mas relevante.</p></div>
-    </article>
-    <article class="col-card"><div class="card-img" style="background:#3b82f6;"><span>Img</span></div><div class="card-body"><span class="tag">Politica</span><h3>Nuevas propuestas legislativas</h3><p>Los proyectos en debate.</p></div></article>
-    <article class="col-card"><div class="card-img" style="background:#93c5fd;"><span>Img</span></div><div class="card-body"><span class="tag">Economia</span><h3>Mercados estables</h3><p>Reporte diario de indicadores.</p></div></article>
-  </section>
-  <section class="latest-grid">
-    <h2 class="section-title">Ultimas Noticias</h2>
-    <div class="news-list">
-      <article class="news-item"><span class="time">Hace 2h</span><h4>Noticia reciente sobre economia mexicana</h4></article>
-      <article class="news-item"><span class="time">Hace 3h</span><h4>Avances en infraestructura nacional</h4></article>
-      <article class="news-item"><span class="time">Hace 4h</span><h4>Reunion diplomatica de alto nivel</h4></article>
-      <article class="news-item"><span class="time">Hace 5h</span><h4>Nuevo proyecto educativo anunciado</h4></article>
-    </div>
-  </section>
-  </main>
-  <div id="site-footer"></div>
-  <script src="components.js"></script>
+    <div id="site-preloader"><div class="loader"></div></div>
+    <div id="site-header"></div>
+    
+    <main class="main-content">
+    </main>
+
+    <div id="site-footer"></div>
+    
+    <script src="pwa-manager.js"></script>
+    <script src="components.js"></script>
+    <script>
+    (async function(){
+        const apiUrl = 'https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=enfoquemexicano&limit=12';
+        let articles = [];
+        try {
+            const res = await fetch(apiUrl);
+            if(!res.ok) throw new Error('Network');
+            const data = await res.json();
+            articles = data.articles || [];
+        } catch(e) {
+            if (window.PWAManager) articles = await PWAManager.getLocalArticles();
+        }
+        if(!articles?.length) return;
+        const hero = articles[0];
+        const secondary = articles.slice(1, 4);
+        const grid = articles.slice(4);
+        const heroContainer = document.getElementById('latest-container');
+        const mainContainer = document.querySelector('.main-content');
+        if(mainContainer) {
+            mainContainer.innerHTML = '<div class="magazine-layout"><div class="magazine-hero">' +
+                '<a href="/articulo/?slug=' + encodeURIComponent(hero.slug) + '" class="hero-main">' +
+                '<img src="' + (hero.imageUrl || 'https://placehold.co/1200x600/1e40af/ffffff?text=News') + '" alt="' + hero.title + '">' +
+                '<div class="hero-overlay"><span class="hero-cat">' + (hero.category || 'Noticias') + '</span>' +
+                '<h1>' + hero.title + '</h1><p>' + (hero.desc ? hero.desc.substring(0, 200) + '...' : '') + '</p>' +
+                '<span class="hero-date">' + (hero.publishedAt ? new Date(hero.publishedAt).toLocaleDateString('es-MX') : '') + '</span></div></a>' +
+                '<div class="magazine-sidebar">' + secondary.map(a =>
+                    '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="side-item">' +
+                    '<img src="' + (a.imageUrl || 'https://placehold.co/300x200/1e40af/ffffff?text=News') + '" alt="' + a.title + '">' +
+                    '<div class="side-content"><span class="side-cat">' + (a.category || 'Noticias') + '</span><h4>' + a.title + '</h4></div></a>'
+                ).join('') + '</div></div>' +
+                '<h2 class="section-label">Más Noticias</h2><div class="news-grid">' + grid.map(a =>
+                    '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="news-card">' +
+                    '<div class="card-img-wrap"><img src="' + (a.imageUrl || 'https://placehold.co/600x400/1e40af/ffffff?text=News') + '" alt="' + a.title + '"></div>' +
+                    '<div class="news-content"><span class="news-category">' + (a.category || 'Noticias') + '</span>' +
+                    '<h3 class="news-title">' + a.title + '</h3><p class="news-desc">' + (a.desc ? a.desc.substring(0, 120) + '...' : '') + '</p>' +
+                    '<span class="news-date">' + (a.publishedAt ? new Date(a.publishedAt).toLocaleDateString('es-MX') : '') + '</span></div></a>'
+                ).join('') + '</div></div>';
+        }
+    })();
+    </script>
 </body>
 </html>

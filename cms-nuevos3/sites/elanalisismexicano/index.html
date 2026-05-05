@@ -1,42 +1,63 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>El Analisis Mexicano - Analisis profundo</title>
-  <meta name="description" content="Analisis profundo">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700|Inter:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%234338ca'/%3E%3Ctext x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'%3EE%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style-custom.css">
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>elanalisismexicano - News</title>
+    <meta content="News site" name="description"/>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <link href="style.css" rel="stylesheet"/>
+    <link href="style-custom.css" rel="stylesheet"/>
+    <link rel="alternate" type="application/rss+xml" title="elanalisismexicano RSS" href="/rss.xml"/>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <meta name="theme-color" content="#4338ca">
 </head>
 <body>
-  <div id="site-preloader"></div>
-  <div id="site-header"></div>
-  <main class="container">
-    <section class="hero-analysis">
-    <div class="chart-bars">
-      <div class="c-bar" style="height:40%"></div>
-      <div class="c-bar" style="height:70%"></div>
-      <div class="c-bar" style="height:55%"></div>
-      <div class="c-bar" style="height:85%"></div>
-      <div class="c-bar" style="height:60%"></div>
-    </div>
-    <div class="analysis-content">
-      <span class="category-tag">Analisis</span>
-      <h1>Datos y contexto para entender Mexico</h1>
-      <p>Profundizamos en las noticias para darte el panorama completo.</p>
-      <a href="#" class="btn-primary">Ver analisis</a>
-    </div>
-  </section>
-    <section class="analysis-grid">
-    <article class="an-card main"><div class="an-chart"><div class="an-bar" style="height:60%"></div><div class="an-bar" style="height:80%"></div><div class="an-bar" style="height:45%"></div><div class="an-bar" style="height:90%"></div></div><div class="an-body"><span class="tag">Analisis</span><h3>Estudio profundo de la jornada</h3><p>Datos y contexto completos.</p></div></article>
-    <article class="an-card"><div class="an-body"><span class="tag">Datos</span><h3>Indicadores economicos</h3><p>Los numeros del dia.</p></div></article>
-    <article class="an-card"><div class="an-body"><span class="tag">Contexto</span><h3>Antecedentes historicos</h3><p>Por que importa esto.</p></div></article>
-    <article class="an-card wide"><div class="an-body"><span class="tag">Reporte</span><h3>Comparativa internacional</h3><p>Mexico en el contexto global.</p></div></article>
-  </section>
-  </main>
-  <div id="site-footer"></div>
-  <script src="components.js"></script>
+    <div id="site-preloader"><div class="loader"></div></div>
+    <div id="site-header"></div>
+    
+    <main class="main-content">
+    </main>
+
+    <div id="site-footer"></div>
+    
+    <script src="pwa-manager.js"></script>
+    <script src="components.js"></script>
+    <script>
+    (async function(){
+        const apiUrl = 'https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=elanalisismexicano&limit=12';
+        let articles = [];
+        try {
+            const res = await fetch(apiUrl);
+            if(!res.ok) throw new Error('Network');
+            const data = await res.json();
+            articles = data.articles || [];
+        } catch(e) {
+            if (window.PWAManager) articles = await PWAManager.getLocalArticles();
+        }
+        if(!articles?.length) return;
+        const hero = articles[0];
+        const cards = articles.slice(1);
+        const container = document.querySelector('.main-content');
+        if(container) {
+            container.innerHTML = '<div class="split-editorial"><aside class="split-left"><div class="sticky-hero">' +
+                '<a href="/articulo/?slug=' + encodeURIComponent(hero.slug) + '">' +
+                '<div class="hero-img" style="background-image:url('' + (hero.imageUrl || 'https://placehold.co/800x1000/4338ca/ffffff?text=News') + '')"></div>' +
+                '<div class="hero-text"><span class="hero-cat">' + (hero.category || 'Noticias') + '</span>' +
+                '<h1>' + hero.title + '</h1><p>' + (hero.desc ? hero.desc.substring(0, 300) + '...' : '') + '</p></div></a></div></aside>' +
+                '<div class="split-right"><h2 class="section-label">M&aacute;s Noticias</h2><div class="editorial-list">' +
+                cards.map(a =>
+                    '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="editorial-card">' +
+                    '<div class="editorial-img" style="background-image:url('' + (a.imageUrl || 'https://placehold.co/400x300/4338ca/ffffff?text=News') + '')"></div>' +
+                    '<div class="editorial-body"><span class="editorial-cat">' + (a.category || 'Noticias') + '</span>' +
+                    '<h3>' + a.title + '</h3><p>' + (a.desc ? a.desc.substring(0, 150) + '...' : '') + '</p>' +
+                    '<span class="read-more">Leer m&aacute;s &rarr;</span></div></a>'
+                ).join('') + '</div></div></div>';
+        }
+    })();
+    </script>
 </body>
 </html>

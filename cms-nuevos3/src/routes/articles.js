@@ -28,9 +28,9 @@ const normalizeTargetSites = ({ value, allowedSet, fallbackSite }) => {
 
 // ── GET /articles — Listado con filtros ──────────────────────
 articles.get('/', async (c) => {
-  const { site, limit = 20, offset = 0, category } = c.req.query();
-  const l = parseInt(limit);
-  const o = parseInt(offset);
+  const { site, limit, offset, category } = c.req.query();
+  const l = parseInt(limit) || 20;
+  const o = parseInt(offset) || 0;
   const MIN_ARTICLES = 8;
 
   try {

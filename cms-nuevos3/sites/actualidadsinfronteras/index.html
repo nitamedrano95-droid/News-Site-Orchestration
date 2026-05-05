@@ -1,33 +1,66 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Actualidad Sin Fronteras - Noticias sin limites</title>
-  <meta name="description" content="Noticias sin limites">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%230e7490'/%3E%3Ctext x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'%3EA%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style-custom.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Actualidad Sin Fronteras - Noticias sin limites</title>
+    <meta name="description" content="Noticias sin limites">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <link href="style.css" rel="stylesheet"/>
+    <link href="style-custom.css" rel="stylesheet"/>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%230e7490'/%3E%3Ctext x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'%3EA%3C/text%3E%3C/svg%3E">
+    <link rel="icon" type="image/png" href="favicon.png">
 </head>
 <body>
-  <div id="site-preloader"></div>
-  <div id="site-header"></div>
-  <main class="container">
-    <section class="hero-borderless">
-    <div class="borderless-image"><span>Imagen a todo ancho</span></div>
-    <div class="borderless-content">
-      <h1>Noticias sin fronteras ni limites</h1>
-      <p>Cobertura amplia que trasciende barreras.</p>
-    </div>
-  </section>
-    <section class="borderless-grid">
-    <article class="bl-card full"><div class="bl-img" style="background:#0e7490;"></div><div class="bl-body"><h2>Noticia sin limites ni fronteras</h2><p>Cobertura amplia del evento principal.</p></div></article>
-    <article class="bl-card half"><div class="bl-body"><span class="tag">Nacional</span><h3>Desarrollo en Mexico</h3><p>El evento desde adentro.</p></div></article>
-    <article class="bl-card half"><div class="bl-body"><span class="tag">Global</span><h3>Impacto internacional</h3><p>Como se ve desde fuera.</p></div></article>
-  </section>
-  </main>
-  <div id="site-footer"></div>
-  <script src="components.js"></script>
+    <div id="site-preloader"><div class="loader"></div></div>
+    <div id="site-header"></div>
+    
+    <main class="main-content">
+    </main>
+
+    <div id="site-footer"></div>
+    
+    <script src="components.js"></script>
+    <script>
+    (async function(){
+        const apiUrl = 'https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=actualidadsinfronteras&limit=12';
+        let articles = [];
+        try {
+            const res = await fetch(apiUrl);
+            if(!res.ok) throw new Error('Network');
+            const data = await res.json();
+            articles = data.articles || [];
+        } catch(e) {
+            if (window.PWAManager) articles = await PWAManager.getLocalArticles();
+        }
+        if(!articles?.length) return;
+        const hero = articles[0];
+        const secondary = articles.slice(1, 4);
+        const grid = articles.slice(4);
+        const mainContainer = document.querySelector('.main-content');
+        if(mainContainer) {
+            mainContainer.innerHTML = '<div class="magazine-layout"><div class="magazine-hero">' +
+                '<a href="/articulo/?slug=' + encodeURIComponent(hero.slug) + '" class="hero-main">' +
+                '<img src="' + (hero.imageUrl || 'https://placehold.co/1200x600/0e7490/ffffff?text=News') + '" alt="' + hero.title + '">' +
+                '<div class="hero-overlay"><span class="hero-cat">' + (hero.category || 'Noticias') + '</span>' +
+                '<h1>' + hero.title + '</h1><p>' + (hero.desc ? hero.desc.substring(0, 200) + '...' : '') + '</p>' +
+                '<span class="hero-date">' + (hero.publishedAt ? new Date(hero.publishedAt).toLocaleDateString('es-MX') : '') + '</span></div></a>' +
+                '<div class="magazine-sidebar">' + secondary.map(a =>
+                    '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="side-item">' +
+                    '<img src="' + (a.imageUrl || 'https://placehold.co/300x200/0e7490/ffffff?text=News') + '" alt="' + a.title + '">' +
+                    '<div class="side-content"><span class="side-cat">' + (a.category || 'Noticias') + '</span><h4>' + a.title + '</h4></div></a>'
+                ).join('') + '</div></div>' +
+                '<h2 class="section-label">Más Noticias</h2><div class="news-grid">' + grid.map(a =>
+                    '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="news-card">' +
+                    '<div class="card-img-wrap"><img src="' + (a.imageUrl || 'https://placehold.co/600x400/0e7490/ffffff?text=News') + '" alt="' + a.title + '"></div>' +
+                    '<div class="news-content"><span class="news-category">' + (a.category || 'Noticias') + '</span>' +
+                    '<h3 class="news-title">' + a.title + '</h3><p class="news-desc">' + (a.desc ? a.desc.substring(0, 120) + '...' : '') + '</p>' +
+                    '<span class="news-date">' + (a.publishedAt ? new Date(a.publishedAt).toLocaleDateString('es-MX') : '') + '</span></div></a>'
+                ).join('') + '</div></div>';
+        }
+    })();
+    </script>
 </body>
 </html>

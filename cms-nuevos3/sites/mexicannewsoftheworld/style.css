@@ -1,0 +1,71 @@
+:root {
+    --text-color: #333333;
+    --text-muted: #666666;
+    --border-color: #e8e8e8;
+    --card-bg: #ffffff;
+    --background-color: #f4f7f6;
+    --site-primary: #1e3a5f;
+    --site-secondary: #475569;
+
+    --font-primary: 'Inter', sans-serif;
+    --font-secondary: 'Space Grotesk', sans-serif;
+
+    --space-xs: 0.25rem; --space-sm: 0.5rem; --space-md: 1rem;
+    --space-lg: 1.5rem; --space-xl: 2rem; --space-2xl: 3rem;
+
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 20px rgba(0,0,0,0.12);
+
+    --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--font-primary); background: var(--background-color); color: var(--text-color); line-height: 1.6; }
+img { max-width: 100%; height: auto; display: block; }
+a { color: inherit; text-decoration: none; transition: all 0.3s ease; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 var(--space-lg); }
+
+@media (max-width: 768px) {
+    .container { padding: 0 var(--space-md); }
+    .category-page { padding: 30px var(--space-md); }
+}
+
+/* ===== LAYOUT STYLES ===== */
+
+/* ===== NEWSPAPER LAYOUT ===== */
+.newspaper-masthead { text-align: center; padding: 40px 24px; border-bottom: 3px double var(--text-color); margin-bottom: 32px; }
+.paper-title { font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 800; letter-spacing: -1px; text-transform: uppercase; color: var(--text-color); }
+.paper-date { font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; text-transform: uppercase; letter-spacing: 2px; }
+.newspaper-headline { max-width: 1000px; margin: 0 auto 40px; padding: 0 24px; text-align: center; }
+.newspaper-headline a { display: block; }
+.newspaper-headline h1 { font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 800; line-height: 1.2; margin-bottom: 20px; color: var(--text-color); }
+.newspaper-headline img { width: 100%; height: 400px; object-fit: cover; margin-bottom: 20px; }
+.newspaper-headline p { font-size: 1.15rem; line-height: 1.7; color: var(--text-muted); column-count: 2; column-gap: 40px; text-align: left; }
+.newspaper-subheads { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; max-width: 1000px; margin: 0 auto 40px; padding: 0 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 40px; }
+.subhead-item { text-align: left; }
+.subhead-item h3 { font-size: 1.3rem; font-weight: 700; line-height: 1.3; margin-bottom: 12px; color: var(--text-color); }
+.subhead-item p { font-size: 0.95rem; line-height: 1.6; color: var(--text-muted); }
+.newspaper-columns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 1000px; margin: 0 auto; padding: 0 24px 48px; }
+.column-item { padding: 16px 0; border-top: 1px solid var(--border-color); }
+.column-item h4 { font-size: 1.1rem; font-weight: 700; line-height: 1.35; margin-bottom: 8px; color: var(--text-color); }
+.column-item p { font-size: 0.9rem; line-height: 1.55; color: var(--text-muted); }
+@media (max-width: 768px) { .newspaper-subheads, .newspaper-columns { grid-template-columns: 1fr; } .newspaper-headline p { column-count: 1; } }
+
+/* ===== CATEGORY PAGE ===== */
+.category-page { padding: 40px 24px; max-width: 1400px; margin: 0 auto; }
+.category-header { margin-bottom: 32px; }
+.category-badge { display: inline-block; padding: 4px 14px; background: var(--site-primary); color: white; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; border-radius: 20px; margin-bottom: 12px; }
+
+/* ===== MOBILE SPACING FIXES ===== */
+@media (max-width: 600px) {
+    .newspaper-headline, .newspaper-subheads, .newspaper-columns { padding-left: var(--space-md) !important; padding-right: var(--space-md) !important; }
+    .cinematic-content { padding: 30px var(--space-md); }
+    .bold-overlay { padding: 20px; }
+    .split-right { padding: 30px var(--space-md); }
+    .hero-text { padding: 24px var(--space-md); }
+    .newspaper-masthead { padding: 30px var(--space-md); }
+    .featured-body { padding: 24px; }
+    .editorial-card { gap: 16px; padding-bottom: 24px; }
+}

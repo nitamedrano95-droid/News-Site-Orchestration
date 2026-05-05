@@ -245,3 +245,40 @@ a { text-decoration: none; color: inherit; }
 .social-link:hover { background: rgba(233,30,99,0.3); border-color: var(--site-secondary); color: var(--site-white); transform: translateY(-3px); box-shadow: 0 4px 16px rgba(233,30,99,0.35); }
 .footer-bottom { border-top: 1px solid rgba(255,255,255,0.08); margin-top: 40px; padding: 24px 24px 0; max-width: 1200px; margin-left: auto; margin-right: auto; color: rgba(255,255,255,0.4); font-size: 0.82rem; text-align: center; display: flex; flex-direction: column; gap: 6px; }
 @media (max-width: 600px) { .footer-grid.cols-3 { grid-template-columns: 1fr; } }
+
+
+/* ===== UNIQUE LOADER (circle/spin-x2-ease4jr) ===== */
+.loader {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        position: relative;
+        animation: rotate 1s linear infinite
+      }
+      .loader::before , .loader::after {
+        content: "";
+        box-sizing: border-box;
+        position: absolute;
+        inset: 0px;
+        border-radius: 50%;
+        border: 5px solid #99f6e4;
+        animation: prixClipFix 2s linear infinite ;
+      }
+      .loader::after{
+        border-color: #8e24aa;
+        animation: prixClipFix 2s linear infinite , rotate 0.5s linear infinite reverse;
+        inset: 6px;
+      }
+
+      @keyframes rotate {
+        0%   {transform: rotate(0deg)}
+        100%   {transform: rotate(360deg)}
+      }
+
+      @keyframes prixClipFix {
+          0%   {clip-path:polygon(50% 50%,0 0,0 0,0 0,0 0,0 0)}
+          25%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 0,100% 0,100% 0)}
+          50%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,100% 100%,100% 100%)}
+          75%  {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 100%)}
+          100% {clip-path:polygon(50% 50%,0 0,100% 0,100% 100%,0 100%,0 0)}
+      }

@@ -1,39 +1,65 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pulso Republicano - El latir de la republica</title>
-  <meta name="description" content="El latir de la republica">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700|Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23dc2626'/%3E%3Ctext x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'%3EP%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style-custom.css">
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>pulsorepublicanonoticias - News</title>
+    <meta content="News site" name="description"/>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <link href="style.css" rel="stylesheet"/>
+    <link href="style-custom.css" rel="stylesheet"/>
+    <link rel="alternate" type="application/rss+xml" title="pulsorepublicanonoticias RSS" href="/rss.xml"/>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <meta name="theme-color" content="#dc2626">
 </head>
 <body>
-  <div id="site-preloader"></div>
-  <div id="site-header"></div>
-  <main class="container">
-    <section class="hero-pulse">
-    <div class="pulse-bar"></div>
-    <div class="pulse-content">
-      <span class="live-badge">EN VIVO</span>
-      <h1>El pulso de la republica en tiempo real</h1>
-      <p>Cobertura continua de los acontecimientos que definen el momento.</p>
-    </div>
-    <div class="pulse-stats">
-      <div class="stat"><span class="stat-num">24</span><span class="stat-label">hrs</span></div>
-      <div class="stat"><span class="stat-num">365</span><span class="stat-label">dias</span></div>
-    </div>
-  </section>
-    <section class="rhythm-grid">
-    <article class="rhythm-card large"><div class="rhythm-img" style="background:#dc2626;"></div><div class="rhythm-body"><span class="tag">Urgente</span><h3>Noticia de ultima hora</h3><p>Desarrollo completo con contexto.</p></div></article>
-    <article class="rhythm-card"><div class="rhythm-body"><span class="tag">Nacional</span><h3>Actualizacion continua</h3><p>Seguimiento minuto a minuto.</p></div></article>
-    <article class="rhythm-card"><div class="rhythm-body"><span class="tag">Politica</span><h3>Decisiones del dia</h3><p>Lo que se definio en el congreso.</p></div></article>
-    <article class="rhythm-card wide"><div class="rhythm-img" style="background:#f97316;"></div><div class="rhythm-body"><span class="tag">Economia</span><h3>Movimiento significativo</h3><p>Analisis de variaciones.</p></div></article>
-  </section>
-  </main>
-  <div id="site-footer"></div>
-  <script src="components.js"></script>
+    <div id="site-preloader"><div class="loader"></div></div>
+    <div id="site-header"></div>
+    
+    <main class="main-content">
+    </main>
+
+    <div id="site-footer"></div>
+    
+    <script src="pwa-manager.js"></script>
+    <script src="components.js"></script>
+    <script>
+    (async function(){
+        const apiUrl = 'https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=pulsorepublicanonoticias&limit=12';
+        let articles = [];
+        try {
+            const res = await fetch(apiUrl);
+            if(!res.ok) throw new Error('Network');
+            const data = await res.json();
+            articles = data.articles || [];
+        } catch(e) {
+            if (window.PWAManager) articles = await PWAManager.getLocalArticles();
+        }
+        if(!articles?.length) return;
+        const headline = articles[0];
+        const subheads = articles.slice(1, 4);
+        const columns = articles.slice(4);
+        const container = document.querySelector('.main-content');
+        if(container) {
+            container.innerHTML = '<div class="newspaper-masthead"><h1 class="paper-title">pulsorepublicanonoticias - News</h1>' +
+                '<div class="paper-date">' + new Date().toLocaleDateString('es-MX', {weekday:'long', year:'numeric', month:'long', day:'numeric'}) + '</div></div>' +
+                '<div class="newspaper-headline"><a href="/articulo/?slug=' + encodeURIComponent(headline.slug) + '">' +
+                '<h1>' + headline.title + '</h1>' +
+                '<img src="' + (headline.imageUrl || 'https://placehold.co/1200x500/dc2626/ffffff?text=News') + '" alt="' + headline.title + '">' +
+                '<p>' + (headline.desc ? headline.desc.substring(0, 400) + '...' : '') + '</p></a></div>' +
+                '<div class="newspaper-subheads">' + subheads.map(a =>
+                    '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="subhead-item">' +
+                    '<h3>' + a.title + '</h3><p>' + (a.desc ? a.desc.substring(0, 200) + '...' : '') + '</p></a>'
+                ).join('') + '</div>' +
+                '<div class="newspaper-columns">' + columns.map(a =>
+                    '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="column-item">' +
+                    '<h4>' + a.title + '</h4><p>' + (a.desc ? a.desc.substring(0, 160) + '...' : '') + '</p></a>'
+                ).join('') + '</div>';
+        }
+    })();
+    </script>
 </body>
 </html>

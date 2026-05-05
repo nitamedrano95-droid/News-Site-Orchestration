@@ -1,33 +1,62 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Republica MX - Noticias de la republica</title>
-  <meta name="description" content="Noticias de la republica">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700|Inter:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%231d4ed8'/%3E%3Ctext x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'%3ER%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style-custom.css">
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>republicamx - News</title>
+    <meta content="News site" name="description"/>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <link href="style.css" rel="stylesheet"/>
+    <link href="style-custom.css" rel="stylesheet"/>
+    <link rel="alternate" type="application/rss+xml" title="republicamx RSS" href="/rss.xml"/>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <meta name="theme-color" content="#1d4ed8">
 </head>
 <body>
-  <div id="site-preloader"></div>
-  <div id="site-header"></div>
-  <main class="container">
-    <section class="hero-republic">
-    <div class="republic-emblem"></div>
-    <div class="republic-content">
-      <h1>Noticias de la Republica Mexicana</h1>
-      <p>Informacion con la seriedad que merece nuestra nacion.</p>
-    </div>
-  </section>
-    <section class="republic-grid">
-    <article class="rep-card main"><div class="rep-img" style="background:#1d4ed8;"></div><div class="rep-body"><span class="tag">Nacional</span><h3>Informacion oficial de la republica</h3><p>Datos relevantes para la nacion.</p></div></article>
-    <article class="rep-card"><div class="rep-body"><span class="tag">Gobierno</span><h3>Acciones federales</h3><p>Lo que hace el gobierno.</p></div></article>
-    <article class="rep-card"><div class="rep-body"><span class="tag">Congreso</span><h3>Actividad legislativa</h3><p>Los proyectos en curso.</p></div></article>
-  </section>
-  </main>
-  <div id="site-footer"></div>
-  <script src="components.js"></script>
+    <div id="site-preloader"><div class="loader"></div></div>
+    <div id="site-header"></div>
+    
+    <main class="main-content">
+    </main>
+
+    <div id="site-footer"></div>
+    
+    <script src="pwa-manager.js"></script>
+    <script src="components.js"></script>
+    <script>
+    (async function(){
+        const apiUrl = 'https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=republicamx&limit=12';
+        let articles = [];
+        try {
+            const res = await fetch(apiUrl);
+            if(!res.ok) throw new Error('Network');
+            const data = await res.json();
+            articles = data.articles || [];
+        } catch(e) {
+            if (window.PWAManager) articles = await PWAManager.getLocalArticles();
+        }
+        if(!articles?.length) return;
+        const hero = articles.slice(0, 2);
+        const grid = articles.slice(2);
+        const container = document.querySelector('.main-content');
+        if(container) {
+            container.innerHTML = '<div class="bold-hero-row">' + hero.map((a, i) =>
+                '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="bold-hero ' + (i === 0 ? 'hero-primary' : 'hero-secondary') + '">' +
+                '<img src="' + (a.imageUrl || 'https://placehold.co/' + (i===0 ? '800x600' : '600x400') + '/1d4ed8/ffffff?text=News') + '" alt="' + a.title + '">' +
+                '<div class="bold-overlay"><span class="bold-cat">' + (a.category || 'Noticias') + '</span>' +
+                '<h2>' + a.title + '</h2><p>' + (a.desc ? a.desc.substring(0, i===0 ? 200 : 100) + '...' : '') + '</p></div></a>'
+            ).join('') + '</div>' +
+            '<h2 class="bold-section-title">Noticias Destacadas</h2><div class="bold-grid">' + grid.map(a =>
+                '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="bold-card">' +
+                '<div class="bold-img-wrap"><img src="' + (a.imageUrl || 'https://placehold.co/600x400/1d4ed8/ffffff?text=News') + '" alt="' + a.title + '"></div>' +
+                '<div class="bold-card-body"><span class="bold-cat">' + (a.category || 'Noticias') + '</span>' +
+                '<h3>' + a.title + '</h3><p>' + (a.desc ? a.desc.substring(0, 140) + '...' : '') + '</p></div></a>'
+            ).join('') + '</div>';
+        }
+    })();
+    </script>
 </body>
 </html>

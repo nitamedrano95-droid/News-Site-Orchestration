@@ -1,38 +1,66 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mexico Plus - Mas que noticias</title>
-  <meta name="description" content="Mas que noticias">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800|Inter:wght@400&display=swap" rel="stylesheet">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23c2410c'/%3E%3Ctext x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'%3EM%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style-custom.css">
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>mexicoplus - News</title>
+    <meta content="News site" name="description"/>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <link href="style.css" rel="stylesheet"/>
+    <link href="style-custom.css" rel="stylesheet"/>
+    <link rel="alternate" type="application/rss+xml" title="mexicoplus RSS" href="/rss.xml"/>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <meta name="theme-color" content="#c2410c">
 </head>
 <body>
-  <div id="site-preloader"></div>
-  <div id="site-header"></div>
-  <main class="container">
-    <section class="hero-plus">
-    <div class="plus-layers">
-      <div class="layer"></div>
-      <div class="layer"></div>
-      <div class="layer"></div>
-    </div>
-    <div class="plus-content">
-      <h1>Mas noticias, mas contexto, mas Mexico</h1>
-      <p>Informacion adicional que enriquece tu panorama.</p>
-    </div>
-  </section>
-    <section class="plus-grid">
-    <article class="plus-card base"><div class="plus-img" style="background:#c2410c;"></div><div class="plus-body"><span class="tag">Base</span><h3>Noticia principal del dia</h3><p>La informacion esencial.</p></div></article>
-    <article class="plus-card add"><div class="plus-body"><span class="tag">+Contexto</span><h3>Informacion adicional</h3><p>Datos que complementan.</p></div></article>
-    <article class="plus-card add"><div class="plus-body"><span class="tag">+Analisis</span><h3>Profundizacion</h3><p>El detras de la noticia.</p></div></article>
-    <article class="plus-card add"><div class="plus-body"><span class="tag">+Reacciones</span><h3>Respuestas</h3><p>Lo que dicen los actores.</p></div></article>
-  </section>
-  </main>
-  <div id="site-footer"></div>
-  <script src="components.js"></script>
+    <div id="site-preloader"><div class="loader"></div></div>
+    <div id="site-header"></div>
+    
+    <main class="main-content">
+    </main>
+
+    <div id="site-footer"></div>
+    
+    <script src="pwa-manager.js"></script>
+    <script src="components.js"></script>
+    <script>
+    (async function(){
+        const apiUrl = 'https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=mexicoplus&limit=12';
+        let articles = [];
+        try {
+            const res = await fetch(apiUrl);
+            if(!res.ok) throw new Error('Network');
+            const data = await res.json();
+            articles = data.articles || [];
+        } catch(e) {
+            if (window.PWAManager) articles = await PWAManager.getLocalArticles();
+        }
+        if(!articles?.length) return;
+        const main = articles[0];
+        const sub = articles.slice(1, 5);
+        const rest = articles.slice(5);
+        const container = document.querySelector('.main-content');
+        if(container) {
+            container.innerHTML = '<div class="bento-grid">' +
+                '<a href="/articulo/?slug=' + encodeURIComponent(main.slug) + '" class="bento-main">' +
+                '<img src="' + (main.imageUrl || 'https://placehold.co/800x600/c2410c/ffffff?text=News') + '" alt="' + main.title + '">' +
+                '<div class="bento-overlay"><span class="bento-cat">' + (main.category || 'Noticias') + '</span><h1>' + main.title + '</h1></div></a>' +
+                sub.map((a, i) =>
+                    '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="bento-sub bento-sub-' + (i+1) + '">' +
+                    '<img src="' + (a.imageUrl || 'https://placehold.co/400x300/c2410c/ffffff?text=News') + '" alt="' + a.title + '">' +
+                    '<div class="bento-overlay"><span class="bento-cat">' + (a.category || 'Noticias') + '</span><h3>' + a.title + '</h3></div></a>'
+                ).join('') + '</div>' +
+                '<h2 class="section-label">Descubre m&aacute;s</h2><div class="bento-rest">' +
+                rest.map(a =>
+                    '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="bento-mini">' +
+                    '<img src="' + (a.imageUrl || 'https://placehold.co/300x200/c2410c/ffffff?text=News') + '" alt="' + a.title + '">' +
+                    '<div class="mini-body"><span class="mini-cat">' + (a.category || 'Noticias') + '</span><h4>' + a.title + '</h4></div></a>'
+                ).join('') + '</div>';
+        }
+    })();
+    </script>
 </body>
 </html>

@@ -13,25 +13,27 @@ echo ""
 
 echo "🔧 Desplegando cms-originaux..."
 cd cms-originaux && ./deploy.sh
-./scripts/deploy/deploy_all_sites.sh
-cd ..
+./scripts/deploy/deploy_all_sites.sh && cd ..
+cd src && wrangler deploy && cd /home/sebastianvernis/ProyectosActivos/cloudflare-news-project/
+
 
 echo ""
 echo "🔧 Desplegando cms-nuevos..."
 cd cms-nuevos && ./deploy.sh 
-./scripts/deploy/deploy_all_sites.sh
-cd ..
+./scripts/deploy/deploy_all_sites.sh && cd ..
+cd src && wrangler deploy && cd /home/sebastianvernis/ProyectosActivos/cloudflare-news-project/
 
 echo ""
 echo "🔧 Desplegando cms-nuevos2..."
-cd cms-nuevos2 && ./deploy.sh &&
-./scripts/deploy/deploy_all_sites.sh
-cd ..
+cd cms-nuevos2 && ./deploy.sh 
+./scripts/deploy/deploy_all_sites.sh && cd ..
+cd src && wrangler deploy && cd /home/sebastianvernis/ProyectosActivos/cloudflare-news-project/
 
 echo ""
-echo "🔧 Desplegando cms-nuevos2..."
-cd cms-nuevos3 && ./deploy.sh &&  ./scripts/deploy/deploy_all_sites.sh
-cd ..
+echo "🔧 Desplegando cms-nuevos3..."
+cd cms-nuevos3 
+./scripts/deploy/deploy_all_sites.sh && cd ..
+wrangler deploy && cd 
 
 echo ""
 echo "═══════════════════════════════════════════════════════════════════"
@@ -49,8 +51,10 @@ echo "🌐 Workers:"
 echo "   • cms-originaux: https://cms-originaux.sebastianvernis.workers.dev"
 echo "   • cms-nuevos:    https://cms-nuevos.sebastianvernis.workers.dev"
 echo "   • cms-nuevos2:   https://cms-nuevos2.sebastianvernis.workers.dev"
+echo "   • cms-nuevos3:   https://cms-nuevos3.sebastianvernis.workers.dev"
 echo ""
 echo "🖥️  Admin UIs:"
 echo "   • https://cms-admin-originaux.pages.dev"
 echo "   • https://cms-admin-nuevos.pages.dev"
 echo "   • https://cms-admin-nuevos2.pages.dev"
+echo "   • https://cms-admin-nuevos3.pages.dev"

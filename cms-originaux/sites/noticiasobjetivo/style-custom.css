@@ -545,3 +545,37 @@ body { background: #05111F; color: #E8F0F4; }
     display: flex;
     justify-content: center;
 }
+
+
+/* ===== UNIQUE LOADER (rect/brix-shake-clr) ===== */
+.loader {
+          width: 48px;
+          height: 48px;
+          display: flex;
+          animation : rotate 2s linear infinite;
+        }
+        .loader:before,
+        .loader:after {
+          content:"";
+          flex:1;
+          background:#fff;
+          animation: mvx 0.5s infinite linear alternate;
+        }
+        .loader:before {
+          background: #0e7490;
+          animation-name:mvrx;
+        }
+
+        @keyframes rotate {
+          100% {transform: rotate(360deg)}
+        }
+        @keyframes mvx {
+          0% , 40% {transform: translateX(0px)}
+          20% , 60% {transform: translateX(8px)}
+          100% {transform: translateX(15px)}
+        }
+        @keyframes mvrx {
+          0% , 40% {transform: translateX(0px)}
+          20% , 60% {transform: translateX(-8px)}
+          100% {transform: translateX(-15px)}
+        }

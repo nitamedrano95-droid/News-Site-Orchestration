@@ -7,7 +7,7 @@
   function injectPreloader() {
     const el = document.getElementById('site-preloader');
     if (!el) return;
-    el.innerHTML = '<div class="preloader-ring"></div><p style="margin-top:16px;font-weight:700;color:var(--brand-primary);font-size:0.9em;letter-spacing:1px;text-transform:uppercase;">Enfoque Mexicano</p>';
+    el.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;"><span class="loader"></span><p style="font-weight:700;color:#0e7490;font-size:0.85em;letter-spacing:1px;">Cargando...</p></div>';
     window.addEventListener('load', () => {
       setTimeout(() => el.classList.add('hidden'), 400);
     });

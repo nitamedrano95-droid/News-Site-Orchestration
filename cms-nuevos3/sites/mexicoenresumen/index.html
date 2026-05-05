@@ -1,39 +1,57 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mexico en Resumen - Las noticias en un vistazo</title>
-  <meta name="description" content="Las noticias en un vistazo">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23c2410c'/%3E%3Ctext x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'%3EM%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style-custom.css">
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>mexicoenresumen - News</title>
+    <meta content="News site" name="description"/>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <link href="style.css" rel="stylesheet"/>
+    <link href="style-custom.css" rel="stylesheet"/>
+    <link rel="alternate" type="application/rss+xml" title="mexicoenresumen RSS" href="/rss.xml"/>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <meta name="theme-color" content="#c2410c">
 </head>
 <body>
-  <div id="site-preloader"></div>
-  <div id="site-header"></div>
-  <main class="container">
-    <section class="hero-summary">
-    <div class="summary-bar"></div>
-    <div class="summary-content">
-      <h1>Las noticias en un vistazo</h1>
-      <p>Resumen compacto de lo esencial.</p>
-    </div>
-    <div class="summary-count">
-      <div class="count-item"><span class="count-num">12</span><span class="count-label">Nacionales</span></div>
-      <div class="count-item"><span class="count-num">8</span><span class="count-label">Politica</span></div>
-      <div class="count-item"><span class="count-num">5</span><span class="count-label">Economia</span></div>
-    </div>
-  </section>
-    <section class="summary-grid">
-    <article class="sum-card main"><div class="sum-body"><h2>Resumen ejecutivo del dia</h2><p>Lo esencial en pocas lineas para quien no tiene tiempo.</p><a href="#" class="btn-primary">Expandir</a></div></article>
-    <article class="sum-card"><div class="sum-body"><span class="tag">Nacional</span><h3>Puntos clave</h3><p>Resumen de politica.</p></div></article>
-    <article class="sum-card"><div class="sum-body"><span class="tag">Economia</span><h3>Cifras del dia</h3><p>Lo que importa.</p></div></article>
-    <article class="sum-card"><div class="sum-body"><span class="tag">Global</span><h3>Contexto internacional</h3><p>En dos lineas.</p></div></article>
-  </section>
-  </main>
-  <div id="site-footer"></div>
-  <script src="components.js"></script>
+    <div id="site-preloader"><div class="loader"></div></div>
+    <div id="site-header"></div>
+    
+    <main class="main-content">
+    </main>
+
+    <div id="site-footer"></div>
+    
+    <script src="pwa-manager.js"></script>
+    <script src="components.js"></script>
+    <script>
+    (async function(){
+        const apiUrl = 'https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=mexicoenresumen&limit=12';
+        let articles = [];
+        try {
+            const res = await fetch(apiUrl);
+            if(!res.ok) throw new Error('Network');
+            const data = await res.json();
+            articles = data.articles || [];
+        } catch(e) {
+            if (window.PWAManager) articles = await PWAManager.getLocalArticles();
+        }
+        if(!articles?.length) return;
+        const container = document.querySelector('.main-content');
+        if(container) {
+            container.innerHTML = '<div class="masonry-wall">' + articles.map((a, i) => {
+                const shape = i % 3 === 0 ? 'tall' : i % 3 === 1 ? 'wide' : 'normal';
+                const dims = i % 3 === 0 ? '400x600' : i % 3 === 1 ? '600x300' : '400x400';
+                const descLen = i % 3 === 0 ? 200 : 80;
+                return '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="masonry-brick brick-' + shape + '">' +
+                    '<div class="brick-img"><img src="' + (a.imageUrl || 'https://placehold.co/' + dims + '/c2410c/ffffff?text=News') + '" alt="' + a.title + '"></div>' +
+                    '<div class="brick-body"><span class="brick-cat">' + (a.category || 'Noticias') + '</span>' +
+                    '<h3>' + a.title + '</h3><p>' + (a.desc ? a.desc.substring(0, descLen) + '...' : '') + '</p></div></a>';
+            }).join('') + '</div>';
+        }
+    })();
+    </script>
 </body>
 </html>

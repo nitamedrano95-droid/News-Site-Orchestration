@@ -1,0 +1,187 @@
+/* ============================================
+   ARTICLE CARD ENHANCEMENTS - cms-nuevos
+   Subtle improvements for diverse designs
+   ============================================ */
+
+/* Enhanced Article Card - Generic improvements */
+.article-card {
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease;
+    cursor: pointer;
+}
+
+.article-card:hover {
+    transform: translateY(-4px);
+}
+
+/* Image zoom effect for article cards */
+.article-card .square-img,
+.article-card .article-img,
+.article-card img {
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), filter 0.4s ease;
+}
+
+.article-card:hover .square-img,
+.article-card:hover .article-img,
+.article-card:hover img {
+    transform: scale(1.03);
+}
+
+/* Enhanced category labels */
+.article-card .category-label,
+.article-card .card-category {
+    transition: all 0.3s ease;
+}
+
+.article-card:hover .category-label,
+.article-card:hover .card-category {
+    transform: translateY(-1px);
+}
+
+/* Enhanced read more links */
+.article-card .read-more,
+.article-card .card-link {
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.article-card .read-more::after,
+.article-card .card-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    transition: width 0.4s ease;
+}
+
+.article-card:hover .read-more::after,
+.article-card:hover .card-link::after {
+    width: 100%;
+}
+
+/* Enhanced Category Cards */
+.category-card {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+.category-card:hover {
+    transform: translateY(-6px);
+}
+
+.category-card .card-img {
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.category-card:hover .card-img {
+    transform: scale(1.04);
+}
+
+/* Card Grid improvements */
+.card-grid {
+    gap: 32px;
+}
+
+/* Enhanced max cards (for brutalist designs) */
+.max-card {
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.max-card:hover {
+    z-index: 10;
+}
+
+.max-card .max-img {
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.max-card:hover .max-img {
+    transform: scale(1.03);
+}
+
+/* Video card enhancements */
+.video-card {
+    transition: transform 0.4s ease;
+    cursor: pointer;
+}
+
+.video-card:hover {
+    transform: translateY(-4px);
+}
+
+.video-card .video-thumb {
+    transition: filter 0.4s ease, transform 0.5s ease;
+}
+
+.video-card:hover .video-thumb {
+    filter: brightness(1);
+    transform: scale(1.02);
+}
+
+.video-card h3 {
+    transition: color 0.3s ease;
+}
+
+/* Hero image enhancements */
+.hero-image,
+.portrait-img {
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), filter 0.4s ease;
+}
+
+.hero-cinematic:hover .hero-image,
+.hero-content:hover .portrait-img {
+    transform: scale(1.02);
+}
+
+/* Smooth fade-in animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.article-card,
+.category-card,
+.video-card,
+.max-card {
+    animation: fadeInUp 0.5s ease forwards;
+}
+
+.article-card:nth-child(1) { animation-delay: 0.05s; }
+.article-card:nth-child(2) { animation-delay: 0.1s; }
+.article-card:nth-child(3) { animation-delay: 0.15s; }
+.category-card:nth-child(1) { animation-delay: 0.05s; }
+.category-card:nth-child(2) { animation-delay: 0.1s; }
+.category-card:nth-child(3) { animation-delay: 0.15s; }
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .article-card,
+    .category-card,
+    .video-card,
+    .max-card,
+    .article-card .square-img,
+    .article-card .article-img,
+    .article-card img,
+    .category-card .card-img,
+    .max-card .max-img,
+    .video-card .video-thumb,
+    .hero-image,
+    .portrait-img {
+        transition: none;
+        animation: none;
+    }
+    
+    .article-card:hover,
+    .category-card:hover,
+    .video-card:hover,
+    .max-card:hover {
+        transform: none;
+    }
+}

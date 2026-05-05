@@ -1,48 +1,63 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ADN Mexicano - La esencia de Mexico</title>
-  <meta name="description" content="La esencia de Mexico">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700|Space+Grotesk:wght@400&display=swap" rel="stylesheet">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23be123c'/%3E%3Ctext x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'%3EA%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style-custom.css">
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>ADN Mexicano - La esencia de Mexico</title>
+    <meta content="La esencia de Mexico" name="description"/>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <link href="style.css" rel="stylesheet"/>
+    <link href="style-custom.css" rel="stylesheet"/>
+    <link rel="alternate" type="application/rss+xml" title="ADN Mexicano RSS" href="/rss.xml"/>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <meta name="theme-color" content="#be123c">
 </head>
 <body>
-  <div id="site-preloader"></div>
-  <div id="site-header"></div>
-  <main class="container">
-    <section class="hero-dna">
-    <div class="dna-strand left"><div class="helix-bar"></div><div class="helix-bar"></div><div class="helix-bar"></div></div>
-    <div class="hero-center">
-      <h1>La esencia de Mexico en cada historia</h1>
-      <p>Noticias que forman parte de nuestro codigo nacional.</p>
-    </div>
-    <div class="dna-strand right"><div class="helix-bar"></div><div class="helix-bar"></div><div class="helix-bar"></div></div>
-  </section>
-    <section class="paired-grid">
-    <div class="pair-row">
-      <article class="pair-card main"><div class="pair-img" style="background:#be123c;"></div><div class="pair-body"><span class="tag">Nacional</span><h3>Historia principal</h3><p>Analisis completo.</p></div></article>
-      <article class="pair-card"><div class="pair-body"><span class="tag">Politica</span><h3>Actualizacion legislativa</h3><p>Cambios recientes.</p></div></article>
-    </div>
-    <div class="pair-row reverse">
-      <article class="pair-card"><div class="pair-body"><span class="tag">Economia</span><h3>Indicadores del dia</h3><p>Datos economicos.</p></div></article>
-      <article class="pair-card main"><div class="pair-img" style="background:#f43f5e;"></div><div class="pair-body"><span class="tag">Sociedad</span><h3>Tendencias sociales</h3><p>Lo que mueve a Mexico.</p></div></article>
-    </div>
-  </section>
-  <section class="timeline-vertical">
-    <h2 class="section-title">Linea del Tiempo</h2>
-    <div class="timeline">
-      <div class="timeline-node"><span class="node-time">08:00</span><p>Apertura de mercados con datos positivos</p></div>
-      <div class="timeline-node"><span class="node-time">12:00</span><p>Conferencia de prensa presidencial</p></div>
-      <div class="timeline-node"><span class="node-time">16:00</span><p>Anuncio de nuevo programa social</p></div>
-      <div class="timeline-node"><span class="node-time">20:00</span><p>Cierre de sesion legislativa</p></div>
-    </div>
-  </section>
-  </main>
-  <div id="site-footer"></div>
-  <script src="components.js"></script>
+    <div id="site-preloader"><div class="loader"></div></div>
+    <div id="site-header"></div>
+    
+    <main class="main-content">
+    </main>
+
+    <div id="site-footer"></div>
+    
+    <script src="pwa-manager.js"></script>
+    <script src="components.js"></script>
+    <script>
+    (async function(){
+        const apiUrl = 'https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=adnmexicano&limit=12';
+        let articles = [];
+        try {
+            const res = await fetch(apiUrl);
+            if(!res.ok) throw new Error('Network');
+            const data = await res.json();
+            articles = data.articles || [];
+        } catch(e) {
+            if (window.PWAManager) articles = await PWAManager.getLocalArticles();
+        }
+        if(!articles?.length) return;
+        const hero = articles[0];
+        const cards = articles.slice(1);
+        const container = document.querySelector('.main-content');
+        if(container) {
+            container.innerHTML = '<div class="split-editorial"><aside class="split-left"><div class="sticky-hero">' +
+                '<a href="/articulo/?slug=' + encodeURIComponent(hero.slug) + '">' +
+                '<div class="hero-img" style="background-image:url('' + (hero.imageUrl || 'https://placehold.co/800x1000/be123c/ffffff?text=News') + '')"></div>' +
+                '<div class="hero-text"><span class="hero-cat">' + (hero.category || 'Noticias') + '</span>' +
+                '<h1>' + hero.title + '</h1><p>' + (hero.desc ? hero.desc.substring(0, 300) + '...' : '') + '</p></div></a></div></aside>' +
+                '<div class="split-right"><h2 class="section-label">M&aacute;s Noticias</h2><div class="editorial-list">' +
+                cards.map(a =>
+                    '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="editorial-card">' +
+                    '<div class="editorial-img" style="background-image:url('' + (a.imageUrl || 'https://placehold.co/400x300/be123c/ffffff?text=News') + '')"></div>' +
+                    '<div class="editorial-body"><span class="editorial-cat">' + (a.category || 'Noticias') + '</span>' +
+                    '<h3>' + a.title + '</h3><p>' + (a.desc ? a.desc.substring(0, 150) + '...' : '') + '</p>' +
+                    '<span class="read-more">Leer m&aacute;s &rarr;</span></div></a>'
+                ).join('') + '</div></div></div>';
+        }
+    })();
+    </script>
 </body>
 </html>
