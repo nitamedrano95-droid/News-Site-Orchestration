@@ -1,0 +1,16 @@
+https://www.lapoliticaonline.com/files/rss/ultimasnoticias-mx.xml
+https://www.jornada.com.mx/rss/edicion.xml?v=1
+https://es.wired.com/feed/rss
+https://elpais.com/info/rss/
+https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/mexico/portada
+https://www.reforma.com/rss/ciudad.xml
+https://www.reforma.com/rss/justicia.xml
+https://www.reforma.com/rss/portada.xml
+https://www.proceso.com.mx/rss/
+https://www.proceso.com.mx/rss/feed.html?r=2
+https://www.proceso.com.mx/rss/feed.html?r=3
+https://www.proceso.com.mx/rss/feed.html?r=5
+https://www.proceso.com.mx/rss/feed.html?r=1
+https://www.eleconomista.com.mx/rss/ultimas-noticias
+https://expansion.mx/rss/tendencias
+https://expansion.mx/rss
