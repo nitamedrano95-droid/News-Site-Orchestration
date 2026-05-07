@@ -136,7 +136,7 @@
             document.getElementById('article-loading').style.display = 'none';
             document.getElementById('article-content').style.display = 'block';
         }
-        function showError() {
+        function showError() { const pre = document.getElementById('site-preloader'); if(pre) pre.classList.add('hidden');
             document.getElementById('article-loading').style.display = 'none';
             document.getElementById('article-error').style.display = 'block';
         }

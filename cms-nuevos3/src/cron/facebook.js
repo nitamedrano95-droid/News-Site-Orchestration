@@ -1,7 +1,7 @@
 // src/cron/facebook.js — Publicación automática a Facebook (6 posts/día/página, timer 4h)
 
 import { SITIOS_LIST, SITE_DOMAIN_MAP } from '../config.js';
-import { decodeHTMLEntities } from '../utils/helpers.js';
+import { decodeHTMLEntities, articleSlugify } from '../utils/helpers.js';
 
 const FB_INTERVAL_MS = 2 * 60 * 60 * 1000; // 2 horas entre posts = 12 posts/día por página
 
@@ -34,9 +34,18 @@ export async function publishToFBIndividual(env, article, siteSlug) {
       return { success: false, error: 'Article missing title' };
     }
 
+    // Ensure we have a valid slug — generate from title if missing
+    const safeSlug = (article.SLUG && article.SLUG.trim()) 
+      ? article.SLUG.trim() 
+      : articleSlugify(article.TITULO);
+    
+    if (!safeSlug) {
+      return { success: false, error: 'Cannot generate slug for article' };
+    }
+
     // Get domain for the site
     const domain = SITE_DOMAIN_MAP[siteSlug] || `https://${siteSlug}.pages.dev`;
-    const url = `${domain}/articulo/?slug=${article.SLUG}`;
+    const url = `${domain}/articulo/?slug=${encodeURIComponent(safeSlug)}`;
 
     console.log(`[FB] Publishing to ${siteSlug}: ${article.TITULO?.substring(0, 50)}...`);
     console.log(`[FB] URL: ${url}`);

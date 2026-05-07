@@ -139,8 +139,14 @@
         function showError() {
             document.getElementById('article-loading').style.display = 'none';
             document.getElementById('article-error').style.display = 'block';
+            const preloader = document.getElementById('site-preloader');
+            if (preloader) preloader.classList.add('hidden');
         }
     })();
+    window.addEventListener('load', () => {
+        const preloader = document.getElementById('site-preloader');
+        if (preloader) preloader.classList.add('hidden');
+    });
     </script>
 </body>
 </html>

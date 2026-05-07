@@ -139,6 +139,8 @@
         function showError() {
             document.getElementById('article-loading').style.display = 'none';
             document.getElementById('article-error').style.display = 'block';
+            const pre = document.getElementById('preloader');
+            if (pre) { pre.style.transition = 'opacity 0.5s ease'; pre.style.opacity = '0'; setTimeout(() => pre.remove(), 600); }
         }
     })();
     </script>
