@@ -1,0 +1,6 @@
+# Proxy /api/* al worker de noticias
+/api/* https://cms-nuevos3.workers.dev/api/:splat 200
+
+# RSS Feed
+/rss.xml  /api/rss/perspectivamexicana  200
+/feed.xml /api/rss/perspectivamexicana  200

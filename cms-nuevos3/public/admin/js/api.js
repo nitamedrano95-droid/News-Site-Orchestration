@@ -3,7 +3,7 @@ const API_CONFIG = {
     base: window.ADMIN_API_BASE_URL
         || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
             ? 'http://localhost:8787/api'
-            : 'https://cms-nuevos.sebastianvernis.workers.dev/api'),
+            : 'https://cms-nuevos3.sebastianvernis.workers.dev/api'),
     r2DevUrl: 'https://pub-42bf42f47f554f9791e810e7d0f209d4.r2.dev',
     r2PublicUrl: 'https://uploads.sebastianvernis.space',
     storageKey: 'CMS_AUTH_TOKEN',
