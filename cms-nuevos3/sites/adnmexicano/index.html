@@ -19,7 +19,7 @@
     <div id="site-preloader"><div class="loader"></div></div>
     <div id="site-header"></div>
     
-    <main class="main-content">
+    <main class="main-content" style="margin-top: 10px;">
     </main>
 
     <div id="site-footer"></div>
@@ -46,13 +46,13 @@
         if(container) {
             container.innerHTML = '<div class="split-editorial"><aside class="split-left"><div class="sticky-hero">' +
                 '<a href="/articulo/?slug=' + encodeURIComponent(hero.slug) + '">' +
-                '<div class="hero-img" style="background-image:url('' + (hero.imageUrl || 'https://placehold.co/800x1000/be123c/ffffff?text=News') + '')"></div>' +
+                '<div class="hero-img" style="background-image:url(\'' + (hero.imageUrl || 'https://placehold.co/800x1000/be123c/ffffff?text=News') + '\')"></div>' +
                 '<div class="hero-text"><span class="hero-cat">' + (hero.category || 'Noticias') + '</span>' +
                 '<h1>' + hero.title + '</h1><p>' + (hero.desc ? hero.desc.substring(0, 300) + '...' : '') + '</p></div></a></div></aside>' +
                 '<div class="split-right"><h2 class="section-label">M&aacute;s Noticias</h2><div class="editorial-list">' +
                 cards.map(a =>
                     '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="editorial-card">' +
-                    '<div class="editorial-img" style="background-image:url('' + (a.imageUrl || 'https://placehold.co/400x300/be123c/ffffff?text=News') + '')"></div>' +
+                    '<div class="editorial-img" style="background-image:url(\'' + (a.imageUrl || 'https://placehold.co/400x300/be123c/ffffff?text=News') + '\')"></div>' +
                     '<div class="editorial-body"><span class="editorial-cat">' + (a.category || 'Noticias') + '</span>' +
                     '<h3>' + a.title + '</h3><p>' + (a.desc ? a.desc.substring(0, 150) + '...' : '') + '</p>' +
                     '<span class="read-more">Leer m&aacute;s &rarr;</span></div></a>'

@@ -2,6 +2,7 @@
   const path = window.location.pathname;
   const isSubdir = /\/(articulo|categoria|admin)\//.test(path);
   const base = isSubdir ? '../' : './';
+  const siteName = 'Azteca Mexico Noticias';
 
   function injectPreloader() {
     const el = document.getElementById('site-preloader');
@@ -19,7 +20,7 @@
   function injectFooter() {
     const el = document.getElementById('site-footer');
     if (!el) return;
-    el.innerHTML = '<footer class="site-footer"><div style="text-align:center;margin-bottom:20px;"><img src="' + base + 'logo-footer.png" alt="aztecamexiconoticias" style="height:32px;width:auto;object-fit:contain;opacity:0.9;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.2));"></div><p>&copy; ' + new Date().getFullYear() + ' aztecamexiconoticias. Todos los derechos reservados.</p><p><a href="' + base + 'privacidad.html">Privacidad</a> | <a href="' + base + 'terminos.html">Terminos</a> | <a href="' + base + 'contacto.html">Contacto</a> | <a href="' + base + 'acerca-de.html">Acerca de</a></p></footer>';
+    el.innerHTML = '<footer class="site-footer"><div style="text-align:center;margin-bottom:20px;"><img src="' + base + 'logo-footer.png" alt="aztecamexiconoticias" style="height:32px;width:auto;object-fit:contain;opacity:0.9;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.2));"></div><p>&copy; ' + new Date().getFullYear() + ' ' + siteName + '. Todos los derechos reservados.</p><p><a href="' + base + 'privacidad.html">Privacidad</a> | <a href="' + base + 'terminos.html">Terminos</a> | <a href="' + base + 'contacto.html">Contacto</a> | <a href="' + base + 'acerca-de.html">Acerca de</a></p></footer>';
   }
 
   function init() { injectPreloader(); injectHeader(); injectFooter(); }

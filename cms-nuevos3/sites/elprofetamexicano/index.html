@@ -19,7 +19,7 @@
     <div id="site-preloader"><div class="loader"></div></div>
     <div id="site-header"></div>
     
-    <main class="main-content">
+    <main class="main-content" style="margin-top: 10px;">
     </main>
 
     <div id="site-footer"></div>
@@ -44,7 +44,7 @@
         const cards = articles.slice(1);
         const container = document.querySelector('.main-content');
         if(container) {
-            container.innerHTML = '<div class="cinematic-hero" style="background-image:url('' + (hero.imageUrl || 'https://placehold.co/1600x900/581c87/ffffff?text=News') + '')">' +
+            container.innerHTML = '<div class="cinematic-hero" style="background-image:url(\'' + (hero.imageUrl || 'https://placehold.co/1600x900/581c87/ffffff?text=News') + '\')">' +
                 '<div class="cinematic-overlay"></div><div class="cinematic-content">' +
                 '<span class="cinematic-cat">' + (hero.category || 'Noticias') + '</span>' +
                 '<h1>' + hero.title + '</h1><p>' + (hero.desc ? hero.desc.substring(0, 300) + '...' : '') + '</p>' +

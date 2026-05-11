@@ -64,27 +64,35 @@ articles.get('/', async (c) => {
       // Sin filtro de sitio: consultar PARAFRASEADOS y CMS
       let queryPara  = "SELECT *, 'PARAFRASEADO' as SOURCE_TABLE FROM ARTICULOS_PARAFRASEADOS WHERE ESTADO = 'PUBLICADO'";
       let paramsPara = [];
-      let queryCMS   = "SELECT *, 'CMS' as SOURCE_TABLE FROM ARTICULOS_CMS WHERE ESTADO = 'PUBLICADO'";
-      let paramsCMS  = [];
 
       if (category) {
         queryPara += ' AND LOWER(CATEGORIA) = LOWER(?)';
         paramsPara.push(category);
-        queryCMS += ' AND LOWER(CATEGORIA) = LOWER(?)';
-        paramsCMS.push(category);
       }
 
       queryPara += ' ORDER BY FECHA_PUBLICACION DESC LIMIT ? OFFSET ?';
       paramsPara.push(l, applyOffset ? o : 0);
-      queryCMS += ' ORDER BY FECHA_PUBLICACION DESC LIMIT ? OFFSET ?';
-      paramsCMS.push(l, applyOffset ? o : 0);
 
-      const [resPara, resCMS] = await Promise.all([
-        c.env.DB.prepare(queryPara).bind(...paramsPara).all(),
-        c.env.DB.prepare(queryCMS).bind(...paramsCMS).all(),
-      ]);
+      const resPara = await c.env.DB.prepare(queryPara).bind(...paramsPara).all();
 
-      return [...(resPara.results || []), ...(resCMS.results || [])]
+      // CMS query en try-catch por si la tabla no existe en producción
+      let resCMSresults = [];
+      try {
+        let queryCMS   = "SELECT *, 'CMS' as SOURCE_TABLE FROM ARTICULOS_CMS WHERE ESTADO = 'PUBLICADO'";
+        let paramsCMS  = [];
+        if (category) {
+          queryCMS += ' AND LOWER(CATEGORIA) = LOWER(?)';
+          paramsCMS.push(category);
+        }
+        queryCMS += ' ORDER BY FECHA_PUBLICACION DESC LIMIT ? OFFSET ?';
+        paramsCMS.push(l, applyOffset ? o : 0);
+        const resCMS = await c.env.DB.prepare(queryCMS).bind(...paramsCMS).all();
+        resCMSresults = resCMS.results || [];
+      } catch (_) {
+        // Tabla ARTICULOS_CMS no existe - solo usar PARAFRASEADOS
+      }
+
+      return [...(resPara.results || []), ...resCMSresults]
         .map(parseArticleRow)
         .filter(Boolean)
         .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt))
@@ -131,9 +139,14 @@ articles.get('/id/:id', async (c) => {
     ).bind(id).first();
     if (rowPara) return c.json({ article: parseArticleRow(rowPara) });
 
-    const rowCMS = await c.env.DB.prepare(
-      "SELECT *, 'CMS' as SOURCE_TABLE FROM ARTICULOS_CMS WHERE ID = ? LIMIT 1"
-    ).bind(id).first();
+    let rowCMS = null;
+    try {
+      rowCMS = await c.env.DB.prepare(
+        "SELECT *, 'CMS' as SOURCE_TABLE FROM ARTICULOS_CMS WHERE ID = ? LIMIT 1"
+      ).bind(id).first();
+    } catch (_) {
+      // Tabla ARTICULOS_CMS puede no existir en producción
+    }
     if (rowCMS) {
       return c.json({
         article: {
@@ -192,20 +205,25 @@ articles.get('/:slug', async (c) => {
      });
      if (matchPara) return c.json({ article: parseArticleRow(matchPara) });
 
-     const legacyPara = await c.env.DB.prepare(
-       "SELECT *, 'PARAFRASEADO' as SOURCE_TABLE FROM ARTICULOS_PARAFRASEADOS WHERE LEGACY_SLUG = ? LIMIT 1"
-     ).bind(slug).first();
-     if (legacyPara) return c.json({ article: parseArticleRow(legacyPara), legacySlug: slug, canonicalSlug: legacyPara.SLUG || parseArticleRow(legacyPara)?.slug });
+     let legacyPara = null;
+      try {
+        legacyPara = await c.env.DB.prepare(
+          "SELECT *, 'PARAFRASEADO' as SOURCE_TABLE FROM ARTICULOS_PARAFRASEADOS WHERE LEGACY_SLUG = ? LIMIT 1"
+        ).bind(slug).first();
+      } catch (_) {
+        // Columna LEGACY_SLUG puede no existir en producción
+      }
+      if (legacyPara) return c.json({ article: parseArticleRow(legacyPara), legacySlug: slug, canonicalSlug: legacyPara.SLUG || parseArticleRow(legacyPara)?.slug });
 
-     let legacyCMS = null;
-     try {
-       legacyCMS = await c.env.DB.prepare(
-         "SELECT *, 'CMS' as SOURCE_TABLE FROM ARTICULOS_CMS WHERE ESTADO = 'PUBLICADO' AND LEGACY_SLUG = ? LIMIT 1"
-       ).bind(slug).first();
-     } catch (e) {
-       console.error('Error fetching CMS legacy article by slug:', e.message);
-     }
-     if (legacyCMS) return c.json({ article: parseArticleRow(legacyCMS), legacySlug: slug, canonicalSlug: legacyCMS.SLUG || parseArticleRow(legacyCMS)?.slug });
+      let legacyCMS = null;
+      try {
+        legacyCMS = await c.env.DB.prepare(
+          "SELECT *, 'CMS' as SOURCE_TABLE FROM ARTICULOS_CMS WHERE ESTADO = 'PUBLICADO' AND LEGACY_SLUG = ? LIMIT 1"
+        ).bind(slug).first();
+      } catch (_) {
+        // Columna LEGACY_SLUG o tabla ARTICULOS_CMS puede no existir en producción
+      }
+      if (legacyCMS) return c.json({ article: parseArticleRow(legacyCMS), legacySlug: slug, canonicalSlug: legacyCMS.SLUG || parseArticleRow(legacyCMS)?.slug });
 
      return c.json({ error: 'Article not found' }, 404);
   } catch (e) {
