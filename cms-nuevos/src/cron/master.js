@@ -1,8 +1,9 @@
 // src/cron/master.js — Orquestador principal del cron job
 
 import { runRSSIngest } from './rss-ingest.js';
-import { processFBTimer } from './facebook.js';
+import { processFBTimer, processFBRetries } from './facebook.js';
 import { updateTickerData } from './ticker.js';
+import { notifyTelegram } from '../utils/helpers.js';
 
 // ============================================================
 // runMasterCron — Ejecuta todas las tareas programadas
@@ -28,10 +29,15 @@ export async function runMasterCron(env) {
     console.log('[CRON] Starting Facebook Timer processing...');
     const fbStats = await processFBTimer(env);
     console.log(`[CRON] FB Timer result: processed=${fbStats.processed}, success=${fbStats.success}, failed=${fbStats.failed}, skipped_timer=${fbStats.skipped_timer}, skipped_no_articles=${fbStats.skipped_no_articles}, skipped_no_image=${fbStats.skipped_no_image}`);
-    status.tasks.fb = `OK (${fbStats.success}/${fbStats.processed})`;
-    console.log('[CRON] Facebook Timer processing complete');
+
+    console.log('[CRON] Starting Facebook retry processing...');
+    const retryStats = await processFBRetries(env);
+    console.log(`[CRON] FB Retry result: retried=${retryStats.retried}, succeeded=${retryStats.succeeded}`);
+
+    status.tasks.fb = `OK timer(${fbStats.success}/${fbStats.processed}) retry(${retryStats.succeeded}/${retryStats.retried})`;
+    console.log('[CRON] Facebook processing complete');
   } catch (e) {
-    console.error('[CRON] Facebook Timer error:', e.message);
+    console.error('[CRON] Facebook error:', e.message);
     status.tasks.fb = `Error: ${e.message}`;
   }
 
@@ -49,6 +55,13 @@ export async function runMasterCron(env) {
   // Guardar estado en KV
   console.log('[CRON] Saving cron status to KV...');
   await env.ARTICLES_KV.put('cron_status', JSON.stringify(status));
+
+  await notifyTelegram(env, {
+    type: 'cron_summary',
+    message: `Cron completado — Ingesta: ${status.tasks.ingest}, FB: ${status.tasks.fb}, Ticker: ${status.tasks.ticker}`,
+    details: status.tasks
+  });
+
   console.log('[CRON] Cron complete');
 
   return status;

@@ -3,6 +3,27 @@ main = "src/index.js"
 compatibility_date = "2023-12-01"
 workers_dev = true
 
+# Rutas para inyectar OG tags en sitios Pages
+routes = [
+  { pattern = "centronews.pages.dev", zone_name = "centronews.pages.dev" },
+  { pattern = "noticias123.pages.dev", zone_name = "noticias123.pages.dev" },
+  { pattern = "breakingcentermexico.pages.dev", zone_name = "breakingcentermexico.pages.dev" },
+  { pattern = "alavistanoticias.pages.dev", zone_name = "alavistanoticias.pages.dev" },
+  { pattern = "socialmexiconews.pages.dev", zone_name = "socialmexiconews.pages.dev" },
+  { pattern = "tmznews.pages.dev", zone_name = "tmznews.pages.dev" },
+  { pattern = "radioabc.pages.dev", zone_name = "radioabc.pages.dev" },
+  { pattern = "noticiasintegra.pages.dev", zone_name = "noticiasintegra.pages.dev" },
+  # Dominios custom
+  { pattern = "centronews.buzz/*", zone_name = "centronews.buzz" },
+  { pattern = "noticias123.click/*", zone_name = "noticias123.click" },
+  { pattern = "breakingcenter.site/*", zone_name = "breakingcenter.site" },
+  { pattern = "alavistanoticias.online/*", zone_name = "alavistanoticias.online" },
+  { pattern = "socialmexico.top/*", zone_name = "socialmexico.top" },
+  { pattern = "tmznews.lat/*", zone_name = "tmznews.lat" },
+  { pattern = "radioabc.space/*", zone_name = "radioabc.space" },
+  { pattern = "noticiasintegra.lat/*", zone_name = "noticiasintegra.lat" },
+]
+
 [vars]
 ENVIRONMENT = "production"
 
@@ -18,9 +39,6 @@ id = "0d0be3689d2342db8ad2a70070e1ecb3"
 [[r2_buckets]]
 binding = "UPLOADS"
 bucket_name = "cms-news"
-
-[triggers]
-crons = ["*/30 * * * *"]
 
 [observability]
 enabled = false

@@ -3,6 +3,63 @@ main = "src/index.js"
 compatibility_date = "2023-12-01"
 workers_dev = true
 
+# Rutas para interceptar requests a los sitios Pages e inyectar OG tags
+# El Worker recibe requests a estos dominios, hace proxy al contenido Pages,
+# e inyecta meta tags OG para Facebook/Twitter via injectMetaTags
+routes = [
+  { pattern = "enfoquemexicano.pages.dev", zone_name = "enfoquemexicano.pages.dev" },
+  { pattern = "adnmexicano.pages.dev", zone_name = "adnmexicano.pages.dev" },
+  { pattern = "pulsorepublicanonoticias.pages.dev", zone_name = "pulsorepublicanonoticias.pages.dev" },
+  { pattern = "mexicannewsoftheworld.pages.dev", zone_name = "mexicannewsoftheworld.pages.dev" },
+  { pattern = "expresomexicano.pages.dev", zone_name = "expresomexicano.pages.dev" },
+  { pattern = "mexicodaily.pages.dev", zone_name = "mexicodaily.pages.dev" },
+  { pattern = "aztecamexiconoticias.pages.dev", zone_name = "aztecamexiconoticias.pages.dev" },
+  { pattern = "elanalisismexicano.pages.dev", zone_name = "elanalisismexicano.pages.dev" },
+  { pattern = "nacionalinstante.pages.dev", zone_name = "nacionalinstante.pages.dev" },
+  { pattern = "mexicoandtheworld.pages.dev", zone_name = "mexicoandtheworld.pages.dev" },
+  { pattern = "diariomexicano.pages.dev", zone_name = "diariomexicano.pages.dev" },
+  { pattern = "politicasalvajealminuto.pages.dev", zone_name = "politicasalvajealminuto.pages.dev" },
+  { pattern = "elobservadorrepublicano.pages.dev", zone_name = "elobservadorrepublicano.pages.dev" },
+  { pattern = "mexicoplus.pages.dev", zone_name = "mexicoplus.pages.dev" },
+  { pattern = "actualidadsinfronteras.pages.dev", zone_name = "actualidadsinfronteras.pages.dev" },
+  { pattern = "noticiasalinstante.pages.dev", zone_name = "noticiasalinstante.pages.dev" },
+  { pattern = "republicamx.pages.dev", zone_name = "republicamx.pages.dev" },
+  { pattern = "diariomexico.pages.dev", zone_name = "diariomexico.pages.dev" },
+  { pattern = "financemarketsmx.pages.dev", zone_name = "financemarketsmx.pages.dev" },
+  { pattern = "monitorrepublicano.pages.dev", zone_name = "monitorrepublicano.pages.dev" },
+  { pattern = "elprofetamexicano.pages.dev", zone_name = "elprofetamexicano.pages.dev" },
+  { pattern = "mexicoenresumen.pages.dev", zone_name = "mexicoenresumen.pages.dev" },
+  { pattern = "radioredmx.pages.dev", zone_name = "radioredmx.pages.dev" },
+  { pattern = "perspectivamexicana.pages.dev", zone_name = "perspectivamexicana.pages.dev" },
+  { pattern = "wenewsmexico.pages.dev", zone_name = "wenewsmexico.pages.dev" },
+  # Dominios custom (los que usa Facebook en los posts)
+  { pattern = "enfoquemexicano.click/*", zone_name = "enfoquemexicano.click" },
+  { pattern = "adnmexicano.online/*", zone_name = "adnmexicano.online" },
+  { pattern = "pulsorepublicanonoticias.top/*", zone_name = "pulsorepublicanonoticias.top" },
+  { pattern = "mexicannewsoftheworld.top/*", zone_name = "mexicannewsoftheworld.top" },
+  { pattern = "expresomexicano.top/*", zone_name = "expresomexicano.top" },
+  { pattern = "mexicodaily.top/*", zone_name = "mexicodaily.top" },
+  { pattern = "aztecamexiconoticias.top/*", zone_name = "aztecamexiconoticias.top" },
+  { pattern = "elanalisismexicano.top/*", zone_name = "elanalisismexicano.top" },
+  { pattern = "nacionalinstante.top/*", zone_name = "nacionalinstante.top" },
+  { pattern = "mexicoandtheworld.click/*", zone_name = "mexicoandtheworld.click" },
+  { pattern = "diariomexicano.click/*", zone_name = "diariomexicano.click" },
+  { pattern = "politicasalvajealminuto.click/*", zone_name = "politicasalvajealminuto.click" },
+  { pattern = "elobservadorrepublicano.click/*", zone_name = "elobservadorrepublicano.click" },
+  { pattern = "mexicoplus.click/*", zone_name = "mexicoplus.click" },
+  { pattern = "actualidadsinfronteras.click/*", zone_name = "actualidadsinfronteras.click" },
+  { pattern = "noticiasalinstante.click/*", zone_name = "noticiasalinstante.click" },
+  { pattern = "republicamx.lat/*", zone_name = "republicamx.lat" },
+  { pattern = "diariomexico.online/*", zone_name = "diariomexico.online" },
+  { pattern = "financemarketsmx.top/*", zone_name = "financemarketsmx.top" },
+  { pattern = "monitorrepublicano.top/*", zone_name = "monitorrepublicano.top" },
+  { pattern = "elprofetamexicano.lat/*", zone_name = "elprofetamexicano.lat" },
+  { pattern = "mexicoenresumen.click/*", zone_name = "mexicoenresumen.click" },
+  { pattern = "radioredmx.top/*", zone_name = "radioredmx.top" },
+  { pattern = "perspectivamexicana.click/*", zone_name = "perspectivamexicana.click" },
+  { pattern = "wenewsmexico.click/*", zone_name = "wenewsmexico.click" },
+]
+
 [vars]
 ENVIRONMENT = "production"
 
@@ -18,9 +75,6 @@ id = "fbf21fb75f5647a8966858d199b44e0b"
 [[r2_buckets]]
 binding = "UPLOADS"
 bucket_name = "cms-news"
-
-[triggers]
-crons = ["*/30 * * * *"]
 
 [observability]
 enabled = false

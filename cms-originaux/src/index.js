@@ -11,8 +11,8 @@ import { ALLOWED_ORIGINS } from './config.js';
 import { injectMetaTags } from './utils/html.js';
 
 // ── Cron ──────────────────────────────────────────────────────
-import { runMasterCron } from './cron/master.js';
-import { processFBTimer } from './cron/facebook.js';
+// import { runMasterCron } from './cron/master.js';
+// import { processFBTimer } from './cron/facebook.js';
 
 // ── Rutas ─────────────────────────────────────────────────────
 import authRoutes       from './routes/auth.js';
@@ -28,6 +28,7 @@ import imageRoutes      from './routes/images.js';
 import rssRoutes        from './routes/rss.js';
 import facebookRoutes   from './routes/facebook.js';
 import cronRoutes       from './routes/cron.js';
+import jobsRoutes       from './routes/jobs.js';
 
 // ── App ───────────────────────────────────────────────────────
 const app = new Hono().basePath('/api');
@@ -63,6 +64,7 @@ app.route('/images',     imageRoutes);
 app.route('/rss',        rssRoutes);
 app.route('/facebook',   facebookRoutes);
 app.route('/cron',       cronRoutes);
+app.route('/jobs',       jobsRoutes);
 
 // ── Rutas standalone ──────────────────────────────────────────
 
@@ -112,16 +114,9 @@ export default {
     return injectMetaTags(request, env, originalRes);
   },
 
-  // Cron job programado - siempre ejecuta todo (FB timer tiene lógica interna de 3 horas)
-  async scheduled(event, env, ctx) {
-    const cronTime = event.cron;
-    console.log('[SCHEDULED] Triggered by cron:', cronTime);
-    
-    // Siempre ejecutar master cron que incluye:
-    // 1. RSS Ingest
-    // 2. Facebook Timer (con control de 3 horas)
-    // 3. Ticker
-    console.log('[SCHEDULED] Running full master cron...');
-    ctx.waitUntil(runMasterCron(env));
-  },
+  // async scheduled(event, env, ctx) {
+  //   const cronTime = event.cron;
+  //   console.log('[SCHEDULED] Triggered by cron:', cronTime);
+  //   ctx.waitUntil(runMasterCron(env));
+  // },
 };

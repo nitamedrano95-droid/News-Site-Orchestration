@@ -2,7 +2,7 @@
 
 import { Hono } from 'hono';
 import { checkAuth } from '../middleware/auth.js';
-import { articleSlugify, parseArticleRow } from '../utils/helpers.js';
+import { articleSlugify, parseArticleRow, seededShuffle } from '../utils/helpers.js';
 
 const articles = new Hono();
 
@@ -28,7 +28,7 @@ const normalizeTargetSites = ({ value, allowedSet, fallbackSite }) => {
 
 // ── GET /articles — Listado con filtros ──────────────────────
 articles.get('/', async (c) => {
-  const { site, limit = 20, offset = 0, category } = c.req.query();
+  const { site, limit = 20, offset = 0, category, shuffle } = c.req.query();
   const l = parseInt(limit);
   const o = parseInt(offset);
   const MIN_ARTICLES = 8;
@@ -99,6 +99,10 @@ articles.get('/', async (c) => {
       const existingIds = new Set(arts.map((a) => a.id));
       const extras = allArticles.filter((a) => !existingIds.has(a.id));
       arts = [...arts, ...extras].slice(0, l);
+    }
+
+    if (shuffle === 'true' && site) {
+      arts = seededShuffle(arts, site);
     }
 
     return c.json({ articles: arts });

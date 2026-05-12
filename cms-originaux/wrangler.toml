@@ -3,6 +3,31 @@ main = "src/index.js"
 compatibility_date = "2023-12-01"
 workers_dev = true
 
+# Rutas para inyectar OG tags en sitios Pages
+routes = [
+  { pattern = "bitacoraurbana.pages.dev", zone_name = "bitacoraurbana.pages.dev" },
+  { pattern = "cbnnoticias.pages.dev", zone_name = "cbnnoticias.pages.dev" },
+  { pattern = "centralmexico.pages.dev", zone_name = "centralmexico.pages.dev" },
+  { pattern = "mexicoinformado.pages.dev", zone_name = "mexicoinformado.pages.dev" },
+  { pattern = "nodoinformativo.pages.dev", zone_name = "nodoinformativo.pages.dev" },
+  { pattern = "noticiasobjetivo.pages.dev", zone_name = "noticiasobjetivo.pages.dev" },
+  { pattern = "radiocinconoticias.pages.dev", zone_name = "radiocinconoticias.pages.dev" },
+  { pattern = "reportecentralmx.pages.dev", zone_name = "reportecentralmx.pages.dev" },
+  { pattern = "tvmexico.pages.dev", zone_name = "tvmexico.pages.dev" },
+  { pattern = "verticenoticias.pages.dev", zone_name = "verticenoticias.pages.dev" },
+  # Dominios custom
+  { pattern = "radiocinconoticias.click/*", zone_name = "radiocinconoticias.click" },
+  { pattern = "centralmexico.online/*", zone_name = "centralmexico.online" },
+  { pattern = "tvmexiconews.site/*", zone_name = "tvmexiconews.site" },
+  { pattern = "cbnnoticias.click/*", zone_name = "cbnnoticias.click" },
+  { pattern = "mexicoinformado.lat/*", zone_name = "mexicoinformado.lat" },
+  { pattern = "nodoinformativo.lat/*", zone_name = "nodoinformativo.lat" },
+  { pattern = "bitacoraurbana.lat/*", zone_name = "bitacoraurbana.lat" },
+  { pattern = "reportecentral.site/*", zone_name = "reportecentral.site" },
+  { pattern = "verticenoticias.today/*", zone_name = "verticenoticias.today" },
+  { pattern = "noticiasobjetivo.click/*", zone_name = "noticiasobjetivo.click" },
+]
+
 [vars]
 ENVIRONMENT = "production"
 
@@ -18,9 +43,6 @@ id = "e6ceb0a1487d425f9c3dc69e3fed9145"
 [[r2_buckets]]
 binding = "UPLOADS"
 bucket_name = "cms-news"
-
-[triggers]
-crons = ["*/30 * * * *"]
 
 [observability]
 enabled = false

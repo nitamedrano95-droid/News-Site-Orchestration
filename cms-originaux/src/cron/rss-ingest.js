@@ -1,6 +1,6 @@
 // src/cron/rss-ingest.js — Ingesta automática de RSS y parafraseo con IA
 
-import { articleSlugify, decodeHTMLEntities } from '../utils/helpers.js';
+import { articleSlugify, decodeHTMLEntities, fetchWithTimeout, notifyTelegram } from '../utils/helpers.js';
 import { getOGImage, uploadToR2 } from '../utils/html.js';
 import { SITIOS_LIST, SITE_DOMAIN_MAP, log, error, warn, LOG_PREFIXES } from '../config.js';
 
@@ -583,20 +583,18 @@ async function scrapeSectionForLinks(sectionUrl, maxRetries = 3) {
 // runRSSIngest — Ingesta artículos por fuentes configurables
 // ============================================================
 export async function runRSSIngest(env) {
-  console.log('[RSS INGEST] Starting RSS ingestion...');
+  console.log('[RSS INGEST] Starting per-site RSS ingestion...');
 
-  // Detectar si es primera ejecución
   const lastIngestTimestamp = await env.ARTICLES_KV.get('last_ingest_timestamp');
   const isFirstRun = !lastIngestTimestamp;
-  const MAX_ARTICLES = isFirstRun ? 15 : 4;
+  const MAX_PER_SITE = isFirstRun ? 2 : 1;
 
   if (isFirstRun) {
-    RSS_LOG('First run detected — limiting to 15 articles');
+    RSS_LOG('First run detected — limiting to 2 articles per site');
   } else {
     RSS_LOG(`Continuing from last run (${new Date(parseInt(lastIngestTimestamp)).toISOString()})`);
   }
 
-  // Cargar fuentes desde D1
   let fuentesRows = [];
   try {
     const result = await env.DB.prepare(
@@ -607,7 +605,6 @@ export async function runRSSIngest(env) {
     RSS_WARN('Error loading FUENTES from DB, falling back to hardcoded feeds:', e.message);
   }
 
-  // Fallback a feeds legacy si la tabla no existe o no tiene fuentes activas
   if (fuentesRows.length === 0) {
     RSS_WARN('No active FUENTES found, falling back to hardcoded feeds');
     const LEGACY_FEEDS = [
@@ -623,21 +620,13 @@ export async function runRSSIngest(env) {
     ];
     for (const feedUrl of LEGACY_FEEDS) {
       fuentesRows.push({
-        SITIO_SLUG: null, // null = asignar a todos
+        SITIO_SLUG: null,
         NOMBRE: 'Legacy Feed',
         URL: feedUrl,
         TIPO: 'RSS',
         CATEGORIA: 'NACIONAL'
       });
     }
-  }
-
-  const FUENTES_POR_SITIO = {};
-  for (const fuente of fuentesRows) {
-    if (!FUENTES_POR_SITIO[fuente.SITIO_SLUG]) {
-      FUENTES_POR_SITIO[fuente.SITIO_SLUG] = [];
-    }
-    FUENTES_POR_SITIO[fuente.SITIO_SLUG].push(fuente);
   }
 
   const validSites = (SITIOS_LIST || []).filter(isValidSiteSlug);
@@ -647,122 +636,148 @@ export async function runRSSIngest(env) {
     return 0;
   }
 
-  console.log(`[RSS INGEST] Total sites: ${validSites.length}, Fuentes: ${fuentesRows.length}, Max articles: ${MAX_ARTICLES}`);
+  const dedicatedFuentes = fuentesRows.filter(f => f.SITIO_SLUG && f.SITIO_SLUG !== 'null');
+  const globalFuentes = fuentesRows.filter(f => !f.SITIO_SLUG || f.SITIO_SLUG === 'null');
 
-  let articlesPublished = 0;
-  let urlsProcessed = 0;
-  let urlsSkippedDuplicate = 0;
-  let urlsSkippedNoImage = 0;
-  let urlsSkippedShortContent = 0;
+  const fuentesBySite = {};
+  for (const site of validSites) {
+    fuentesBySite[site] = dedicatedFuentes.filter(f => f.SITIO_SLUG === site);
+  }
 
-  // Procesar fuentes configuradas por sitio
-  for (const [siteSlug, fuentes] of Object.entries(FUENTES_POR_SITIO)) {
-    if (articlesPublished >= MAX_ARTICLES) break;
-
-    // Si siteSlug es null, asignar a todos los sitios (legacy)
-    const sitosDestino = siteSlug === 'null' || siteSlug === null ? validSites : [siteSlug];
-
-    for (const fuente of fuentes) {
-      if (articlesPublished >= MAX_ARTICLES) break;
-
-      RSS_LOG(`Processing fuente: ${fuente.NOMBRE} (${fuente.TIPO}) → ${sitosDestino.join(',')}`);
-
-      let articleUrls = [];
-
-      // Extraer URLs según tipo de fuente
-      if (fuente.TIPO === 'RSS') {
-        articleUrls = await extractLinksFromRSS(fuente.URL);
-      } else {
-        articleUrls = await scrapeSectionForLinks(fuente.URL);
-      }
-
-      RSS_LOG(`Found ${articleUrls.length} candidate URLs from ${fuente.NOMBRE}`);
-
-      for (const link of articleUrls) {
-        if (articlesPublished >= MAX_ARTICLES) break;
-
-        urlsProcessed++;
-
-        // Check duplicate
-        const urlExists = await env.DB.prepare(
-          'SELECT ID FROM ARTICULOS_PARAFRASEADOS WHERE SOURCE_URL = ?'
-        ).bind(link).first();
-
-        if (urlExists) {
-          urlsSkippedDuplicate++;
-          continue;
-        }
-
-        // Scraping completo del artículo
-        const scrapedArticle = await scrapeArticleFromURL(link, env);
-
-        if (!scrapedArticle) {
-          urlsSkippedNoImage++;
-          continue;
-        }
-
-        const { title, content, imageUrl, url } = scrapedArticle;
-
-        if (content.length < 200) {
-          RSS_LOG('Skip: Content too short');
-          urlsSkippedShortContent++;
-          continue;
-        }
-
-        // Insert article into DB — asignar SOLO a los sitios de esta fuente
-        try {
-          const now = new Date().toISOString();
-          const paraId = crypto.randomUUID();
-          let slug = articleSlugify(title);
-          if (!slug || slug.trim() === '') {
-            slug = `articulo-${Date.now()}`;
-            RSS_LOG(`Generated fallback slug: ${slug}`);
-          }
-
-          const sitiosDestinoStr = sitosDestino.join(',');
-
-          const statements = [];
-          statements.push(
-            env.DB.prepare(`
-              INSERT INTO ARTICULOS_PARAFRASEADOS
-                (ID, TITULO_PARAFRASEADO, SLUG, CONTENIDO, DESCRIPCION_PARAFRASEADA,
-                 CATEGORIA, AUTOR, FECHA_PUBLICACION, URL_IMAGEN, SOURCE_URL, ESTADO, SITIO_DESTINO)
-              VALUES (?, ?, ?, ?, ?, ?, 'NexoPress', ?, ?, ?, 'PUBLICADO', ?)
-            `).bind(paraId, title, slug, content, content.substring(0, 200), fuente.CATEGORIA || 'NACIONAL', now, imageUrl, url, sitiosDestinoStr)
-          );
-
-          for (const targetSite of sitosDestino) {
-            const siteId = crypto.randomUUID();
-            const tableName = `ARTICULOS_SITIO_${targetSite.toUpperCase()}`;
-            statements.push(
-              env.DB.prepare(`
-                INSERT INTO ${tableName} (ID, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID)
-                VALUES (?, ?, datetime('now'), 0, NULL, NULL)
-              `).bind(siteId, paraId)
-            );
-          }
-
-          await env.DB.batch(statements);
-
-          RSS_LOG(`✓ Published: "${title.substring(0, 40)}..." to ${sitosDestino.length} site(s)`);
-          articlesPublished++;
-        } catch (dbErr) {
-          RSS_ERR('DB Error:', dbErr.message);
-        }
-      }
+  let globalIdx = 0;
+  for (const site of validSites) {
+    if (fuentesBySite[site].length === 0 && globalFuentes.length > 0) {
+      fuentesBySite[site].push(globalFuentes[globalIdx % globalFuentes.length]);
+      globalIdx++;
     }
   }
 
-  console.log(`[RSS INGEST] ===== SUMMARY =====`);
-  console.log(`[RSS INGEST] Run type: ${isFirstRun ? 'FIRST RUN (max 15)' : 'NORMAL (max 4)'}`);
-  console.log(`[RSS INGEST] URLs processed: ${urlsProcessed}`);
-  console.log(`[RSS INGEST] URLs skipped (duplicate): ${urlsSkippedDuplicate}`);
-  console.log(`[RSS INGEST] URLs skipped (no image): ${urlsSkippedNoImage}`);
-  console.log(`[RSS INGEST] URLs skipped (short content): ${urlsSkippedShortContent}`);
-  console.log(`[RSS INGEST] Articles published: ${articlesPublished}`);
+  console.log(`[RSS INGEST] Total sites: ${validSites.length}, Fuentes: ${fuentesRows.length}, Max per site: ${MAX_PER_SITE}`);
 
-  // Guardar timestamp de esta ejecución para la próxima
-  if (articlesPublished > 0) {
+  let totalArticlesPublished = 0;
+  let totalUrlsProcessed = 0;
+  let totalUrlsSkippedDuplicate = 0;
+  let totalUrlsSkippedNoImage = 0;
+  let totalUrlsSkippedShortContent = 0;
+
+  for (const siteSlug of validSites) {
+    const siteFuentes = fuentesBySite[siteSlug] || [];
+
+    if (siteFuentes.length === 0) {
+      RSS_WARN(`[${siteSlug}] No fuentes configured, skipping`);
+      continue;
+    }
+
+    let siteArticlesPublished = 0;
+    let siteUrlsProcessed = 0;
+    let siteUrlsSkippedDuplicate = 0;
+    let siteUrlsSkippedNoImage = 0;
+    let siteUrlsSkippedShortContent = 0;
+
+    try {
+      for (const fuente of siteFuentes) {
+        if (siteArticlesPublished >= MAX_PER_SITE) break;
+
+        RSS_LOG(`[${siteSlug}] Processing fuente: ${fuente.NOMBRE} (${fuente.TIPO})`);
+
+        let articleUrls = [];
+
+        if (fuente.TIPO === 'RSS') {
+          articleUrls = await extractLinksFromRSS(fuente.URL);
+        } else {
+          articleUrls = await scrapeSectionForLinks(fuente.URL);
+        }
+
+        RSS_LOG(`[${siteSlug}] Found ${articleUrls.length} candidate URLs from ${fuente.NOMBRE}`);
+
+        for (const link of articleUrls) {
+          if (siteArticlesPublished >= MAX_PER_SITE) break;
+
+          siteUrlsProcessed++;
+          totalUrlsProcessed++;
+
+          const urlExists = await env.DB.prepare(
+            'SELECT ID FROM ARTICULOS_PARAFRASEADOS WHERE SOURCE_URL = ?'
+          ).bind(link).first();
+
+          if (urlExists) {
+            siteUrlsSkippedDuplicate++;
+            totalUrlsSkippedDuplicate++;
+            continue;
+          }
+
+          const scrapedArticle = await scrapeArticleFromURL(link, env);
+
+          if (!scrapedArticle) {
+            siteUrlsSkippedNoImage++;
+            totalUrlsSkippedNoImage++;
+            continue;
+          }
+
+          const { title, content, imageUrl, url } = scrapedArticle;
+
+          if (content.length < 200) {
+            RSS_LOG(`[${siteSlug}] Skip: Content too short`);
+            siteUrlsSkippedShortContent++;
+            totalUrlsSkippedShortContent++;
+            continue;
+          }
+
+          try {
+            const now = new Date().toISOString();
+            const paraId = crypto.randomUUID();
+            let slug = articleSlugify(title);
+            if (!slug || slug.trim() === '') {
+              slug = `articulo-${Date.now()}`;
+              RSS_LOG(`[${siteSlug}] Generated fallback slug: ${slug}`);
+            }
+
+            const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+
+            await env.DB.batch([
+              env.DB.prepare(`
+                INSERT INTO ARTICULOS_PARAFRASEADOS
+                  (ID, TITULO_PARAFRASEADO, SLUG, CONTENIDO, DESCRIPCION_PARAFRASEADA,
+                   CATEGORIA, AUTOR, FECHA_PUBLICACION, URL_IMAGEN, SOURCE_URL, ESTADO, SITIO_DESTINO)
+                VALUES (?, ?, ?, ?, ?, ?, 'NexoPress', ?, ?, ?, 'PUBLICADO', ?)
+              `).bind(paraId, title, slug, content, content.substring(0, 200), fuente.CATEGORIA || 'NACIONAL', now, imageUrl, url, siteSlug),
+              env.DB.prepare(`
+                INSERT INTO ${tableName} (ID, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID)
+                VALUES (?, ?, datetime('now'), 0, NULL, NULL)
+              `).bind(crypto.randomUUID(), paraId)
+            ]);
+
+            RSS_LOG(`[${siteSlug}] ✓ Published: "${title.substring(0, 40)}..."`);
+            siteArticlesPublished++;
+            totalArticlesPublished++;
+          } catch (dbErr) {
+            RSS_ERR(`[${siteSlug}] DB Error:`, dbErr.message);
+          }
+        }
+      }
+    } catch (siteErr) {
+      RSS_ERR(`[${siteSlug}] Fatal error during ingestion:`, siteErr.message);
+      await notifyTelegram(env, {
+        type: 'ingest_error',
+        site: siteSlug,
+        message: `Ingesta falló para ${siteSlug}: ${siteErr.message}`,
+        details: { error: siteErr.message, stack: siteErr.stack }
+      });
+    }
+
+    console.log(`[RSS INGEST] [${siteSlug}] Done: ${siteArticlesPublished} articles`);
+  }
+
+  console.log(`[RSS INGEST] ===== SUMMARY =====`);
+  console.log(`[RSS INGEST] Run type: ${isFirstRun ? 'FIRST RUN (max 2/site)' : 'NORMAL (max 1/site)'}`);
+  console.log(`[RSS INGEST] Sites processed: ${validSites.length}`);
+  console.log(`[RSS INGEST] URLs processed: ${totalUrlsProcessed}`);
+  console.log(`[RSS INGEST] URLs skipped (duplicate): ${totalUrlsSkippedDuplicate}`);
+  console.log(`[RSS INGEST] URLs skipped (no image): ${totalUrlsSkippedNoImage}`);
+  console.log(`[RSS INGEST] URLs skipped (short content): ${totalUrlsSkippedShortContent}`);
+  console.log(`[RSS INGEST] Articles published: ${totalArticlesPublished}`);
+
+  if (totalArticlesPublished > 0) {
     const now = Date.now();
     await env.ARTICLES_KV.put('last_ingest_timestamp', now.toString());
     RSS_LOG(`Saved last_ingest_timestamp: ${new Date(now).toISOString()}`);
@@ -770,5 +785,283 @@ export async function runRSSIngest(env) {
 
   console.log(`[RSS INGEST] Complete!`);
 
-  return articlesPublished;
+  return totalArticlesPublished;
+}
+
+export async function runRSSIngestForSite(env, siteSlug) {
+  if (!isValidSiteSlug(siteSlug)) {
+    throw new Error(`Invalid site slug: ${siteSlug}`);
+  }
+
+  console.log(`[RSS INGEST] Starting ingestion for site: ${siteSlug}`);
+
+  const lastIngestTimestamp = await env.ARTICLES_KV.get('last_ingest_timestamp');
+  const isFirstRun = !lastIngestTimestamp;
+  const MAX_PER_SITE = isFirstRun ? 2 : 1;
+
+  let fuentesRows = [];
+  try {
+    const result = await env.DB.prepare(
+      'SELECT * FROM FUENTES WHERE ACTIVA = 1 ORDER BY SITIO_SLUG, ID'
+    ).all();
+    fuentesRows = result.results || [];
+  } catch (e) {
+    RSS_WARN('Error loading FUENTES from DB, falling back to hardcoded feeds:', e.message);
+  }
+
+  if (fuentesRows.length === 0) {
+    RSS_WARN('No active FUENTES found, falling back to hardcoded feeds');
+    const LEGACY_FEEDS = [
+      'https://www.jornada.com.mx/rss/edicion.xml?v=1',
+      'https://www.informador.mx/rss/mexico.xml',
+      'https://www.proceso.com.mx/rss/feed.html',
+      'https://expansion.mx/rss',
+      'https://www.reforma.com/rss/portada.xml',
+      'https://aristeguinoticias.com/feed/',
+      'https://www.infobae.com/arc/outboundfeeds/rss/?outputType=xml&section=mexico',
+      'https://rss.dw.com/xml/rss-esp-all',
+      'https://www.france24.com/es/rss',
+    ];
+    for (const feedUrl of LEGACY_FEEDS) {
+      fuentesRows.push({
+        SITIO_SLUG: null,
+        NOMBRE: 'Legacy Feed',
+        URL: feedUrl,
+        TIPO: 'RSS',
+        CATEGORIA: 'NACIONAL'
+      });
+    }
+  }
+
+  const dedicatedFuentes = fuentesRows.filter(f => f.SITIO_SLUG && f.SITIO_SLUG !== 'null');
+  const globalFuentes = fuentesRows.filter(f => !f.SITIO_SLUG || f.SITIO_SLUG === 'null');
+
+  let siteFuentes = dedicatedFuentes.filter(f => f.SITIO_SLUG === siteSlug);
+  if (siteFuentes.length === 0 && globalFuentes.length > 0) {
+    siteFuentes = [globalFuentes[0]];
+  }
+
+  if (siteFuentes.length === 0) {
+    RSS_WARN(`[${siteSlug}] No fuentes configured, skipping`);
+    return 0;
+  }
+
+  let siteArticlesPublished = 0;
+
+  try {
+    for (const fuente of siteFuentes) {
+      if (siteArticlesPublished >= MAX_PER_SITE) break;
+
+      RSS_LOG(`[${siteSlug}] Processing fuente: ${fuente.NOMBRE} (${fuente.TIPO})`);
+
+      let articleUrls = [];
+      if (fuente.TIPO === 'RSS') {
+        articleUrls = await extractLinksFromRSS(fuente.URL);
+      } else {
+        articleUrls = await scrapeSectionForLinks(fuente.URL);
+      }
+
+      RSS_LOG(`[${siteSlug}] Found ${articleUrls.length} candidate URLs from ${fuente.NOMBRE}`);
+
+      for (const link of articleUrls) {
+        if (siteArticlesPublished >= MAX_PER_SITE) break;
+
+        const urlExists = await env.DB.prepare(
+          'SELECT ID FROM ARTICULOS_PARAFRASEADOS WHERE SOURCE_URL = ?'
+        ).bind(link).first();
+
+        if (urlExists) continue;
+
+        const scrapedArticle = await scrapeArticleFromURL(link, env);
+        if (!scrapedArticle) continue;
+
+        const { title, content, imageUrl, url } = scrapedArticle;
+        if (content.length < 200) {
+          RSS_LOG(`[${siteSlug}] Skip: Content too short`);
+          continue;
+        }
+
+        try {
+          const now = new Date().toISOString();
+          const paraId = crypto.randomUUID();
+          let slug = articleSlugify(title);
+          if (!slug || slug.trim() === '') {
+            slug = `articulo-${Date.now()}`;
+            RSS_LOG(`[${siteSlug}] Generated fallback slug: ${slug}`);
+          }
+
+          const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+
+          await env.DB.batch([
+            env.DB.prepare(`
+              INSERT INTO ARTICULOS_PARAFRASEADOS
+                (ID, TITULO_PARAFRASEADO, SLUG, CONTENIDO, DESCRIPCION_PARAFRASEADA,
+                 CATEGORIA, AUTOR, FECHA_PUBLICACION, URL_IMAGEN, SOURCE_URL, ESTADO, SITIO_DESTINO)
+              VALUES (?, ?, ?, ?, ?, ?, 'NexoPress', ?, ?, ?, 'PUBLICADO', ?)
+            `).bind(paraId, title, slug, content, content.substring(0, 200), fuente.CATEGORIA || 'NACIONAL', now, imageUrl, url, siteSlug),
+            env.DB.prepare(`
+              INSERT INTO ${tableName} (ID, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID)
+              VALUES (?, ?, datetime('now'), 0, NULL, NULL)
+            `).bind(crypto.randomUUID(), paraId)
+          ]);
+
+          RSS_LOG(`[${siteSlug}] Published: "${title.substring(0, 40)}..."`);
+          siteArticlesPublished++;
+        } catch (dbErr) {
+          RSS_ERR(`[${siteSlug}] DB Error:`, dbErr.message);
+        }
+      }
+    }
+  } catch (siteErr) {
+    RSS_ERR(`[${siteSlug}] Fatal error during ingestion:`, siteErr.message);
+    await notifyTelegram(env, {
+      type: 'ingest_error',
+      site: siteSlug,
+      message: `Ingesta falló para ${siteSlug}: ${siteErr.message}`,
+      details: { error: siteErr.message, stack: siteErr.stack }
+    });
+  }
+
+  console.log(`[RSS INGEST] [${siteSlug}] Done: ${siteArticlesPublished} articles`);
+
+  if (siteArticlesPublished > 0) {
+    const now = Date.now();
+    await env.ARTICLES_KV.put('last_ingest_timestamp', now.toString());
+  }
+
+  return siteArticlesPublished;
+}
+
+// ============================================================
+// getFuentesForSite — Obtiene las FUENTES activas para un sitio
+// ============================================================
+export async function getFuentesForSite(env, siteSlug) {
+  if (!isValidSiteSlug(siteSlug)) {
+    return [];
+  }
+
+  let fuentesRows = [];
+  try {
+    const result = await env.DB.prepare(
+      'SELECT * FROM FUENTES WHERE ACTIVA = 1 ORDER BY SITIO_SLUG, ID'
+    ).all();
+    fuentesRows = result.results || [];
+  } catch (e) {
+    RSS_WARN('Error loading FUENTES from DB:', e.message);
+  }
+
+  if (fuentesRows.length === 0) {
+    return [];
+  }
+
+  const dedicatedFuentes = fuentesRows.filter(f => f.SITIO_SLUG && f.SITIO_SLUG !== 'null');
+  const globalFuentes = fuentesRows.filter(f => !f.SITIO_SLUG || f.SITIO_SLUG === 'null');
+
+  let siteFuentes = dedicatedFuentes.filter(f => f.SITIO_SLUG === siteSlug);
+  if (siteFuentes.length === 0 && globalFuentes.length > 0) {
+    siteFuentes = [globalFuentes[0]];
+  }
+
+  return siteFuentes;
+}
+
+// ============================================================
+// processPreScrapedArticle — Procesa un artículo pre-scrapeado
+// desde n8n: parafrasea, maneja imagen y guarda en D1
+// ============================================================
+export async function processPreScrapedArticle(env, siteSlug, article) {
+  if (!isValidSiteSlug(siteSlug)) {
+    throw new Error(`Invalid site slug: ${siteSlug}`);
+  }
+
+  const { title, content, imageUrl, sourceUrl, category } = article;
+
+  if (!title || !content || content.length < 200) {
+    RSS_LOG(`[${siteSlug}] Skip: Content too short or missing`);
+    return null;
+  }
+
+  // 1. Check duplicate
+  const urlExists = await env.DB.prepare(
+    'SELECT ID FROM ARTICULOS_PARAFRASEADOS WHERE SOURCE_URL = ?'
+  ).bind(sourceUrl).first();
+
+  if (urlExists) {
+    RSS_LOG(`[${siteSlug}] Skip: Duplicate article`);
+    return null;
+  }
+
+  const now = new Date().toISOString();
+  const paraId = crypto.randomUUID();
+
+  // 2. Clean content
+  const cleanedContent = cleanArticleContent(content || '');
+  if (cleanedContent.length < 200) {
+    RSS_LOG(`[${siteSlug}] Skip: Cleaned content too short`);
+    return null;
+  }
+
+  // 3. Paraphrase with AI
+  let paraphrasedTitle = title;
+  let paraphrasedContent = cleanedContent;
+  try {
+    if (env.AI) {
+      paraphrasedTitle = await proofreadTextAI(title, 'título', env) || title;
+      paraphrasedContent = await proofreadTextAI(cleanedContent, 'contenido', env) || cleanedContent;
+    }
+  } catch (aiErr) {
+    RSS_WARN(`[${siteSlug}] AI paraphrasing failed, using original:`, aiErr.message);
+  }
+
+  // 4. Handle image
+  let finalImageUrl = imageUrl || null;
+  if (imageUrl) {
+    try {
+      const r2Url = await uploadToR2(imageUrl, env);
+      if (r2Url) {
+        finalImageUrl = r2Url;
+        RSS_LOG(`[${siteSlug}] Image uploaded to R2`);
+      }
+    } catch (imgErr) {
+      RSS_WARN(`[${siteSlug}] Image upload failed:`, imgErr.message);
+    }
+  }
+
+  if (!finalImageUrl) {
+    RSS_LOG(`[${siteSlug}] Skip: No valid image`);
+    return null;
+  }
+
+  // 5. Generate slug
+  let slug = articleSlugify(paraphrasedTitle);
+  if (!slug || slug.trim() === '') {
+    slug = `articulo-${Date.now()}`;
+  }
+
+  // 6. Store in D1
+  const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+  try {
+    await env.DB.batch([
+      env.DB.prepare(`
+        INSERT INTO ARTICULOS_PARAFRASEADOS
+          (ID, TITULO_PARAFRASEADO, SLUG, CONTENIDO, DESCRIPCION_PARAFRASEADA,
+           CATEGORIA, AUTOR, FECHA_PUBLICACION, URL_IMAGEN, SOURCE_URL, ESTADO, SITIO_DESTINO)
+        VALUES (?, ?, ?, ?, ?, ?, 'NexoPress', ?, ?, ?, 'PUBLICADO', ?)
+      `).bind(paraId, paraphrasedTitle, slug, paraphrasedContent, paraphrasedContent.substring(0, 200),
+              category || 'NACIONAL', now, finalImageUrl, sourceUrl, siteSlug),
+      env.DB.prepare(`
+        INSERT INTO ${tableName} (ID, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID)
+        VALUES (?, ?, datetime('now'), 0, NULL, NULL)
+      `).bind(crypto.randomUUID(), paraId)
+    ]);
+
+    RSS_LOG(`[${siteSlug}] Published pre-scraped: "${paraphrasedTitle.substring(0, 40)}..."`);
+
+    await env.ARTICLES_KV.put('last_ingest_timestamp', Date.now().toString());
+
+    return paraId;
+  } catch (dbErr) {
+    RSS_ERR(`[${siteSlug}] DB Error:`, dbErr.message);
+    throw dbErr;
+  }
 }

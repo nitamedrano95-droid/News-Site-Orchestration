@@ -3,6 +3,45 @@ main = "src/index.js"
 compatibility_date = "2023-12-01"
 workers_dev = true
 
+# Rutas para inyectar OG tags en sitios Pages
+routes = [
+  { pattern = "boominformativo.pages.dev", zone_name = "boominformativo.pages.dev" },
+  { pattern = "capitalpress.pages.dev", zone_name = "capitalpress.pages.dev" },
+  { pattern = "diarioexpress.pages.dev", zone_name = "diarioexpress.pages.dev" },
+  { pattern = "elpulsomexicano.pages.dev", zone_name = "elpulsomexicano.pages.dev" },
+  { pattern = "enfoquecapital.pages.dev", zone_name = "enfoquecapital.pages.dev" },
+  { pattern = "enfoquedirecto.pages.dev", zone_name = "enfoquedirecto.pages.dev" },
+  { pattern = "formulacdmx.pages.dev", zone_name = "formulacdmx.pages.dev" },
+  { pattern = "mexicantimes.pages.dev", zone_name = "mexicantimes.pages.dev" },
+  { pattern = "mexico360noticias.pages.dev", zone_name = "mexico360noticias.pages.dev" },
+  { pattern = "mradio.pages.dev", zone_name = "mradio.pages.dev" },
+  { pattern = "noticiashorizonte.pages.dev", zone_name = "noticiashorizonte.pages.dev" },
+  { pattern = "pulsodiario.pages.dev", zone_name = "pulsodiario.pages.dev" },
+  { pattern = "puntoclave.pages.dev", zone_name = "puntoclave.pages.dev" },
+  { pattern = "puntonoticias.pages.dev", zone_name = "puntonoticias.pages.dev" },
+  { pattern = "radarinformativo.pages.dev", zone_name = "radarinformativo.pages.dev" },
+  { pattern = "reportediario.pages.dev", zone_name = "reportediario.pages.dev" },
+  { pattern = "televisionabc.pages.dev", zone_name = "televisionabc.pages.dev" },
+  # Dominios custom
+  { pattern = "boominformativo.top/*", zone_name = "boominformativo.top" },
+  { pattern = "capitalpress.lat/*", zone_name = "capitalpress.lat" },
+  { pattern = "diarioexpress.click/*", zone_name = "diarioexpress.click" },
+  { pattern = "elpulsomexicano.lat/*", zone_name = "elpulsomexicano.lat" },
+  { pattern = "enfoquecapital.top/*", zone_name = "enfoquecapital.top" },
+  { pattern = "enfoquedirecto.lat/*", zone_name = "enfoquedirecto.lat" },
+  { pattern = "formulacdmx.top/*", zone_name = "formulacdmx.top" },
+  { pattern = "mexicantimes.top/*", zone_name = "mexicantimes.top" },
+  { pattern = "mexico360noticias.click/*", zone_name = "mexico360noticias.click" },
+  { pattern = "mradio.lat/*", zone_name = "mradio.lat" },
+  { pattern = "noticiashorizonte.click/*", zone_name = "noticiashorizonte.click" },
+  { pattern = "pulsodiario.lat/*", zone_name = "pulsodiario.lat" },
+  { pattern = "puntoclave.lat/*", zone_name = "puntoclave.lat" },
+  { pattern = "puntonoticias.website/*", zone_name = "puntonoticias.website" },
+  { pattern = "radarinformativo.online/*", zone_name = "radarinformativo.online" },
+  { pattern = "reportediario.online/*", zone_name = "reportediario.online" },
+  { pattern = "televisionabc.lat/*", zone_name = "televisionabc.lat" },
+]
+
 [vars]
 ENVIRONMENT = "production"
 
@@ -18,9 +57,6 @@ id = "c90aab3a89054141933a28d232e87b6c"
 [[r2_buckets]]
 binding = "UPLOADS"
 bucket_name = "cms-news"
-
-[triggers]
-crons = ["*/30 * * * *"]
 
 [observability]
 enabled = false

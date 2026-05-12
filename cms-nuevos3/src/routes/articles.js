@@ -2,7 +2,7 @@
 
 import { Hono } from 'hono';
 import { checkAuth } from '../middleware/auth.js';
-import { articleSlugify, parseArticleRow } from '../utils/helpers.js';
+import { articleSlugify, parseArticleRow, seededShuffle } from '../utils/helpers.js';
 
 const articles = new Hono();
 
@@ -28,14 +28,13 @@ const normalizeTargetSites = ({ value, allowedSet, fallbackSite }) => {
 
 // ── GET /articles — Listado con filtros ──────────────────────
 articles.get('/', async (c) => {
-  const { site, limit, offset, category } = c.req.query();
+  const { site, limit, offset, category, shuffle } = c.req.query();
   const l = parseInt(limit) || 20;
   const o = parseInt(offset) || 0;
   const MIN_ARTICLES = 8;
 
   try {
     const fetchArticles = async (siteFilter, applyOffset = true) => {
-      // Si hay sitio específico, consultar ARTICULOS_SITIO_{SLUG}
       if (siteFilter) {
         const tableName = `ARTICULOS_SITIO_${siteFilter.toUpperCase()}`;
         let query = `
@@ -51,7 +50,6 @@ articles.get('/', async (c) => {
           params.push(category);
         }
 
-        // Excluir artículos sin imagen
         query += " AND p.URL_IMAGEN IS NOT NULL AND p.URL_IMAGEN != '' AND p.URL_IMAGEN NOT LIKE '%logo.png%'";
 
         query += ' ORDER BY p.FECHA_PUBLICACION DESC LIMIT ? OFFSET ?';
@@ -61,7 +59,6 @@ articles.get('/', async (c) => {
         return (res.results || []).map(parseArticleRow).filter(Boolean);
       }
 
-      // Sin filtro de sitio: consultar PARAFRASEADOS y CMS
       let queryPara  = "SELECT *, 'PARAFRASEADO' as SOURCE_TABLE FROM ARTICULOS_PARAFRASEADOS WHERE ESTADO = 'PUBLICADO'";
       let paramsPara = [];
 
@@ -75,7 +72,6 @@ articles.get('/', async (c) => {
 
       const resPara = await c.env.DB.prepare(queryPara).bind(...paramsPara).all();
 
-      // CMS query en try-catch por si la tabla no existe en producción
       let resCMSresults = [];
       try {
         let queryCMS   = "SELECT *, 'CMS' as SOURCE_TABLE FROM ARTICULOS_CMS WHERE ESTADO = 'PUBLICADO'";
@@ -88,9 +84,7 @@ articles.get('/', async (c) => {
         paramsCMS.push(l, applyOffset ? o : 0);
         const resCMS = await c.env.DB.prepare(queryCMS).bind(...paramsCMS).all();
         resCMSresults = resCMS.results || [];
-      } catch (_) {
-        // Tabla ARTICULOS_CMS no existe - solo usar PARAFRASEADOS
-      }
+      } catch (_) {}
 
       return [...(resPara.results || []), ...resCMSresults]
         .map(parseArticleRow)
@@ -101,12 +95,15 @@ articles.get('/', async (c) => {
 
     let arts = await fetchArticles(site);
 
-    // Complementar si hay menos del mínimo y estamos en un sitio específico
     if (site && arts.length < MIN_ARTICLES && o === 0) {
       const allArticles = await fetchArticles(null, false);
       const existingIds = new Set(arts.map((a) => a.id));
       const extras = allArticles.filter((a) => !existingIds.has(a.id));
       arts = [...arts, ...extras].slice(0, l);
+    }
+
+    if (shuffle === 'true' && site) {
+      arts = seededShuffle(arts, site);
     }
 
     return c.json({ articles: arts });

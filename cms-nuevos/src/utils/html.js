@@ -1,11 +1,10 @@
+import { fetchWithTimeout, fetchWithRetry } from './helpers.js';
+
 // src/utils/html.js — Utilidades HTML: meta tags, OG scraping, R2 upload
 
-// ============================================================
-// getOGImage — Extrae og:image de una URL remota
-// ============================================================
 export const getOGImage = async (url) => {
   try {
-    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    const res = await fetchWithTimeout(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }, 8000);
     const html = await res.text();
     const ogMatch =
       html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i) ||
@@ -16,17 +15,9 @@ export const getOGImage = async (url) => {
   }
 };
 
-// ============================================================
-// uploadToR2 — Descarga imagen remota y la sube a R2
-// Retorna null si la imagen no es accesible (404, etc.)
-// ============================================================
 export const uploadToR2 = async (url, env) => {
   try {
-    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-    if (!res.ok) {
-      console.log('[R2] Image not accessible:', res.status, url);
-      return null;
-    }
+    const res = await fetchWithRetry(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }, { maxRetries: 2, timeoutMs: 8000 });
     const contentType = res.headers.get('content-type') || 'image/jpeg';
     if (!contentType.startsWith('image/')) {
       console.log('[R2] Not an image:', contentType, url);

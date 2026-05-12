@@ -5,6 +5,30 @@
 // ============================================================
 export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+export const fetchWithTimeout = (url, options = {}, timeoutMs = 10000) => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(id));
+};
+
+export const fetchWithRetry = async (url, options = {}, { maxRetries = 3, timeoutMs = 10000, backoffBaseMs = 1000 } = {}) => {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const res = await fetchWithTimeout(url, options, timeoutMs);
+      if (res.ok) return res;
+      if (attempt < maxRetries - 1) {
+        const delay = backoffBaseMs * Math.pow(2, attempt);
+        await sleep(delay);
+      }
+    } catch (err) {
+      if (attempt === maxRetries - 1) throw err;
+      const delay = backoffBaseMs * Math.pow(2, attempt);
+      await sleep(delay);
+    }
+  }
+  throw new Error(`fetchWithRetry failed after ${maxRetries} attempts: ${url}`);
+};
+
 // ============================================================
 // slugify — Convierte texto a slug URL-friendly
 // ============================================================
@@ -149,3 +173,55 @@ export const parseArticleRow = (row) => {
     fb_published: Boolean(row.FB_PUBLICADO || 0),
   };
 };
+
+export const notifyTelegram = async (env, { type, site, message }) => {
+  const botToken = env.TELEGRAM_BOT_TOKEN;
+  const chatId = env.TELEGRAM_CHAT_ID;
+  if (!botToken || !chatId) return;
+
+  const text = `[${type.toUpperCase()}] ${site ? '(' + site + ')' : ''} ${message}`;
+
+  try {
+    await fetchWithTimeout(
+      `https://api.telegram.org/bot${botToken}/sendMessage`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text,
+          parse_mode: 'HTML'
+        })
+      },
+      10000
+    );
+  } catch (e) {
+    console.error('[TELEGRAM] Failed to send:', e.message);
+  }
+};
+
+// ============================================================
+// seededShuffle — Shuffle determinístico por seed string
+// ============================================================
+const seededShuffle = (array, seed) => {
+  const rng = (s) => {
+    let x = 0;
+    for (let i = 0; i < s.length; i++) {
+      x = ((x << 5) - x + s.charCodeAt(i)) | 0;
+    }
+    return () => {
+      x = (x * 1664525 + 1013904223) | 0;
+      return (x >>> 0) / 4294967296;
+    };
+  };
+
+  const rand = rng(seed);
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+};
+
+export { seededShuffle };
