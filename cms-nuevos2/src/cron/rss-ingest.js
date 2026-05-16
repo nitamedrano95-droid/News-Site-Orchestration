@@ -444,6 +444,8 @@ export async function runRSSIngest(env) {
   let totalArticlesPublished = 0;
 
   for (const siteSlug of validSites) {
+    let siteArticlesPublished = 0;
+    
     const siteFuentes = fuentesBySite[siteSlug] || [];
 
     if (siteFuentes.length === 0) {
@@ -452,7 +454,6 @@ export async function runRSSIngest(env) {
     }
 
     try {
-      let siteArticlesPublished = 0;
 
       for (const fuente of siteFuentes) {
         const MAX_PER_SITE = isFirstRun ? 2 : 1;

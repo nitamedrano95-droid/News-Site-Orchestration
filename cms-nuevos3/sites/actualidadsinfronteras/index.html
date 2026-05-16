@@ -6,10 +6,18 @@
     <title>Actualidad Sin Fronteras - Noticias sin limites</title>
     <meta name="description" content="Noticias sin limites">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
-    <link href="style.css" rel="stylesheet"/>
-    <link href="style-custom.css" rel="stylesheet"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cms-nuevos3.sebastianvernis.workers.dev">
+    <link rel="dns-prefetch" href="https://placehold.co">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"></noscript>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" media="print" onload="this.media='all'" media="print" onload="this.media='all'">
+    <noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" media="print" onload="this.media='all'"></noscript>
+    <link href="style.css" rel="stylesheet" media="print" onload="this.media='all'" media="print" onload="this.media='all'">
+    <noscript><link href="style.css" rel="stylesheet" media="print" onload="this.media='all'"></noscript>
+    <link href="style-custom.css" rel="stylesheet" media="print" onload="this.media='all'" media="print" onload="this.media='all'">
+    <noscript><link href="style-custom.css" rel="stylesheet" media="print" onload="this.media='all'"></noscript>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%230e7490'/%3E%3Ctext x='50' y='68' font-size='55' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'%3EA%3C/text%3E%3C/svg%3E">
     <link rel="icon" type="image/png" href="favicon.png">
 </head>
@@ -21,8 +29,15 @@
 
     <div id="site-footer"></div>
     
-    <script src="script.js"></script>
-    <script src="components.js"></script>
+    <script src="script.js" defer></script>
+    <script src="components.js" defer></script>
+    <script>
+    if('serviceWorker' in navigator) {
+        window.addEventListener('load', () => 
+            navigator.serviceWorker.register('/sw.js').catch(() => {})
+        );
+    }
+    </script>
     <script>
     (async function(){
         const apiUrl = 'https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=actualidadsinfronteras&limit=12';
@@ -43,18 +58,18 @@
         if(mainContainer) {
             mainContainer.innerHTML = '<div class="magazine-layout"><div class="magazine-hero">' +
                 '<a href="/articulo/?slug=' + encodeURIComponent(hero.slug) + '" class="hero-main">' +
-                '<img src="' + (hero.imageUrl || 'https://placehold.co/1200x600/0e7490/ffffff?text=News') + '" alt="' + hero.title + '">' +
+                '<img src="' + (hero.imageUrl || 'https://placehold.co/1200x600/0e7490/ffffff?text=News') + '" alt="' + hero.title + '" fetchpriority="high">' +
                 '<div class="hero-overlay"><span class="hero-cat">' + (hero.category || 'Noticias') + '</span>' +
                 '<h1>' + hero.title + '</h1><p>' + (hero.desc ? hero.desc.substring(0, 200) + '...' : '') + '</p>' +
                 '<span class="hero-date">' + (hero.publishedAt ? new Date(hero.publishedAt).toLocaleDateString('es-MX') : '') + '</span></div></a>' +
                 '<div class="magazine-sidebar">' + secondary.map(a =>
                     '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="side-item">' +
-                    '<img src="' + (a.imageUrl || 'https://placehold.co/300x200/0e7490/ffffff?text=News') + '" alt="' + a.title + '">' +
+                    '<img src="' + (a.imageUrl || 'https://placehold.co/300x200/0e7490/ffffff?text=News') + '" alt="' + a.title + '" loading="lazy">' +
                     '<div class="side-content"><span class="side-cat">' + (a.category || 'Noticias') + '</span><h4>' + a.title + '</h4></div></a>'
                 ).join('') + '</div></div>' +
                 '<h2 class="section-label">Más Noticias</h2><div class="news-grid">' + grid.map(a =>
                     '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="news-card">' +
-                    '<div class="card-img-wrap"><img src="' + (a.imageUrl || 'https://placehold.co/600x400/0e7490/ffffff?text=News') + '" alt="' + a.title + '"></div>' +
+                    '<div class="card-img-wrap"><img src="' + (a.imageUrl || 'https://placehold.co/600x400/0e7490/ffffff?text=News') + '" alt="' + a.title + '" loading="lazy"></div>' +
                     '<div class="news-content"><span class="news-category">' + (a.category || 'Noticias') + '</span>' +
                     '<h3 class="news-title">' + a.title + '</h3><p class="news-desc">' + (a.desc ? a.desc.substring(0, 120) + '...' : '') + '</p>' +
                     '<span class="news-date">' + (a.publishedAt ? new Date(a.publishedAt).toLocaleDateString('es-MX') : '') + '</span></div></a>'

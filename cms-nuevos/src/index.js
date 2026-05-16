@@ -114,10 +114,10 @@ export default {
     return injectMetaTags(request, env, originalRes);
   },
 
-  // Cron job programado - ahora desacoplado, usar /jobs/run endpoint
-  // async scheduled(event, env, ctx) {
-  //   const cronTime = event.cron;
-  //   console.log('[SCHEDULED] Triggered by cron:', cronTime);
-  //   ctx.waitUntil(runMasterCron(env));
-  // },
+  // Cron job programado - ejecuta RSS Ingest + Facebook Timer + Ticker
+  async scheduled(event, env, ctx) {
+    const cronTime = event.cron;
+    console.log('[SCHEDULED] Triggered by cron:', cronTime);
+    ctx.waitUntil(runMasterCron(env));
+  },
 };

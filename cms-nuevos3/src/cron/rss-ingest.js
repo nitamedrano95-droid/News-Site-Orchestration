@@ -588,7 +588,7 @@ export async function runRSSIngest(env) {
   // Detectar si es primera ejecución
   const lastIngestTimestamp = await env.ARTICLES_KV.get('last_ingest_timestamp');
   const isFirstRun = !lastIngestTimestamp;
-  const MAX_PER_SITE = isFirstRun ? 2 : 1;
+  const MAX_PER_SITE = isFirstRun ? 5 : 3;
 
   if (isFirstRun) {
     RSS_LOG('First run detected — limiting to 2 articles per site');
@@ -615,10 +615,7 @@ export async function runRSSIngest(env) {
       'https://www.informador.mx/rss/mexico.xml',
       'https://www.proceso.com.mx/rss/feed.html',
       'https://expansion.mx/rss',
-      'https://www.reforma.com/rss/portada.xml',
-      'https://aristeguinoticias.com/feed/',
       'https://www.infobae.com/arc/outboundfeeds/rss/?outputType=xml&section=mexico',
-      'https://rss.dw.com/xml/rss-esp-all',
       'https://www.france24.com/es/rss',
     ];
     for (const feedUrl of LEGACY_FEEDS) {
@@ -804,7 +801,7 @@ export async function runRSSIngestForSite(env, siteSlug) {
 
   const lastIngestTimestamp = await env.ARTICLES_KV.get('last_ingest_timestamp');
   const isFirstRun = !lastIngestTimestamp;
-  const MAX_PER_SITE = isFirstRun ? 2 : 1;
+  const MAX_PER_SITE = isFirstRun ? 5 : 3;
 
   let fuentesRows = [];
   try {
@@ -823,10 +820,7 @@ export async function runRSSIngestForSite(env, siteSlug) {
       'https://www.informador.mx/rss/mexico.xml',
       'https://www.proceso.com.mx/rss/feed.html',
       'https://expansion.mx/rss',
-      'https://www.reforma.com/rss/portada.xml',
-      'https://aristeguinoticias.com/feed/',
       'https://www.infobae.com/arc/outboundfeeds/rss/?outputType=xml&section=mexico',
-      'https://rss.dw.com/xml/rss-esp-all',
       'https://www.france24.com/es/rss',
     ];
     for (const feedUrl of LEGACY_FEEDS) {

@@ -77,29 +77,20 @@ export async function publishToFBIndividual(env, article, siteSlug) {
     }
 
     let fbResult;
+    const linkForm = new FormData();
+    linkForm.append('message', decodeHTMLEntities(article.TITULO));
+    linkForm.append('link', url);
+    linkForm.append('access_token', token);
+
     if (photoId) {
-      const linkForm = new FormData();
-      linkForm.append('message', decodeHTMLEntities(article.TITULO));
-      linkForm.append('access_token', token);
-      linkForm.append('attached_photo', photoId);
-
-      const linkRes = await fetch(
-        `https://graph.facebook.com/v19.0/${site.FACEBOOK_PAGE_ID}/feed`,
-        { method: 'POST', body: linkForm }
-      );
-      fbResult = await linkRes.json();
-    } else {
-      const linkForm = new FormData();
-      linkForm.append('message', decodeHTMLEntities(article.TITULO));
-      linkForm.append('link', url);
-      linkForm.append('access_token', token);
-
-      const linkRes = await fetch(
-        `https://graph.facebook.com/v19.0/${site.FACEBOOK_PAGE_ID}/feed`,
-        { method: 'POST', body: linkForm }
-      );
-      fbResult = await linkRes.json();
+      linkForm.append('attached_media[0]', JSON.stringify({ media_fbid: photoId }));
     }
+
+    const linkRes = await fetch(
+      `https://graph.facebook.com/v19.0/${site.FACEBOOK_PAGE_ID}/feed`,
+      { method: 'POST', body: linkForm }
+    );
+    fbResult = await linkRes.json();
 
     if (fbResult.id) {
       console.log(`[FB] ✓ Published to ${siteSlug}: ${fbResult.id}`);
@@ -156,6 +147,7 @@ export async function processFBTimer(env) {
         FROM ${tableName} s
         JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
         WHERE s.FB_PUBLICADO = 0
+          AND s.FECHA_ASIGNACION >= datetime('now', '-3 days')
           AND p.URL_IMAGEN IS NOT NULL
           AND p.URL_IMAGEN != ''
           AND p.URL_IMAGEN NOT LIKE '%logo.png'
@@ -177,6 +169,7 @@ export async function processFBTimer(env) {
           FROM ${tableName} s
           JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
           WHERE s.FB_PUBLICADO = 1
+            AND s.FECHA_ASIGNACION >= datetime('now', '-3 days')
             AND s.FB_FECHA < datetime('now', '-1 day')
             AND p.URL_IMAGEN IS NOT NULL
             AND p.URL_IMAGEN != ''

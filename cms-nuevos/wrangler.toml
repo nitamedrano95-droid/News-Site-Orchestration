@@ -58,6 +58,9 @@ id = "c90aab3a89054141933a28d232e87b6c"
 binding = "UPLOADS"
 bucket_name = "cms-news"
 
+[triggers]
+crons = ["*/30 * * * *"]
+
 [observability]
 enabled = false
 
