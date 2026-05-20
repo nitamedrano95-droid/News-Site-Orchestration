@@ -1,0 +1,11 @@
+{
+  "name": "health-monitor",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "dependencies": {
+    "hono": "^4.11.9"
+  },
+  "devDependencies": {
+    "wrangler": "^4.92.0"
+  }
+}

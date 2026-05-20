@@ -1,9 +1,9 @@
-// src/cron/facebook.js — Publicación automática a Facebook (6 posts/día/página, timer 4h)
+// src/cron/facebook.js — Publicación automática a Facebook (4 posts/día/sitio, timer 6h)
 
 import { SITIOS_LIST, SITE_DOMAIN_MAP } from '../config.js';
 import { decodeHTMLEntities, articleSlugify, fetchWithTimeout, notifyTelegram } from '../utils/helpers.js';
 
-const FB_INTERVAL_MS = 60 * 60 * 1000;
+const FB_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
 // ============================================================
 // publishToFBIndividual — Publica un artículo a Facebook
@@ -110,7 +110,7 @@ export async function publishToFBIndividual(env, article, siteSlug) {
 }
 
 // ============================================================
-// processFBTimer — 1 artículo por sitio cada 4 horas (= 6/día)
+// processFBTimer — 1 artículo por sitio cada 6 horas (= 4/día)
 // ============================================================
 export async function processFBTimer(env) {
   console.log('[FB TIMER] Starting Facebook timer processing...');

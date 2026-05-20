@@ -1,7 +1,7 @@
 import { SITIOS_LIST, SITE_DOMAIN_MAP } from '../config.js';
 import { decodeHTMLEntities, articleSlugify, fetchWithTimeout, notifyTelegram } from '../utils/helpers.js';
 
-const FB_INTERVAL_MS = 60 * 60 * 1000;
+const FB_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
 export async function publishToFBIndividual(env, article, siteSlug) {
   try {

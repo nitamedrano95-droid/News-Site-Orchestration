@@ -1,0 +1,48 @@
+name = "health-monitor"
+main = "src/index.js"
+compatibility_date = "2024-12-01"
+
+workers_dev = true
+
+[triggers]
+crons = ["*/15 * * * *"]
+
+[observability]
+enabled = false
+  [observability.logs]
+  enabled = true
+  persist = true
+  invocation_logs = true
+
+# KV for alert state
+[[kv_namespaces]]
+binding = "MONITOR_KV"
+id = "d16626c540e54c9b848c15a015084fc8"
+
+# D1 for historical data
+[[d1_databases]]
+binding = "MONITOR_DB"
+database_name = "health-monitor"
+database_id = "c3a12627-3403-4ea8-9ecc-b49682b284f8"
+
+# Service bindings to CMS workers
+[[services]]
+binding = "CMS_NUEVOS"
+service = "cms-nuevos"
+
+[[services]]
+binding = "CMS_NUEVOS2"
+service = "cms-nuevos2"
+
+[[services]]
+binding = "CMS_NUEVOS3"
+service = "cms-nuevos3"
+
+[[services]]
+binding = "CMS_ORIGINAUX"
+service = "cms-originaux"
+
+# Telegram notifications
+[vars]
+TELEGRAM_BOT_TOKEN = "8050461185:AAF91pG2ugi5ij2235Y2fl6cKQ6nd9LehTM"
+TELEGRAM_CHAT_ID = "-1002508776650"

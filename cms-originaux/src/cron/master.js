@@ -24,7 +24,7 @@ export async function runMasterCron(env) {
     status.tasks.ingest = `Error: ${e.message}`;
   }
 
-  // 2. Facebook Timer (publica 1 artículo aleatorio con R2 si pasaron 3 horas)
+  // 2. Facebook Timer (publica 1 artículo por sitio cada 6 horas = 4/día)
   try {
     console.log('[CRON] Starting Facebook Timer processing...');
     const fbStats = await processFBTimer(env);

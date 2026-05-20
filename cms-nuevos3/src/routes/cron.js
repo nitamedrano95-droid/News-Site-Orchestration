@@ -81,7 +81,7 @@ cron.get('/diagnostic', async (c) => {
   try {
     const { SITIOS_LIST } = await import('../config.js');
     const now = Date.now();
-    const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
+    const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
     
     const diagnostics = [];
     
@@ -96,7 +96,7 @@ cron.get('/diagnostic', async (c) => {
       const lastPostTime = lastPostRow?.LAST_POST_MS ? Number(lastPostRow.LAST_POST_MS) : 0;
       const elapsed = now - lastPostTime;
       const elapsedMin = Math.floor(elapsed / 60000);
-      const shouldPublish = elapsed >= THREE_HOURS_MS || lastPostTime === 0;
+      const shouldPublish = elapsed >= SIX_HOURS_MS || lastPostTime === 0;
       
       // Contar artículos pendientes
       const pendingCount = await c.env.DB.prepare(`
@@ -243,7 +243,7 @@ cron.get('/debug-fb-timer/:siteSlug', async (c) => {
   const siteSlug = c.req.param('siteSlug');
   const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
   const kvKey = `last_fb_post_${siteSlug}`;
-  const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
+  const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
   const now = Date.now();
   
   // Get timer
@@ -251,7 +251,7 @@ cron.get('/debug-fb-timer/:siteSlug', async (c) => {
   const lastPostTime = lastPostRaw ? parseInt(lastPostRaw, 10) : 0;
   const elapsed = now - lastPostTime;
   const elapsedMin = Math.floor(elapsed / 60000);
-  const shouldPublish = elapsed >= THREE_HOURS_MS || lastPostTime === 0;
+  const shouldPublish = elapsed >= SIX_HOURS_MS || lastPostTime === 0;
   
   // Get pending count
   const pendingCount = await c.env.DB.prepare(`
