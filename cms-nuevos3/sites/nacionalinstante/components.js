@@ -18,27 +18,41 @@
   <div class="ticker-label"><i class="fas fa-bolt"></i>INSTANTE</div>
   <div class="ticker-viewport">
     <div class="ticker-track" id="ticker-track">
-      <span class="ticker-msg">ÚLTIMA HORA</span>
-      <span class="ticker-sep">•</span>
-      <span class="ticker-msg">Noticias de última hora en tiempo real</span>
-      <span class="ticker-sep">•</span>
-      <span class="ticker-msg">Síguenos para más actualizaciones</span>
-      <span class="ticker-sep">•</span>
-      <span class="ticker-msg">Información verificada y actualizada</span>
-      <span class="ticker-sep">•</span>
+      <span class="ticker-loading">Cargando noticias...</span>
     </div>
   </div>
 </div>`);
-    startTicker();
+    fetchTickerArticles();
+  }
+
+  async function fetchTickerArticles() {
+    const track = document.getElementById('ticker-track');
+    if (!track) return;
+    try {
+      const res = await fetch('https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=nacionalinstante&limit=5');
+      if (!res.ok) throw new Error('Network');
+      const data = await res.json();
+      const articles = data.articles || [];
+      if (!articles.length) { track.innerHTML = '<span class="ticker-msg">Sin noticias disponibles</span>'; return; }
+      const tickerItems = articles.map(a =>
+        '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="ticker-msg" style="color:inherit;text-decoration:none;">' + a.title + '</a>'
+      ).join('<span class="ticker-sep">•</span>');
+      track.innerHTML = tickerItems;
+      startTicker();
+    } catch(e) {
+      track.innerHTML = '<span class="ticker-msg">ÚLTIMA HORA • Síguenos para más actualizaciones</span>';
+      startTicker();
+    }
   }
 
   function startTicker() {
     const track = document.getElementById('ticker-track');
     if (!track) return;
     let pos = 0;
+    const totalWidth = track.scrollWidth / 2;
     setInterval(() => {
-      pos -= 1;
-      if (pos < -track.scrollWidth / 2) pos = 0;
+      pos -= 0.8;
+      if (pos < -totalWidth) pos = 0;
       track.style.transform = 'translateX(' + pos + 'px)';
     }, 20);
   }

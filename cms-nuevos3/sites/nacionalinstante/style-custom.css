@@ -817,8 +817,9 @@ header {
   white-space: nowrap;
   will-change: transform;
 }
-.ticker-msg { padding: 0 20px; font-size: 0.85em; font-weight: 500; }
-.ticker-sep { color: rgba(255,255,255,0.4); font-size: 0.7em; }
+.ticker-msg { padding: 0 24px; font-size: 0.85em; font-weight: 500; white-space: nowrap; }
+.ticker-msg:hover { color: #fb7185; text-decoration: underline; }
+.ticker-sep { color: rgba(255,255,255,0.4); font-size: 0.7em; padding: 0 8px; }
 
 /* ===== PULSE LOADER ===== */
 #site-preloader { background: #fff; }
