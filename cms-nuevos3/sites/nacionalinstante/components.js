@@ -6,22 +6,74 @@
   function injectPreloader() {
     const el = document.getElementById('site-preloader');
     if (!el) return;
-    el.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;"><span class="loader">Deleting</span><p style="font-weight:700;color:#be123c;font-size:0.85em;letter-spacing:1px;">Cargando...</p></div>';
-    window.addEventListener('load', () => { setTimeout(() => el.classList.add('hidden'), 500); });
+    el.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;"><div class="pulse-loader"><div class="pulse-dot"></div><div class="pulse-dot"></div><div class="pulse-dot"></div></div><p style="font-weight:700;color:#be123c;font-size:0.9em;letter-spacing:2px;text-transform:uppercase;">Cargando...</p></div>';
+    window.addEventListener('load', () => { setTimeout(() => el.classList.add('hidden'), 400); });
+  }
+
+  function injectTicker() {
+    const el = document.getElementById('site-header');
+    if (!el) return;
+    el.insertAdjacentHTML('afterend', `
+<div class="news-ticker-wrap" id="ticker-wrap">
+  <div class="ticker-label"><i class="fas fa-bolt"></i>INSTANTE</div>
+  <div class="ticker-viewport">
+    <div class="ticker-track" id="ticker-track">
+      <span class="ticker-msg">ÚLTIMA HORA</span>
+      <span class="ticker-sep">•</span>
+      <span class="ticker-msg">Noticias de última hora en tiempo real</span>
+      <span class="ticker-sep">•</span>
+      <span class="ticker-msg">Síguenos para más actualizaciones</span>
+      <span class="ticker-sep">•</span>
+      <span class="ticker-msg">Información verificada y actualizada</span>
+      <span class="ticker-sep">•</span>
+    </div>
+  </div>
+</div>`);
+    startTicker();
+  }
+
+  function startTicker() {
+    const track = document.getElementById('ticker-track');
+    if (!track) return;
+    let pos = 0;
+    setInterval(() => {
+      pos -= 1;
+      if (pos < -track.scrollWidth / 2) pos = 0;
+      track.style.transform = 'translateX(' + pos + 'px)';
+    }, 20);
   }
 
   function injectHeader() {
     const el = document.getElementById('site-header');
     if (!el) return;
-    el.innerHTML = '<header style="background:linear-gradient(135deg,#9f1239 0%,#fb7185 100%);color:#fff;padding:10px 0;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,0.1);"><div class="container" style="display:flex;align-items:center;justify-content:space-between;max-width:1200px;margin:0 auto;padding:0 24px;"><a href="' + base + '" style="display:flex;align-items:center;text-decoration:none;gap:12px;"><img src="' + base + 'logo-header.png" alt="nacionalinstante" style="height:42px;width:auto;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2));"></a><nav style="display:flex;gap:20px;"><a href="' + base + '" style="color:rgba(255,255,255,0.9);text-decoration:none;font-weight:600;font-size:0.88em;">Inicio</a><a href="' + base + 'categoria/index.html?cat=nacional" style="color:rgba(255,255,255,0.9);text-decoration:none;font-weight:600;font-size:0.88em;">Nacional</a><a href="' + base + 'categoria/index.html?cat=politica" style="color:rgba(255,255,255,0.9);text-decoration:none;font-weight:600;font-size:0.88em;">Politica</a><a href="' + base + 'categoria/index.html?cat=economia" style="color:rgba(255,255,255,0.9);text-decoration:none;font-weight:600;font-size:0.88em;">Economia</a></nav></div></header>';
+    const now = new Date();
+    const dayNames = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+    const monthNames = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    const dayStr = dayNames[now.getDay()] + ', ' + now.getDate() + ' ' + monthNames[now.getMonth()] + ' ' + now.getFullYear();
+    const timeStr = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+    el.innerHTML = '<header class="site-header-modern"><div class="header-inner">' +
+      '<div class="header-brand"><a href="' + base + '" class="logo-link"><img src="' + base + 'logo-header.png" alt="nacionalinstante" class="logo-img"></a><div class="header-brand-text"><span class="brand-name">NACIÓN AL INSTANTE</span><span class="brand-tagline">Noticias en tiempo real</span></div></div>' +
+      '<div class="header-center"><nav class="main-nav"><a href="' + base + '" class="nav-link active">Inicio</a><a href="' + base + 'categoria/index.html?cat=nacional" class="nav-link">Nacional</a><a href="' + base + 'categoria/index.html?cat=politica" class="nav-link">Política</a><a href="' + base + 'categoria/index.html?cat=economia" class="nav-link">Economía</a><a href="' + base + 'categoria/index.html?cat=mundo" class="nav-link">Mundo</a></nav></div>' +
+      '<div class="header-right"><div class="header-date"><span class="header-date-time">' + timeStr + '</span><span class="header-date-day">' + dayStr + '</span></div>' +
+      '<div class="social-links"><a href="https://twitter.com/intent/tweet?url=' + encodeURIComponent(window.location.href) + '&text=' + encodeURIComponent(document.title) + '" class="social-link" target="_blank" rel="noopener"><i class="fab fa-twitter"></i></a><a href="https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(window.location.href) + '" class="social-link" target="_blank" rel="noopener"><i class="fab fa-facebook-f"></i></a><a href="https://api.whatsapp.com/send?text=' + encodeURIComponent(window.location.href) + '" class="social-link" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i></a></div></div>' +
+      '<button class="nav-toggle" onclick="document.querySelector(\'.main-nav\').classList.toggle(\'open\')"><i class="fas fa-bars"></i></button>' +
+      '</div></header>';
   }
 
   function injectFooter() {
     const el = document.getElementById('site-footer');
     if (!el) return;
-    el.innerHTML = '<footer class="site-footer"><div style="text-align:center;margin-bottom:20px;"><img src="' + base + 'logo-footer.png" alt="nacionalinstante" style="height:32px;width:auto;object-fit:contain;opacity:0.9;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.2));"></div><p>&copy; ' + new Date().getFullYear() + ' nacionalinstante. Todos los derechos reservados.</p><p><a href="' + base + 'privacidad.html">Privacidad</a> | <a href="' + base + 'terminos.html">Terminos</a> | <a href="' + base + 'contacto.html">Contacto</a> | <a href="' + base + 'acerca-de.html">Acerca de</a></p></footer>';
+    el.innerHTML = '<footer class="site-footer-modern"><div class="footer-inner"><div class="footer-grid">' +
+      '<div><img src="' + base + 'logo-footer.png" alt="nacionalinstante" class="footer-brand-img"><p class="footer-desc">Tu fuente confiable de noticias nacionales. Información verificada y actualizada las 24 horas.</p>' +
+      '<div class="footer-social"><a href="https://twitter.com/intent/tweet?url=' + encodeURIComponent(window.location.href) + '&text=' + encodeURIComponent(document.title) + '" class="social-link" target="_blank" rel="noopener"><i class="fab fa-twitter"></i></a><a href="https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(window.location.href) + '" class="social-link" target="_blank" rel="noopener"><i class="fab fa-facebook-f"></i></a><a href="https://api.whatsapp.com/send?text=' + encodeURIComponent(window.location.href) + '" class="social-link" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i></a><a href="https://www.linkedin.com/shareArticle?url=' + encodeURIComponent(window.location.href) + '" class="social-link" target="_blank" rel="noopener"><i class="fab fa-linkedin-in"></i></a></div></div>' +
+      '<div><span class="footer-col-title">Secciones</span><ul class="footer-links-list"><li><a href="' + base + 'categoria/index.html?cat=nacional">Nacional</a></li><li><a href="' + base + 'categoria/index.html?cat=politica">Política</a></li><li><a href="' + base + 'categoria/index.html?cat=economia">Economía</a></li><li><a href="' + base + 'categoria/index.html?cat=mundo">Mundo</a></li></ul></div>' +
+      '<div><span class="footer-col-title">Institucional</span><ul class="footer-links-list"><li><a href="' + base + 'acerca-de.html">Acerca de</a></li><li><a href="' + base + 'contacto.html">Contacto</a></li><li><a href="' + base + 'privacidad.html">Privacidad</a></li><li><a href="' + base + 'terminos.html">Términos</a></li></ul></div>' +
+      '</div>' +
+      '<div class="footer-bottom"><span class="footer-copy">&copy; ' + new Date().getFullYear() + ' nacionalinstante. Todos los derechos reservados.</span>' +
+      '<div class="footer-legal"><a href="' + base + 'privacidad.html">Privacidad</a><a href="' + base + 'terminos.html">Términos</a><a href="' + base + 'contacto.html">Contacto</a></div></div>' +
+      '</div></footer>';
   }
 
-  function init() { injectPreloader(); injectHeader(); injectFooter(); }
+  function init() { injectPreloader(); injectTicker(); injectHeader(); injectFooter(); }
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
 })();
