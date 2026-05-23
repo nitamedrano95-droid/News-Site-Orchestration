@@ -49,7 +49,7 @@
                 '<div class="paper-date">' + new Date().toLocaleDateString('es-MX', {weekday:'long', year:'numeric', month:'long', day:'numeric'}) + '</div></div>' +
                 '<div class="newspaper-headline"><a href="/articulo/?slug=' + encodeURIComponent(headline.slug) + '">' +
                 '<h1>' + headline.title + '</h1>' +
-                '<img src="' + (headline.imageUrl || 'https://placehold.co/1200x500/166534/ffffff?text=News') + '" alt="' + headline.title + '">' +
+                '<img src="' + (headline.imageUrl || ' + base + 'logo-header.png' ) + '" alt="' + headline.title + '">' +
                 '<p>' + (headline.desc ? headline.desc.substring(0, 400) + '...' : '') + '</p></a></div>' +
                 '<div class="newspaper-subheads">' + subheads.map(a =>
                     '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="subhead-item">' +

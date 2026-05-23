@@ -640,15 +640,178 @@ header {
   }
 }
 
-/* ===== MOBILE SPACING FIXES ===== */
-@media (max-width: 768px) {
-    .container { padding: 0 var(--space-md) !important; }
-    .site-footer { padding: 40px var(--space-md) 30px; }
-    .legal-page { padding: 0 var(--space-md); }
+/* ===== EL OBSERVADOR REPUBLICANO LOADER ===== */
+.obsr-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.obsr-circle {
+  width: 20px;
+  height: 20px;
+  background: #3f6212;
+  border-radius: 50%;
+  animation: obsrPulse 0.8s ease-in-out infinite;
+}
+.obsr-ring {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #d9f99d;
+  border-top-color: #3f6212;
+  border-radius: 50%;
+  animation: obsrSpin 0.8s linear infinite;
+}
+@keyframes obsrPulse {
+  0%, 100% { transform: scale(0.8); opacity: 0.6; }
+  50% { transform: scale(1.2); opacity: 1; }
+}
+@keyframes obsrSpin {
+  to { transform: rotate(360deg); }
 }
 
-@media (max-width: 600px) {
-    .site-footer { padding: 30px var(--space-sm); }
-    .legal-page { padding: 0 var(--space-sm); }
-    .news-grid { gap: 20px; }
+/* ===== EL OBSERVADOR REPUBLICANO TICKER ===== */
+.obsr-ticker {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #1a2e05 0%, #3f6212 100%);
+  color: #fff;
+  height: 48px;
+  overflow: hidden;
+}
+.ticker-obsr-left { display: flex; align-items: center; flex-shrink: 0; }
+.ticker-obsr-logo {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  height: 100%;
+  background: #fff;
+  flex-shrink: 0;
+}
+.ticker-obsr-logo img { height: 30px; width: auto; object-fit: contain; }
+.ticker-obsr-viewport { flex: 1; overflow: hidden; white-space: nowrap; position: relative; }
+.ticker-obsr-inner { display: inline-block; white-space: nowrap; }
+.ticker-obsr-item {
+  color: rgba(255,255,255,0.9);
+  text-decoration: none;
+  font-size: 0.8em;
+  padding: 0 16px;
+  white-space: nowrap;
+  transition: color 0.3s;
+}
+.ticker-obsr-item:hover { color: #d9f99d; }
+.ticker-obsr-sep { color: #65a30d; padding: 0 4px; }
+.ticker-loading { color: rgba(255,255,255,0.5); font-size: 0.8em; font-style: italic; }
+.ticker-obsr-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  flex-shrink: 0;
+}
+.ticker-obsr-time {
+  background: #65a30d;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.7em;
+  padding: 4px 10px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+.ticker-obsr-social { display: flex; gap: 6px; }
+.ticker-obsr-social a {
+  color: rgba(255,255,255,0.7);
+  text-decoration: none;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.3s;
+  font-size: 0.8em;
+}
+.ticker-obsr-social a:hover { color: #fff; background: rgba(255,255,255,0.15); }
+
+/* ===== EL OBSERVADOR REPUBLICANO HEADER ===== */
+.site-header-obsr {
+  background: #1a2e05;
+  padding: 0;
+}
+.obsr-header-top {
+  background: linear-gradient(90deg, #3f6212, #65a30d);
+  padding: 8px 24px;
+  text-align: center;
+  border-bottom: 2px solid #65a30d;
+}
+.obsr-header-title {
+  font-size: 0.7em;
+  font-weight: 900;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: #d9f99d;
+}
+.header-obsr-nav { padding: 0 24px; }
+.nav-obsr-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 48px;
+}
+.nav-obsr-link {
+  color: rgba(255,255,255,0.85);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.8em;
+  letter-spacing: 0.5px;
+  padding: 6px 14px;
+  border-radius: 4px;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+.nav-obsr-link:hover { color: #fff; background: rgba(255,255,255,0.15); }
+.nav-obsr-link.active { background: rgba(217,249,157,0.2); color: #d9f99d; }
+
+/* ===== EL OBSERVADOR REPUBLICANO FOOTER ===== */
+.site-footer-obsr {
+  background: #1a2e05;
+  padding: 36px 20px 20px;
+  margin-top: 60px;
+}
+.footer-obsr-inner { max-width: 900px; margin: 0 auto; }
+.footer-obsr-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  max-width: 640px;
+  margin: 0 auto 20px;
+}
+.footer-obsr-col { text-align: center; }
+.footer-obsr-title {
+  font-size: 0.7em;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #d9f99d;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #65a30d;
+  display: inline-block;
+}
+.footer-obsr-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.footer-obsr-list li a { color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.85em; transition: color 0.3s; }
+.footer-obsr-list li a:hover { color: #d9f99d; }
+.footer-obsr-bottom {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 14px;
+  text-align: center;
+  font-size: 0.75em;
+  color: rgba(255,255,255,0.45);
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .footer-obsr-grid { grid-template-columns: 1fr; }
+  .nav-obsr-inner { overflow-x: auto; }
 }

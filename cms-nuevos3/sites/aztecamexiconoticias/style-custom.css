@@ -638,3 +638,179 @@ header {
     .legal-page { padding: 0 var(--space-sm); }
     .news-grid { gap: 20px; }
 }
+
+/* ===== AZTECA HEADER (minimal - just background) ===== */
+.site-header-aztec {
+  display: none;
+}
+.header-aztec-inner, .header-aztec-brand, .header-aztec-logo, .header-aztec-title, .header-aztec-nav { display: none; }
+
+/* ===== AZTECA TICKER ===== */
+.aztec-ticker {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #14532d 0%, #166534 100%);
+  color: #fff;
+  height: 52px;
+  overflow: hidden;
+}
+.ticker-aztec-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  height: 100%;
+  border-right: 1px solid rgba(202, 138, 4, 0.3);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.ticker-aztec-date {
+  background: #ca8a04;
+  color: #14532d;
+  font-weight: 800;
+  font-size: 0.7em;
+  padding: 4px 8px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+.ticker-aztec-financial {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  padding: 0 12px;
+}
+.ticker-aztec-viewport { flex: 1; overflow: hidden; white-space: nowrap; position: relative; }
+.ticker-aztec-inner { display: inline-block; white-space: nowrap; }
+.ticker-aztec-msg {
+  font-size: 0.75em;
+  font-weight: 500;
+  color: rgba(255,255,255,0.9);
+}
+.ticker-aztec-msg .up { color: #4ade80; font-weight: 700; }
+.ticker-aztec-msg .down { color: #f87171; font-weight: 700; }
+.ticker-aztec-msg .neutral { color: #fde68a; font-weight: 700; }
+.ticker-aztec-sep { color: #ca8a04; padding: 0 8px; }
+.ticker-aztec-nav {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 12px;
+  height: 100%;
+  background: rgba(0,0,0,0.2);
+}
+.ticker-nav-link {
+  color: rgba(255,255,255,0.85);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.75em;
+  letter-spacing: 0.5px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+.ticker-nav-link:hover { color: #fff; background: rgba(255,255,255,0.15); }
+.ticker-nav-link.active { background: rgba(202, 138, 4, 0.3); color: #fde68a; }
+.ticker-aztec-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  height: 100%;
+  flex-shrink: 0;
+}
+.ticker-aztec-social {
+  display: flex;
+  gap: 6px;
+}
+.ticker-aztec-social a {
+  color: rgba(255,255,255,0.7);
+  text-decoration: none;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.3s;
+  font-size: 0.8em;
+}
+.ticker-aztec-social a:hover { color: #fff; background: rgba(255,255,255,0.15); }
+.ticker-aztec-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0 12px;
+  background: #fff;
+}
+.ticker-aztec-logo img { height: 30px; width: auto; object-fit: contain; }
+
+/* ===== AZTECA LOADER ===== */
+.aztec-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.aztec-step {
+  background: linear-gradient(to right, #15803d, #ca8a04);
+  border-radius: 2px;
+  animation: aztecPulse 1.2s ease-in-out infinite;
+}
+.aztec-step.s1 { width: 80px; height: 6px; }
+.aztec-step.s2 { width: 120px; height: 8px; animation-delay: 0.1s; }
+.aztec-step.s3 { width: 160px; height: 10px; animation-delay: 0.2s; }
+.aztec-step.s4 { width: 200px; height: 12px; animation-delay: 0.3s; }
+@keyframes aztecPulse {
+  0%, 100% { opacity: 0.5; transform: scaleX(1); }
+  50% { opacity: 1; transform: scaleX(1.05); }
+}
+
+/* ===== AZTECA FOOTER ===== */
+.site-footer-aztec {
+  background: #14532d;
+  padding: 40px 20px 24px;
+  margin-top: 60px;
+}
+.footer-aztec-inner { max-width: 800px; margin: 0 auto; }
+.footer-aztec-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 32px;
+  max-width: 500px;
+  margin: 0 auto 24px;
+}
+.footer-aztec-col { text-align: center; }
+.footer-aztec-col-title {
+  font-size: 0.7em;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #fde68a;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #ca8a04;
+  display: inline-block;
+}
+.footer-aztec-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.footer-aztec-list li a { color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.85em; transition: color 0.3s; }
+.footer-aztec-list li a:hover { color: #fde68a; }
+.footer-aztec-bottom {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 16px;
+  text-align: center;
+  font-size: 0.75em;
+  color: rgba(255,255,255,0.5);
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .header-aztec-inner { padding: 12px 16px; flex-direction: column; text-align: center; }
+  .header-aztec-title { font-size: 1em; }
+  .nav-inner { padding: 0 16px; overflow-x: auto; }
+  .footer-aztec-grid { grid-template-columns: 1fr; }
+}

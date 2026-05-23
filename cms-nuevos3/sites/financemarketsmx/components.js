@@ -10,6 +10,42 @@
     window.addEventListener('load', () => { setTimeout(() => el.classList.add('hidden'), 500); });
   }
 
+  function injectTicker() {
+    const el = document.getElementById('site-header');
+    if (!el) return;
+    el.insertAdjacentHTML('afterend', `
+<div class="news-ticker-banner" id="ticker-banner">
+  <div class="ticker-label"><i class="fas fa-chart-line"></i>MERCADOS</div>
+  <div class="ticker-scroll-wrapper">
+    <div class="ticker-scroll-content" id="ticker-content">
+      <span class="ticker-item">IPC BMV <span class="up">+0.82%</span></span>
+      <span class="ticker-item sep">|</span>
+      <span class="ticker-item">USD/MXN <span class="neutral">18.45</span></span>
+      <span class="ticker-item sep">|</span>
+      <span class="ticker-item">ORO <span class="down">-0.34%</span></span>
+      <span class="ticker-item sep">|</span>
+      <span class="ticker-item">WTI PETRÓLEO <span class="up">+1.12%</span></span>
+      <span class="ticker-item sep">|</span>
+      <span class="ticker-item">NASDAQ <span class="up">+0.45%</span></span>
+      <span class="ticker-item sep">|</span>
+      <span class="ticker-item">DÓLAR EURO <span class="neutral">1.08</span></span>
+      <span class="ticker-item sep">|</span>
+      <span class="ticker-item">S&P 500 <span class="down">-0.18%</span></span>
+      <span class="ticker-item sep">|</span>
+      <span class="ticker-item">BOLSAS ASIÁTICAS <span class="up">+0.67%</span></span>
+      <span class="ticker-item sep">|</span>
+      <span class="ticker-item headline">Banco de México mantiene tasa de interés en 11.25%</span>
+      <span class="ticker-item sep">|</span>
+      <span class="ticker-item headline">Inflación anual se ubica en 4.78% en abril</span>
+      <span class="ticker-item sep">|</span>
+      <span class="ticker-item headline">Remesas superan los 5 mil millones de dólares en marzo</span>
+      <span class="ticker-item sep">|</span>
+      <span class="ticker-item headline">Sector manufacturing crece 3.2% trimestral</span>
+    </div>
+  </div>
+</div>`);
+  }
+
   function injectHeader() {
     const el = document.getElementById('site-header');
     if (!el) return;
@@ -22,6 +58,6 @@
     el.innerHTML = '<footer class="site-footer"><div style="text-align:center;margin-bottom:20px;"><img src="' + base + 'logo-footer.png" alt="financemarketsmx" style="height:32px;width:auto;object-fit:contain;opacity:0.9;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.2));"></div><p>&copy; ' + new Date().getFullYear() + ' financemarketsmx. Todos los derechos reservados.</p><p><a href="' + base + 'privacidad.html">Privacidad</a> | <a href="' + base + 'terminos.html">Terminos</a> | <a href="' + base + 'contacto.html">Contacto</a> | <a href="' + base + 'acerca-de.html">Acerca de</a></p></footer>';
   }
 
-  function init() { injectPreloader(); injectHeader(); injectFooter(); }
+  function init() { injectPreloader(); injectTicker(); injectHeader(); injectFooter(); }
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
 })();

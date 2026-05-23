@@ -628,15 +628,188 @@ header {
           66% , 100% {transform: translateY(-24px)}
         }
 
-/* ===== MOBILE SPACING FIXES ===== */
-@media (max-width: 768px) {
-    .container { padding: 0 var(--space-md) !important; }
-    .site-footer { padding: 40px var(--space-md) 30px; }
-    .legal-page { padding: 0 var(--space-md); }
+/* ===== EXPRESO MEXICANO LOADER ===== */
+.xpr-loader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.xpr-dot {
+  width: 12px;
+  height: 12px;
+  background: #ea580c;
+  border-radius: 50%;
+  animation: xprPulse 0.7s ease-in-out infinite;
+}
+.xpr-dot:nth-child(1) { animation-delay: 0s; }
+.xpr-dot:nth-child(2) { animation-delay: 0.15s; }
+.xpr-dot:nth-child(3) { animation-delay: 0.3s; }
+@keyframes xprPulse {
+  0%, 100% { transform: scale(0.7); opacity: 0.5; }
+  50% { transform: scale(1); opacity: 1; }
 }
 
-@media (max-width: 600px) {
-    .site-footer { padding: 30px var(--space-sm); }
-    .legal-page { padding: 0 var(--space-sm); }
-    .news-grid { gap: 20px; }
+/* ===== EXPRESO MEXICANO TICKER ===== */
+.xpr-ticker {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #7c2d12 0%, #c2410c 100%);
+  color: #fff;
+  height: 48px;
+  overflow: hidden;
+}
+.ticker-xpr-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  height: 100%;
+  border-right: 1px solid rgba(254,215,170,0.3);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.ticker-xpr-date {
+  background: #fb923c;
+  color: #7c2d12;
+  font-weight: 800;
+  font-size: 0.7em;
+  padding: 4px 8px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+.ticker-xpr-label {
+  font-weight: 900;
+  font-size: 0.8em;
+  letter-spacing: 2px;
+  color: #fed7aa;
+  text-transform: uppercase;
+}
+.ticker-xpr-track {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+}
+.ticker-xpr-item {
+  color: rgba(255,255,255,0.9);
+  text-decoration: none;
+  font-size: 0.8em;
+  padding: 0 16px;
+  white-space: nowrap;
+  transition: color 0.3s;
+}
+.ticker-xpr-item:hover { color: #fed7aa; }
+.ticker-xpr-sep { color: #fb923c; padding: 0 4px; font-size: 1.2em; }
+.ticker-loading { color: rgba(255,255,255,0.5); font-size: 0.8em; font-style: italic; }
+.ticker-xpr-social {
+  display: flex;
+  gap: 8px;
+  padding: 0 12px;
+  flex-shrink: 0;
+}
+.ticker-xpr-social a {
+  color: rgba(255,255,255,0.7);
+  text-decoration: none;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.3s;
+  font-size: 0.85em;
+}
+.ticker-xpr-social a:hover { color: #fff; background: rgba(255,255,255,0.15); }
+.ticker-xpr-logo {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  height: 100%;
+  background: #fff;
+  flex-shrink: 0;
+}
+.ticker-xpr-logo img { height: 28px; width: auto; object-fit: contain; filter: brightness(0) invert(1); }
+
+/* ===== EXPRESO MEXICANO HEADER ===== */
+.site-header-xpr {
+  background: #7c2d12;
+  padding: 0;
+}
+.xpr-header-top {
+  background: linear-gradient(90deg, #c2410c, #fb923c);
+  padding: 8px 24px;
+  text-align: center;
+  border-bottom: 2px solid #fb923c;
+}
+.xpr-header-tag {
+  font-size: 0.7em;
+  font-weight: 900;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: #fed7aa;
+}
+.header-xpr-nav { padding: 0 24px; }
+.nav-xpr-inner {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 48px;
+}
+.nav-xpr-link {
+  color: rgba(255,255,255,0.85);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.8em;
+  letter-spacing: 0.5px;
+  padding: 6px 14px;
+  border-radius: 4px;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+.nav-xpr-link:hover { color: #fff; background: rgba(255,255,255,0.15); }
+.nav-xpr-link.active { background: rgba(254,215,170,0.2); color: #fed7aa; }
+
+/* ===== EXPRESO MEXICANO FOOTER ===== */
+.site-footer-xpr {
+  background: #7c2d12;
+  padding: 36px 20px 20px;
+  margin-top: 60px;
+}
+.footer-xpr-inner { max-width: 900px; margin: 0 auto; }
+.footer-xpr-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  max-width: 640px;
+  margin: 0 auto 20px;
+}
+.footer-xpr-col { text-align: center; }
+.footer-xpr-title {
+  font-size: 0.7em;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #fed7aa;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #fb923c;
+  display: inline-block;
+}
+.footer-xpr-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.footer-xpr-list li a { color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.85em; transition: color 0.3s; }
+.footer-xpr-list li a:hover { color: #fed7aa; }
+.footer-xpr-bottom {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 14px;
+  text-align: center;
+  font-size: 0.75em;
+  color: rgba(255,255,255,0.45);
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .footer-xpr-grid { grid-template-columns: 1fr; }
+  .nav-xpr-inner { overflow-x: auto; }
 }

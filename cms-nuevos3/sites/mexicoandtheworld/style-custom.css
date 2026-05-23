@@ -606,15 +606,190 @@ header {
   }
 }
 
-/* ===== MOBILE SPACING FIXES ===== */
-@media (max-width: 768px) {
-    .container { padding: 0 var(--space-md) !important; }
-    .site-footer { padding: 40px var(--space-md) 30px; }
-    .legal-page { padding: 0 var(--space-md); }
+/* ===== MEXICO AND THE WORLD LOADER ===== */
+.maw-loader {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 32px;
+}
+.maw-bar {
+  width: 5px;
+  height: 100%;
+  background: linear-gradient(to bottom, #166534, #64748b);
+  border-radius: 3px;
+  animation: mawPulse 0.9s ease-in-out infinite;
+}
+.maw-bar:nth-child(1) { animation-delay: 0s; }
+.maw-bar:nth-child(2) { animation-delay: 0.15s; }
+.maw-bar:nth-child(3) { animation-delay: 0.3s; }
+.maw-bar:nth-child(4) { animation-delay: 0.45s; }
+@keyframes mawPulse {
+  0%, 100% { transform: scaleY(0.4); opacity: 0.4; }
+  50% { transform: scaleY(1); opacity: 1; }
 }
 
-@media (max-width: 600px) {
-    .site-footer { padding: 30px var(--space-sm); }
-    .legal-page { padding: 0 var(--space-sm); }
-    .news-grid { gap: 20px; }
+/* ===== MEXICO AND THE WORLD TICKER ===== */
+.maw-ticker {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #14532d 0%, #166534 100%);
+  color: #fff;
+  height: 48px;
+  overflow: hidden;
+}
+.ticker-maw-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  height: 100%;
+  border-right: 1px solid rgba(187,247,208,0.3);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.ticker-maw-date {
+  background: #64748b;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.7em;
+  padding: 4px 8px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+.ticker-maw-label {
+  font-weight: 800;
+  font-size: 0.7em;
+  letter-spacing: 2px;
+  color: #bbf7d0;
+  text-transform: uppercase;
+}
+.ticker-maw-track {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+}
+.ticker-maw-item {
+  color: rgba(255,255,255,0.9);
+  text-decoration: none;
+  font-size: 0.8em;
+  padding: 0 16px;
+  white-space: nowrap;
+  transition: color 0.3s;
+}
+.ticker-maw-item:hover { color: #bbf7d0; }
+.ticker-maw-sep { color: #64748b; padding: 0 4px; }
+.ticker-loading { color: rgba(255,255,255,0.5); font-size: 0.8em; font-style: italic; }
+.ticker-maw-social {
+  display: flex;
+  gap: 8px;
+  padding: 0 12px;
+  flex-shrink: 0;
+}
+.ticker-maw-social a {
+  color: rgba(255,255,255,0.7);
+  text-decoration: none;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.3s;
+  font-size: 0.85em;
+}
+.ticker-maw-social a:hover { color: #fff; background: rgba(255,255,255,0.15); }
+.ticker-maw-logo {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  height: 100%;
+  background: #fff;
+  flex-shrink: 0;
+}
+.ticker-maw-logo img { height: 28px; width: auto; object-fit: contain; filter: brightness(0) invert(1); }
+
+/* ===== MEXICO AND THE WORLD HEADER ===== */
+.site-header-maw {
+  background: #14532d;
+  padding: 0;
+}
+.maw-header-bar {
+  background: linear-gradient(90deg, #166534, #64748b);
+  padding: 8px 24px;
+  text-align: center;
+  border-bottom: 2px solid #64748b;
+}
+.maw-header-tag {
+  font-size: 0.7em;
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #bbf7d0;
+}
+.header-maw-nav { padding: 0 24px; }
+.nav-maw-inner {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 48px;
+}
+.nav-maw-link {
+  color: rgba(255,255,255,0.85);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.8em;
+  letter-spacing: 0.5px;
+  padding: 6px 14px;
+  border-radius: 4px;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+.nav-maw-link:hover { color: #fff; background: rgba(255,255,255,0.15); }
+.nav-maw-link.active { background: rgba(187,247,208,0.2); color: #bbf7d0; }
+
+/* ===== MEXICO AND THE WORLD FOOTER ===== */
+.site-footer-maw {
+  background: #14532d;
+  padding: 36px 20px 20px;
+  margin-top: 60px;
+}
+.footer-maw-inner { max-width: 900px; margin: 0 auto; }
+.footer-maw-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  max-width: 640px;
+  margin: 0 auto 20px;
+}
+.footer-maw-col { text-align: center; }
+.footer-maw-title {
+  font-size: 0.7em;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #bbf7d0;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #64748b;
+  display: inline-block;
+}
+.footer-maw-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.footer-maw-list li a { color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.85em; transition: color 0.3s; }
+.footer-maw-list li a:hover { color: #bbf7d0; }
+.footer-maw-bottom {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 14px;
+  text-align: center;
+  font-size: 0.75em;
+  color: rgba(255,255,255,0.45);
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .footer-maw-grid { grid-template-columns: 1fr; }
+  .nav-maw-inner { overflow-x: auto; }
 }

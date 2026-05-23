@@ -48,18 +48,18 @@
         if(mainContainer) {
             mainContainer.innerHTML = '<div class="magazine-layout"><div class="magazine-hero">' +
                 '<a href="/articulo/?slug=' + encodeURIComponent(hero.slug) + '" class="hero-main">' +
-                '<img src="' + (hero.imageUrl || 'https://placehold.co/1200x600/1e40af/ffffff?text=News') + '" alt="' + hero.title + '">' +
+                '<img src="' + (hero.imageUrl || ' + base + 'logo-header.png' ) + '" alt="' + hero.title + '">' +
                 '<div class="hero-overlay"><span class="hero-cat">' + (hero.category || 'Noticias') + '</span>' +
                 '<h1>' + hero.title + '</h1><p>' + (hero.desc ? hero.desc.substring(0, 200) + '...' : '') + '</p>' +
                 '<span class="hero-date">' + (hero.publishedAt ? new Date(hero.publishedAt).toLocaleDateString('es-MX') : '') + '</span></div></a>' +
                 '<div class="magazine-sidebar">' + secondary.map(a =>
                     '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="side-item">' +
-                    '<img src="' + (a.imageUrl || 'https://placehold.co/300x200/1e40af/ffffff?text=News') + '" alt="' + a.title + '">' +
+                    '<img src="' + (a.imageUrl || ' + base + 'logo-header.png' ) + '" alt="' + a.title + '">' +
                     '<div class="side-content"><span class="side-cat">' + (a.category || 'Noticias') + '</span><h4>' + a.title + '</h4></div></a>'
                 ).join('') + '</div></div>' +
                 '<h2 class="section-label">Más Noticias</h2><div class="news-grid">' + grid.map(a =>
                     '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="news-card">' +
-                    '<div class="card-img-wrap"><img src="' + (a.imageUrl || 'https://placehold.co/600x400/1e40af/ffffff?text=News') + '" alt="' + a.title + '"></div>' +
+                    '<div class="card-img-wrap"><img src="' + (a.imageUrl || ' + base + 'logo-header.png' ) + '" alt="' + a.title + '"></div>' +
                     '<div class="news-content"><span class="news-category">' + (a.category || 'Noticias') + '</span>' +
                     '<h3 class="news-title">' + a.title + '</h3><p class="news-desc">' + (a.desc ? a.desc.substring(0, 120) + '...' : '') + '</p>' +
                     '<span class="news-date">' + (a.publishedAt ? new Date(a.publishedAt).toLocaleDateString('es-MX') : '') + '</span></div></a>'

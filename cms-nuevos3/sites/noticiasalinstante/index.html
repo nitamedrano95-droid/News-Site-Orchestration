@@ -46,19 +46,19 @@
         if(container) {
             container.innerHTML = '<div class="bold-hero-row">' + hero.map((a, i) =>
                 '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="bold-hero ' + (i === 0 ? 'hero-primary' : 'hero-secondary') + '">' +
-                '<img src="' + (a.imageUrl || 'https://placehold.co/' + (i===0 ? '800x600' : '600x400') + '/991b1b/ffffff?text=News') + '" alt="' + a.title + '">' +
+                '<img src="' + (a.imageUrl || './logo-header.png') + '" alt="' + a.title + '">' +
                 '<div class="bold-overlay"><span class="bold-cat">' + (a.category || 'Noticias') + '</span>' +
                 '<h2>' + a.title + '</h2><p>' + (a.desc ? a.desc.substring(0, i===0 ? 200 : 100) + '...' : '') + '</p></div></a>'
             ).join('') + '</div>' +
             '<h2 class="bold-section-title">Noticias Destacadas</h2><div class="bold-grid">' + grid.map(a =>
                 '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="bold-card">' +
-                '<div class="bold-img-wrap"><img src="' + (a.imageUrl || 'https://placehold.co/600x400/991b1b/ffffff?text=News') + '" alt="' + a.title + '"></div>' +
+                '<div class="bold-img-wrap"><img src="' + (a.imageUrl || './logo-header.png') + '" alt="' + a.title + '"></div>' +
                 '<div class="bold-card-body"><span class="bold-cat">' + (a.category || 'Noticias') + '</span>' +
                 '<h3>' + a.title + '</h3><p>' + (a.desc ? a.desc.substring(0, 140) + '...' : '') + '</p></div></a>'
             ).join('') + '</div>';
         }
     })();
     </script>
-</body>
     <script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}))}</script>
+</body>
 </html>

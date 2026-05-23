@@ -647,15 +647,191 @@ header {
   }
 }
 
-/* ===== MOBILE SPACING FIXES ===== */
-@media (max-width: 768px) {
-    .container { padding: 0 var(--space-md) !important; }
-    .site-footer { padding: 40px var(--space-md) 30px; }
-    .legal-page { padding: 0 var(--space-md); }
+/* ===== EL PROFETA MEXICANO LOADER ===== */
+.prof-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.prof-ray {
+  width: 3px;
+  height: 28px;
+  background: linear-gradient(to top, #581c87, #a855f7);
+  border-radius: 2px;
+  animation: profRay 1.2s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+.prof-ray:nth-child(1) { animation-delay: 0s; }
+.prof-ray:nth-child(2) { animation-delay: 0.1s; }
+.prof-ray:nth-child(3) { animation-delay: 0.2s; }
+.prof-ray:nth-child(4) { animation-delay: 0.3s; }
+.prof-ray:nth-child(5) { animation-delay: 0.4s; }
+.prof-ray:nth-child(6) { animation-delay: 0.5s; }
+@keyframes profRay {
+  0%, 100% { transform: scaleY(0.4); opacity: 0.4; }
+  50% { transform: scaleY(1); opacity: 1; }
 }
 
-@media (max-width: 600px) {
-    .site-footer { padding: 30px var(--space-sm); }
-    .legal-page { padding: 0 var(--space-sm); }
-    .news-grid { gap: 20px; }
+/* ===== EL PROFETA MEXICANO TICKER ===== */
+.prof-ticker {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #3b0764 0%, #581c87 100%);
+  color: #fff;
+  height: 48px;
+  overflow: hidden;
+}
+.ticker-prof-logo {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  height: 100%;
+  background: #fff;
+  flex-shrink: 0;
+}
+.ticker-prof-logo img { height: 30px; width: auto; object-fit: contain; filter: brightness(0) invert(1); }
+.ticker-prof-marker {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  color: #a855f7;
+  font-size: 1.1em;
+  flex-shrink: 0;
+  background: rgba(168,85,247,0.15);
+  height: 100%;
+  border-left: 1px solid rgba(168,85,247,0.3);
+  border-right: 1px solid rgba(168,85,247,0.3);
+}
+.ticker-prof-track {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+}
+.ticker-prof-item {
+  color: rgba(255,255,255,0.9);
+  text-decoration: none;
+  font-size: 0.8em;
+  padding: 0 16px;
+  white-space: nowrap;
+  transition: color 0.3s;
+}
+.ticker-prof-item:hover { color: #e9d5ff; }
+.ticker-prof-sep { color: #a855f7; padding: 0 4px; }
+.ticker-loading { color: rgba(255,255,255,0.5); font-size: 0.8em; font-style: italic; }
+.ticker-prof-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  flex-shrink: 0;
+}
+.ticker-prof-date {
+  background: #a855f7;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.7em;
+  padding: 4px 10px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+.ticker-prof-social { display: flex; gap: 6px; }
+.ticker-prof-social a {
+  color: rgba(255,255,255,0.7);
+  text-decoration: none;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.3s;
+  font-size: 0.8em;
+}
+.ticker-prof-social a:hover { color: #fff; background: rgba(255,255,255,0.15); }
+
+/* ===== EL PROFETA MEXICANO HEADER ===== */
+.site-header-prof {
+  background: #3b0764;
+  padding: 0;
+}
+.prof-header-eyebrow {
+  background: linear-gradient(90deg, #581c87, #a855f7);
+  padding: 8px 24px;
+  text-align: center;
+  border-bottom: 2px solid #a855f7;
+}
+.prof-header-tag {
+  font-size: 0.7em;
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #e9d5ff;
+}
+.prof-header-tag i { margin-right: 8px; color: #a855f7; }
+.header-prof-nav { padding: 0 24px; }
+.nav-prof-inner {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 48px;
+}
+.nav-prof-link {
+  color: rgba(255,255,255,0.85);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.8em;
+  letter-spacing: 0.5px;
+  padding: 6px 14px;
+  border-radius: 4px;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+.nav-prof-link:hover { color: #fff; background: rgba(255,255,255,0.15); }
+.nav-prof-link.active { background: rgba(233,213,255,0.2); color: #e9d5ff; }
+
+/* ===== EL PROFETA MEXICANO FOOTER ===== */
+.site-footer-prof {
+  background: #3b0764;
+  padding: 36px 20px 20px;
+  margin-top: 60px;
+}
+.footer-prof-inner { max-width: 900px; margin: 0 auto; }
+.footer-prof-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  max-width: 640px;
+  margin: 0 auto 20px;
+}
+.footer-prof-col { text-align: center; }
+.footer-prof-title {
+  font-size: 0.7em;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #e9d5ff;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #a855f7;
+  display: inline-block;
+}
+.footer-prof-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.footer-prof-list li a { color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.85em; transition: color 0.3s; }
+.footer-prof-list li a:hover { color: #e9d5ff; }
+.footer-prof-bottom {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 14px;
+  text-align: center;
+  font-size: 0.75em;
+  color: rgba(255,255,255,0.45);
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .footer-prof-grid { grid-template-columns: 1fr; }
+  .nav-prof-inner { overflow-x: auto; }
 }

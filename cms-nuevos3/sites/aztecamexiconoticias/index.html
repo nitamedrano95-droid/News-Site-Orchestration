@@ -47,17 +47,17 @@
         if(container) {
             container.innerHTML = '<div class="bento-grid">' +
                 '<a href="/articulo/?slug=' + encodeURIComponent(main.slug) + '" class="bento-main">' +
-                '<img src="' + (main.imageUrl || 'https://placehold.co/800x600/15803d/ffffff?text=News') + '" alt="' + main.title + '">' +
+                '<img src="' + (main.imageUrl || './logo-header.png' ) + '" alt="' + main.title + '">' +
                 '<div class="bento-overlay"><span class="bento-cat">' + (main.category || 'Noticias') + '</span><h1>' + main.title + '</h1></div></a>' +
                 sub.map((a, i) =>
                     '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="bento-sub bento-sub-' + (i+1) + '">' +
-                    '<img src="' + (a.imageUrl || 'https://placehold.co/400x300/15803d/ffffff?text=News') + '" alt="' + a.title + '">' +
+                    '<img src="' + (a.imageUrl || './logo-header.png' ) + '" alt="' + a.title + '">' +
                     '<div class="bento-overlay"><span class="bento-cat">' + (a.category || 'Noticias') + '</span><h3>' + a.title + '</h3></div></a>'
                 ).join('') + '</div>' +
                 '<h2 class="section-label">Descubre m&aacute;s</h2><div class="bento-rest">' +
                 rest.map(a =>
                     '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="bento-mini">' +
-                    '<img src="' + (a.imageUrl || 'https://placehold.co/300x200/15803d/ffffff?text=News') + '" alt="' + a.title + '">' +
+                    '<img src="' + (a.imageUrl || './logo-header.png' ) + '" alt="' + a.title + '">' +
                     '<div class="mini-body"><span class="mini-cat">' + (a.category || 'Noticias') + '</span><h4>' + a.title + '</h4></div></a>'
                 ).join('') + '</div>';
         }

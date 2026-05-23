@@ -6,22 +6,63 @@
   function injectPreloader() {
     const el = document.getElementById('site-preloader');
     if (!el) return;
-    el.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;"><span class="loader"></span><p style="font-weight:700;color:#4338ca;font-size:0.85em;letter-spacing:1px;">Cargando...</p></div>';
+    el.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;"><div class="anam-loader"><div class="anam-bar"></div><div class="anam-bar"></div><div class="anam-bar"></div><div class="anam-bar"></div><div class="anam-bar"></div></div><p style="font-weight:700;color:#4338ca;font-size:0.85em;letter-spacing:2px;text-transform:uppercase;">Cargando...</p></div>';
     window.addEventListener('load', () => { setTimeout(() => el.classList.add('hidden'), 500); });
+  }
+
+  function injectTicker() {
+    const el = document.getElementById('site-header');
+    if (!el) return;
+    const now = new Date();
+    const day = now.getDate();
+    const month = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][now.getMonth()];
+    const dateStr = day + ' ' + month;
+    el.insertAdjacentHTML('afterend', '<div class="anam-ticker"><a href="' + base + '" class="ticker-anam-logo"><img src="' + base + 'logo-header.png" alt="elanalisismexicano"></a><div class="ticker-anam-label"><i class="fas fa-chart-line"></i>ANÁLISIS</div><div class="ticker-anam-date">' + dateStr + '</div><div class="ticker-anam-track" id="ticker-anam-track"><span class="ticker-loading">Cargando...</span></div></div>');
+    fetchTicker();
+  }
+
+  async function fetchTicker() {
+    const track = document.getElementById('ticker-anam-track');
+    if (!track) return;
+    try {
+      const res = await fetch('https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=elanalisismexicano&limit=5');
+      if (!res.ok) throw new Error('Network');
+      const data = await res.json();
+      const articles = data.articles || [];
+      if (!articles.length) { track.innerHTML = '<span>Sin análisis disponibles</span>'; return; }
+      const items = articles.map(a => '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="ticker-anam-item">' + a.title + '</a>').join('<span class="ticker-anam-sep">||</span>');
+      track.innerHTML = items;
+      startAnamTicker();
+    } catch(e) {
+      track.innerHTML = '<span>El Análisis Mexicano • Noticias y columnas de análisis</span>';
+      startAnamTicker();
+    }
+  }
+
+  function startAnamTicker() {
+    const track = document.getElementById('ticker-anam-track');
+    if (!track) return;
+    let pos = 0;
+    const totalWidth = track.scrollWidth / 2;
+    setInterval(() => {
+      pos -= 0.6;
+      if (pos < -totalWidth) pos = 0;
+      track.style.transform = 'translateX(' + pos + 'px)';
+    }, 20);
   }
 
   function injectHeader() {
     const el = document.getElementById('site-header');
     if (!el) return;
-    el.innerHTML = '<header style="background:linear-gradient(135deg,#4f46e5 0%,#818cf8 100%);color:#fff;padding:10px 0;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,0.1);"><div class="container" style="display:flex;align-items:center;justify-content:space-between;max-width:1200px;margin:0 auto;padding:0 24px;"><a href="' + base + '" style="display:flex;align-items:center;text-decoration:none;gap:12px;"><img src="' + base + 'logo-header.png" alt="elanalisismexicano" style="height:42px;width:auto;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2));"></a><nav style="display:flex;gap:20px;"><a href="' + base + '" style="color:rgba(255,255,255,0.9);text-decoration:none;font-weight:600;font-size:0.88em;">Inicio</a><a href="' + base + 'categoria/index.html?cat=nacional" style="color:rgba(255,255,255,0.9);text-decoration:none;font-weight:600;font-size:0.88em;">Nacional</a><a href="' + base + 'categoria/index.html?cat=politica" style="color:rgba(255,255,255,0.9);text-decoration:none;font-weight:600;font-size:0.88em;">Politica</a><a href="' + base + 'categoria/index.html?cat=economia" style="color:rgba(255,255,255,0.9);text-decoration:none;font-weight:600;font-size:0.88em;">Economia</a></nav></div></header>';
+    el.innerHTML = '<header class="site-header-anam"><div class="anam-header-bar"><span class="anam-header-tag">OPINIÓN Y ANÁLISIS</span></div><nav class="header-anam-nav"><div class="nav-anam-inner"><a href="' + base + '" class="nav-anam-link active">Inicio</a><a href="' + base + 'categoria/index.html?cat=nacional" class="nav-anam-link">Nacional</a><a href="' + base + 'categoria/index.html?cat=politica" class="nav-anam-link">Política</a><a href="' + base + 'categoria/index.html?cat=economia" class="nav-anam-link">Economía</a></div></nav></header>';
   }
 
   function injectFooter() {
     const el = document.getElementById('site-footer');
     if (!el) return;
-    el.innerHTML = '<footer class="site-footer"><div style="text-align:center;margin-bottom:20px;"><img src="' + base + 'logo-footer.png" alt="elanalisismexicano" style="height:32px;width:auto;object-fit:contain;opacity:0.9;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.2));"></div><p>&copy; ' + new Date().getFullYear() + ' elanalisismexicano. Todos los derechos reservados.</p><p><a href="' + base + 'privacidad.html">Privacidad</a> | <a href="' + base + 'terminos.html">Terminos</a> | <a href="' + base + 'contacto.html">Contacto</a> | <a href="' + base + 'acerca-de.html">Acerca de</a></p></footer>';
+    el.innerHTML = '<footer class="site-footer-anam"><div class="footer-anam-inner"><div class="footer-anam-grid"><div class="footer-anam-col"><span class="footer-anam-title">Secciones</span><ul class="footer-anam-list"><li><a href="' + base + 'categoria/index.html?cat=nacional">Nacional</a></li><li><a href="' + base + 'categoria/index.html?cat=politica">Política</a></li><li><a href="' + base + 'categoria/index.html?cat=economia">Economía</a></li></ul></div><div class="footer-anam-col"><span class="footer-anam-title">Editorial</span><ul class="footer-anam-list"><li><a href="' + base + 'categoria/index.html?cat=sociedad">Sociedad</a></li><li><a href="' + base + 'categoria/index.html?cat=cultura">Cultura</a></li></ul></div><div class="footer-anam-col"><span class="footer-anam-title">Legal</span><ul class="footer-anam-list"><li><a href="' + base + 'acerca-de.html">Acerca de</a></li><li><a href="' + base + 'contacto.html">Contacto</a></li><li><a href="' + base + 'privacidad.html">Privacidad</a></li></ul></div></div><div class="footer-anam-bottom">© ' + new Date().getFullYear() + ' El Análisis Mexicano. Todos los derechos reservados.</div></div></footer>';
   }
 
-  function init() { injectPreloader(); injectHeader(); injectFooter(); }
+  function init() { injectPreloader(); injectHeader(); injectTicker(); injectFooter(); }
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
 })();

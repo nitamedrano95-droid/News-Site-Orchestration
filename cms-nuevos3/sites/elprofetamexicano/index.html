@@ -44,14 +44,14 @@
         const cards = articles.slice(1);
         const container = document.querySelector('.main-content');
         if(container) {
-            container.innerHTML = '<div class="cinematic-hero" style="background-image:url(\'' + (hero.imageUrl || 'https://placehold.co/1600x900/581c87/ffffff?text=News') + '\')">' +
+            container.innerHTML = '<div class="cinematic-hero" style="background-image:url(\'' + (hero.imageUrl || ' + base + 'logo-header.png' ) + '\')">' +
                 '<div class="cinematic-overlay"></div><div class="cinematic-content">' +
                 '<span class="cinematic-cat">' + (hero.category || 'Noticias') + '</span>' +
                 '<h1>' + hero.title + '</h1><p>' + (hero.desc ? hero.desc.substring(0, 300) + '...' : '') + '</p>' +
                 '<a href="/articulo/?slug=' + encodeURIComponent(hero.slug) + '" class="cinematic-btn">Leer Art&iacute;culo</a></div></div>' +
                 '<div class="cinematic-grid">' + cards.map(a =>
                     '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="cine-card">' +
-                    '<div class="cine-img"><img src="' + (a.imageUrl || 'https://placehold.co/600x400/581c87/ffffff?text=News') + '" alt="' + a.title + '">' +
+                    '<div class="cine-img"><img src="' + (a.imageUrl || ' + base + 'logo-header.png' ) + '" alt="' + a.title + '">' +
                     '<div class="cine-img-overlay"></div></div>' +
                     '<div class="cine-body"><span class="cine-cat">' + (a.category || 'Noticias') + '</span>' +
                     '<h3>' + a.title + '</h3><p>' + (a.desc ? a.desc.substring(0, 120) + '...' : '') + '</p></div></a>'

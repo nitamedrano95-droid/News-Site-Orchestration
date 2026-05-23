@@ -622,15 +622,159 @@ header {
   100%{ transform: translate(-50%, -100%) rotate(360deg) scale(1 , 1)}
 }
 
-/* ===== MOBILE SPACING FIXES ===== */
-@media (max-width: 768px) {
-    .container { padding: 0 var(--space-md) !important; }
-    .site-footer { padding: 40px var(--space-md) 30px; }
-    .legal-page { padding: 0 var(--space-md); }
+/* ===== DIARIO MEXICANO LOADER ===== */
+.dmex-loader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+}
+.dmex-bar {
+  width: 6px;
+  height: 100%;
+  background: linear-gradient(to bottom, #854d0e, #a16207);
+  border-radius: 3px;
+  animation: dmexPulse 0.9s ease-in-out infinite;
+}
+.dmex-bar:nth-child(1) { animation-delay: 0s; }
+.dmex-bar:nth-child(2) { animation-delay: 0.15s; }
+.dmex-bar:nth-child(3) { animation-delay: 0.3s; }
+@keyframes dmexPulse {
+  0%, 100% { transform: scaleY(0.4); opacity: 0.4; }
+  50% { transform: scaleY(1); opacity: 1; }
 }
 
-@media (max-width: 600px) {
-    .site-footer { padding: 30px var(--space-sm); }
-    .legal-page { padding: 0 var(--space-sm); }
-    .news-grid { gap: 20px; }
+/* ===== DIARIO MEXICANO TICKER ===== */
+.dmex-ticker {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #713f12 0%, #854d0e 100%);
+  color: #fff;
+  height: 44px;
+  overflow: hidden;
+}
+.ticker-dmex-left { display: flex; align-items: center; gap: 10px; flex-shrink: 0; padding: 0 12px; }
+.ticker-dmex-logo img { height: 28px; width: auto; object-fit: contain; }
+.ticker-dmex-msg {
+  font-weight: 800;
+  font-size: 0.8em;
+  letter-spacing: 2px;
+  color: #fde68a;
+  text-transform: uppercase;
+}
+.ticker-dmex-viewport { flex: 1; overflow: hidden; white-space: nowrap; position: relative; }
+.ticker-dmex-inner { display: inline-block; white-space: nowrap; }
+.ticker-dmex-item {
+  color: rgba(255,255,255,0.9);
+  text-decoration: none;
+  font-size: 0.8em;
+  padding: 0 16px;
+  white-space: nowrap;
+  transition: color 0.3s;
+}
+.ticker-dmex-item:hover { color: #fde68a; }
+.ticker-dmex-sep { color: #ca8a04; padding: 0 4px; }
+.ticker-loading { color: rgba(255,255,255,0.5); font-size: 0.8em; font-style: italic; }
+.ticker-dmex-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; padding: 0 12px; }
+.ticker-dmex-time {
+  background: #fde68a;
+  color: #854d0e;
+  font-weight: 800;
+  font-size: 0.7em;
+  padding: 4px 10px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+.ticker-dmex-social { display: flex; gap: 8px; }
+.ticker-dmex-social a {
+  color: rgba(255,255,255,0.7);
+  text-decoration: none;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.3s;
+  font-size: 0.85em;
+}
+.ticker-dmex-social a:hover { color: #fff; background: rgba(255,255,255,0.15); }
+.ticker-dmex-logo {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  height: 100%;
+  background: #fff;
+  flex-shrink: 0;
+}
+.ticker-dmex-logo img { height: 28px; width: auto; object-fit: contain; }
+
+/* ===== DIARIO MEXICANO HEADER ===== */
+.site-header-dmex {
+  background: linear-gradient(135deg, #854d0e 0%, #a16207 100%);
+  padding: 0;
+}
+.header-dmex-nav { padding: 0 24px; }
+.nav-dmex-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 48px;
+}
+.nav-dmex-link {
+  color: rgba(255,255,255,0.85);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.8em;
+  letter-spacing: 0.5px;
+  padding: 6px 14px;
+  border-radius: 4px;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+.nav-dmex-link:hover { color: #fff; background: rgba(255,255,255,0.15); }
+.nav-dmex-link.active { background: rgba(253,230,138,0.2); color: #fde68a; }
+
+/* ===== DIARIO MEXICANO FOOTER ===== */
+.site-footer-dmex {
+  background: #713f12;
+  padding: 36px 20px 20px;
+  margin-top: 60px;
+}
+.footer-dmex-inner { max-width: 800px; margin: 0 auto; }
+.footer-dmex-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 32px;
+  max-width: 480px;
+  margin: 0 auto 20px;
+}
+.footer-dmex-col { text-align: center; }
+.footer-dmex-title {
+  font-size: 0.7em;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #fde68a;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #a16207;
+  display: inline-block;
+}
+.footer-dmex-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.footer-dmex-list li a { color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.85em; transition: color 0.3s; }
+.footer-dmex-list li a:hover { color: #fde68a; }
+.footer-dmex-bottom {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 14px;
+  text-align: center;
+  font-size: 0.75em;
+  color: rgba(255,255,255,0.45);
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .footer-dmex-grid { grid-template-columns: 1fr; }
+  .nav-dmex-inner { overflow-x: auto; }
 }

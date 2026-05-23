@@ -152,7 +152,7 @@ export async function processFBTimer(env) {
         FROM ${tableName} s
         JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
         WHERE s.FB_PUBLICADO = 0
-          AND s.FECHA_ASIGNACION >= datetime('now', '-3 days')
+          AND s.FECHA_ASIGNACION >= datetime('now', '-30 days')
           AND p.URL_IMAGEN IS NOT NULL
           AND p.URL_IMAGEN != ''
           AND p.URL_IMAGEN NOT LIKE '%logo.png'
@@ -175,7 +175,7 @@ export async function processFBTimer(env) {
           FROM ${tableName} s
           JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
           WHERE s.FB_PUBLICADO = 1
-            AND s.FECHA_ASIGNACION >= datetime('now', '-3 days')
+            AND s.FECHA_ASIGNACION >= datetime('now', '-30 days')
             AND s.FB_FECHA < datetime('now', '-1 day')
             AND p.URL_IMAGEN IS NOT NULL
             AND p.URL_IMAGEN != ''
@@ -415,7 +415,7 @@ export async function processFBTimerForSite(env, siteSlug) {
       FROM ${tableName} s
       JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
       WHERE s.FB_PUBLICADO = 0
-        AND s.FECHA_ASIGNACION >= datetime('now', '-3 days')
+        AND s.FECHA_ASIGNACION >= datetime('now', '-30 days')
         AND p.URL_IMAGEN IS NOT NULL
         AND p.URL_IMAGEN != ''
         AND p.URL_IMAGEN NOT LIKE '%logo.png'
@@ -437,7 +437,7 @@ export async function processFBTimerForSite(env, siteSlug) {
         FROM ${tableName} s
         JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
         WHERE s.FB_PUBLICADO = 1
-          AND s.FECHA_ASIGNACION >= datetime('now', '-3 days')
+          AND s.FECHA_ASIGNACION >= datetime('now', '-30 days')
           AND s.FB_FECHA < datetime('now', '-1 day')
           AND p.URL_IMAGEN IS NOT NULL
           AND p.URL_IMAGEN != ''

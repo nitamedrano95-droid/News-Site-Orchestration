@@ -46,13 +46,13 @@
         if(container) {
             container.innerHTML = '<div class="list-layout">' +
                 '<a href="/articulo/?slug=' + encodeURIComponent(featured.slug) + '" class="list-featured">' +
-                '<img src="' + (featured.imageUrl || 'https://placehold.co/1200x500/be123c/ffffff?text=News') + '" alt="' + featured.title + '">' +
+                '<img src="' + (featured.imageUrl || './logo-header.png' ) + '" alt="' + featured.title + '">' +
                 '<div class="featured-body"><span class="featured-cat">' + (featured.category || 'Noticias') + '</span>' +
                 '<h1>' + featured.title + '</h1><p>' + (featured.desc ? featured.desc.substring(0, 300) + '...' : '') + '</p></div></a>' +
                 '<div class="article-list">' + list.map((a, i) =>
                     '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="list-item">' +
                     '<span class="list-num">' + String(i+1).padStart(2, '0') + '</span>' +
-                    '<div class="list-img"><img src="' + (a.imageUrl || 'https://placehold.co/200x150/be123c/ffffff?text=News') + '" alt="' + a.title + '"></div>' +
+                    '<div class="list-img"><img src="' + (a.imageUrl || './logo-header.png' ) + '" alt="' + a.title + '"></div>' +
                     '<div class="list-body"><span class="list-cat">' + (a.category || 'Noticias') + '</span>' +
                     '<h3>' + a.title + '</h3><p>' + (a.desc ? a.desc.substring(0, 140) + '...' : '') + '</p></div></a>'
                 ).join('') + '</div></div>';
