@@ -51,8 +51,7 @@ articles.get('/', async (c) => {
           params.push(category);
         }
 
-        // Excluir artículos sin imagen
-        query += " AND p.URL_IMAGEN IS NOT NULL AND p.URL_IMAGEN != '' AND p.URL_IMAGEN NOT LIKE '%logo.png%'";
+        // Image filter removed - articles without images will be included and frontend handles fallback
 
         query += ' ORDER BY p.FECHA_PUBLICACION DESC LIMIT ? OFFSET ?';
         params.push(l, applyOffset ? o : 0);

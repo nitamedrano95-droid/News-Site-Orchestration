@@ -143,8 +143,8 @@
 
             // Populate image placeholder (background-image on div)
             var imgDiv=el.querySelector("div[class*=img],div[class*=image],div[class*=thumb],div[class*=placeholder]");
-            if(imgDiv&&a.imageUrl){
-                imgDiv.style.backgroundImage="url("+a.imageUrl+")";
+            if(imgDiv){
+                imgDiv.style.backgroundImage="url("+(a.imageUrl||"./logo.png")+")";
                 imgDiv.style.backgroundSize="cover";
                 imgDiv.style.backgroundPosition="center";
             }

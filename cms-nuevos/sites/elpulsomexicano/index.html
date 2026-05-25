@@ -118,8 +118,8 @@
             
             // Populate image
             var imgDiv=card.querySelector(".max-img");
-            if(imgDiv&&a.imageUrl){
-                imgDiv.style.backgroundImage="url("+a.imageUrl+")";
+            if(imgDiv){
+                imgDiv.style.backgroundImage="url("+(a.imageUrl||"./logo.png")+")";
                 imgDiv.style.backgroundSize="cover";
                 imgDiv.style.backgroundPosition="center";
             }

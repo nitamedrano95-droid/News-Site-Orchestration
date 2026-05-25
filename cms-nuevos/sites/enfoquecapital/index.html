@@ -116,8 +116,8 @@
             if(tag&&a.category)tag.textContent=a.category;
 
             var imgDiv=el.querySelector(".square-img");
-            if(imgDiv&&a.imageUrl){
-                imgDiv.style.backgroundImage="url("+a.imageUrl+")";
+            if(imgDiv){
+                imgDiv.style.backgroundImage="url("+(a.imageUrl||"./logo.png")+")";
                 imgDiv.style.backgroundSize="cover";
                 imgDiv.style.backgroundPosition="center";
             }

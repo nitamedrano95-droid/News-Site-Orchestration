@@ -29,7 +29,7 @@
     <script src="components.js" defer></script>
     <script>
     (async function(){
-        const apiUrl = 'https://cms-nuevos.sebastianvernis.workers.dev/api/articles?site=financemarketsmx&limit=12';
+        function isWeatherArticle(t){return t&&(t.includes('Clima')||t.includes('No Circula')||t.includes('Hoy No'));}const apiUrl = 'https://cms-nuevos.sebastianvernis.workers.dev/api/articles?site=financemarketsmx&limit=12';
         let articles = [];
         try {
             const res = await fetch(apiUrl);

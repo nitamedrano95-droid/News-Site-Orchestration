@@ -106,7 +106,7 @@
         }catch(e){console.error("Error:",e);}
     }
 
-    function populate(arts){
+    function isWeatherArticle(t){return t&&(t.includes("Clima")||t.includes("No Circula")||t.includes("Hoy No"));}function populate(arts){
         var main=document.querySelector("main");if(!main)return;
         var ai=0;
 
@@ -152,8 +152,8 @@
 
             // Populate image placeholder (background-image on div)
             var imgDiv=el.querySelector("div[class*=img],div[class*=image],div[class*=thumb],div[class*=placeholder]");
-            if(imgDiv&&a.imageUrl){
-                imgDiv.style.backgroundImage="url("+a.imageUrl+")";
+            if(imgDiv){var useLogo=isWeatherArticle(a.title)||!a.imageUrl;
+                imgDiv.style.backgroundImage="url("+(useLogo?"./logo.png":a.imageUrl)+")";
                 imgDiv.style.backgroundSize="cover";
                 imgDiv.style.backgroundPosition="center";
             }

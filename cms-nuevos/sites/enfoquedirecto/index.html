@@ -147,9 +147,9 @@
                 imgDiv=el.querySelector(".hero-image");
                 console.log("Hero-cinematic: searching for .hero-image, found:", !!imgDiv);
             }
-            if(imgDiv&&a.imageUrl){
+            if(imgDiv){
                 console.log("Setting image for", el.className, "URL:", a.imageUrl.slice(0,60));
-                imgDiv.style.backgroundImage="url("+a.imageUrl+")";
+                imgDiv.style.backgroundImage="url("+(a.imageUrl||"./logo.png")+")";
                 imgDiv.style.backgroundSize="cover";
                 imgDiv.style.backgroundPosition="center";
             }

@@ -85,6 +85,35 @@ export function cleanArticleContent(text) {
   cleaned = cleaned.replace(/\.[\w-]+\{[^}]*\}/gi, '');
   cleaned = cleaned.replace(/\{[^}]*--[\w-]+:[^}]*\}/gi, '');
 
+  // 7b. Eliminar marcas de sitio original (SUN, ARCHIVO, ESPECIAL, CANVA)
+  cleaned = cleaned.replace(/\bSUN\b/gi, '');
+  cleaned = cleaned.replace(/\bARCHIVO\b/gi, '');
+  cleaned = cleaned.replace(/\bESPECIAL\b/gi, '');
+  cleaned = cleaned.replace(/\bCANVA\b/gi, '');
+  cleaned = cleaned.replace(/\* \* \* Mantente al día.*?Términos y Condiciones/gi, '');
+  cleaned = cleaned.replace(/Registrarse implica aceptar los Términos y Condiciones/gi, '');
+  cleaned = cleaned.replace(/únete a nuestro canal de WhatsApp/gi, '');
+  cleaned = cleaned.replace(/WhatsApp/gi, '');
+
+  // 7c. Eliminar atribuciones de foto (Foto: AP / Mark Schiefelbein)
+  cleaned = cleaned.replace(/Foto:\s*(?:AP|Reuters|EPA|AFP)[^\n]*\n/gi, '');
+  cleaned = cleaned.replace(/\bAP\b.*?\//gi, '');
+
+  // 7d. Eliminar fechas de publicacion (jueves, 7 de mayo de 2026 · 22:09)
+  cleaned = cleaned.replace(/(?:lunes|martes|miércoles|jueves|viernes|sábado|domingo),?\s*\d{1,2}\s+de\s+(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\s+de\s+\d{4}\s*·\s*\d{2}:\d{2}\n/gi, '');
+
+  // 7e. Eliminar googletag残留
+  cleaned = cleaned.replace(/googletag\.cmd\.push\s*\(\s*function\s*\(\s*\)\s*\{\s*\}\s*\)\s*;/g, '');
+
+  // 7f. Limpiar entidades HTML double-encoded
+  cleaned = cleaned.replace(/&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;nbsp;/g, '&nbsp;');
+  cleaned = cleaned.replace(/&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;/g, '&amp;');
+  cleaned = cleaned.replace(/&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;lt;/g, '&lt;');
+  cleaned = cleaned.replace(/&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;gt;/g, '&gt;');
+
+  // 7g. Eliminar listas de clima de otras ciudades (El Informador)
+  cleaned = cleaned.replace(/¿Cómo estará el clima en otras ciudades\?[\s\S]*?$/g, '');
+
   // 8. Eliminar caracteres corruptos y whitespace excesivo
   cleaned = cleaned.replace(/[\uFFFD]/g, ''); // Replacement character
   cleaned = cleaned.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, '');

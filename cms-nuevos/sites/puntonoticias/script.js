@@ -64,6 +64,19 @@ document.addEventListener("DOMContentLoaded", initCarousel);
     function enc(t) {
         return encodeURIComponent(t || '');
     }
+
+    // Detectar artículos de clima/El Informador que deben usar logo
+    function isInformadorWeatherArticle(article) {
+        if (!article || !article.title) return false;
+        const t = article.title.toLowerCase();
+        return t.includes('clima') || t.includes('no circula') || t.includes('hoy no');
+    }
+
+    // Obtener URL del logo del sitio
+    function getSiteLogo() {
+        return './logo.png';
+    }
+
     const HERO_CONFIG = {
         boominformativo: {
             root: '.hero-section',
@@ -191,9 +204,14 @@ document.addEventListener("DOMContentLoaded", initCarousel);
         ]
     };
 
-    function setBackgroundImage(el, imageUrl) {
-        if (!el || !imageUrl) return;
-        el.style.backgroundImage = `url(${imageUrl})`;
+    function setBackgroundImage(el, imageUrl, article) {
+        if (!el) return;
+        // Use site logo for weather/El Informador articles instead of article image
+        if (article && isInformadorWeatherArticle(article)) {
+            el.style.backgroundImage = `url(${getSiteLogo()})`;
+        } else if (imageUrl) {
+            el.style.backgroundImage = `url(${imageUrl})`;
+        }
         el.style.backgroundSize = 'cover';
         el.style.backgroundPosition = 'center';
     }
@@ -230,7 +248,7 @@ document.addEventListener("DOMContentLoaded", initCarousel);
 
         const image = config.image ? root.querySelector(config.image) : null;
         if (image) {
-            setBackgroundImage(image, article.imageUrl);
+            setBackgroundImage(image, article.imageUrl, article);
             if (SITE_SLUG === 'elpulsomexicano' && article.imageUrl) {
                 image.style.backgroundColor = 'transparent';
                 image.classList.add('has-image');
@@ -277,7 +295,7 @@ document.addEventListener("DOMContentLoaded", initCarousel);
 
         const imgDiv = slotDef.image ? slotRoot.querySelector(slotDef.image) : null;
         if (imgDiv) {
-            setBackgroundImage(imgDiv, article.imageUrl);
+            setBackgroundImage(imgDiv, article.imageUrl, article);
         }
 
         const linkEl = slotDef.link ? slotRoot.querySelector(slotDef.link) : null;

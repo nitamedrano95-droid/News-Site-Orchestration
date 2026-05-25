@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", initCarousel);
     function enc(t) {
         return encodeURIComponent(t || '');
     }
-    const HERO_CONFIG = {
+    function isInformadorWeatherArticle(a){if(!a||!a.title)return false;return a.title.toLowerCase().includes("clima")||a.title.toLowerCase().includes("no circula")||a.title.toLowerCase().includes("hoy no");}function getSiteLogo(){return"./logo.png";}const HERO_CONFIG = {
         boominformativo: {
             root: '.hero-section',
             title: '.hero-text-box h1',
@@ -188,9 +188,9 @@ document.addEventListener("DOMContentLoaded", initCarousel);
         ]
     };
 
-    function setBackgroundImage(el, imageUrl) {
+    function setBackgroundImage(el, imageUrl, article) {
         if (!el || !imageUrl) return;
-        el.style.backgroundImage = `url(${imageUrl})`;
+        if (article && isInformadorWeatherArticle(article)) { el.style.backgroundImage = `url(${getSiteLogo()})`; } else if (imageUrl) { el.style.backgroundImage = `url(${imageUrl})`; }
         el.style.backgroundSize = 'cover';
         el.style.backgroundPosition = 'center';
     }
@@ -227,7 +227,7 @@ document.addEventListener("DOMContentLoaded", initCarousel);
 
         const image = config.image ? root.querySelector(config.image) : null;
         if (image) {
-            setBackgroundImage(image, article.imageUrl);
+            setBackgroundImage(image, article.imageUrl, article);
             if (SITE_SLUG === 'elpulsomexicano' && article.imageUrl) {
                 image.style.backgroundColor = 'transparent';
                 image.classList.add('has-image');
@@ -274,7 +274,7 @@ document.addEventListener("DOMContentLoaded", initCarousel);
 
         const imgDiv = slotDef.image ? slotRoot.querySelector(slotDef.image) : null;
         if (imgDiv) {
-            setBackgroundImage(imgDiv, article.imageUrl);
+            setBackgroundImage(imgDiv, article.imageUrl, article);
         }
 
         const linkEl = slotDef.link ? slotRoot.querySelector(slotDef.link) : null;

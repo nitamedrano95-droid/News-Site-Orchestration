@@ -85,6 +85,36 @@ export function cleanArticleContent(text) {
   cleaned = cleaned.replace(/\.[\w-]+\{[^}]*\}/gi, '');
   cleaned = cleaned.replace(/\{[^}]*--[\w-]+:[^}]*\}/gi, '');
 
+  // 7b. Eliminar marcas de sitio original (SUN, ARCHIVO, ESPECIAL, CANVA)
+  cleaned = cleaned.replace(/\bSUN\b/gi, '');
+  cleaned = cleaned.replace(/\bARCHIVO\b/gi, '');
+  cleaned = cleaned.replace(/\bESPECIAL\b/gi, '');
+  cleaned = cleaned.replace(/\bCANVA\b/gi, '');
+  cleaned = cleaned.replace(/\* \* \* Mantente al día.*?Términos y Condiciones/gi, '');
+  cleaned = cleaned.replace(/Registrarse implica aceptar los Términos y Condiciones/gi, '');
+  cleaned = cleaned.replace(/únete a nuestro canal de WhatsApp/gi, '');
+  cleaned = cleaned.replace(/WhatsApp/gi, '');
+
+  // 7c. Eliminar atribuciones de foto (Foto: AP / Mark Schiefelbein)
+  cleaned = cleaned.replace(/Foto:\s*(?:AP|Reuters|EPA|AFP)[^\n]*\n/gi, '');
+  cleaned = cleaned.replace(/\bAP\b.*?\//gi, '');
+
+  // 7d. Eliminar fechas de publicacion (jueves, 7 de mayo de 2026 · 22:09)
+  cleaned = cleaned.replace(/\{diadeSemana\},\s*\{dia\} de \{mes\} de \{year\}\s*·\s*\{hora\}\n/gi, '');
+  cleaned = cleaned.replace(/(?:lunes|martes|miércoles|jueves|viernes|sábado|domingo),?\s*\d{1,2}\s+de\s+(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\s+de\s+\d{4}\s*·\s*\d{2}:\d{2}\n/gi, '');
+
+  // 7e. Eliminar googletag残留
+  cleaned = cleaned.replace(/googletag\.cmd\.push\s*\(\s*function\s*\(\s*\)\s*\{\s*\}\s*\)\s*;/g, '');
+
+  // 7f. Limpiar entidades HTML double-encoded
+  cleaned = cleaned.replace(/&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;nbsp;/g, '&nbsp;');
+  cleaned = cleaned.replace(/&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;/g, '&amp;');
+  cleaned = cleaned.replace(/&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;lt;/g, '&lt;');
+  cleaned = cleaned.replace(/&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;gt;/g, '&gt;');
+
+  // 7g. Eliminar listas de clima de otras ciudades (El Informador)
+  cleaned = cleaned.replace(/¿Cómo estará el clima en otras ciudades\?[\s\S]*?$/g, '');
+
   // 8. Eliminar caracteres corruptos y whitespace excesivo
   cleaned = cleaned.replace(/[\uFFFD]/g, ''); // Replacement character
   cleaned = cleaned.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, '');
@@ -632,13 +662,11 @@ export async function runRSSIngest(env) {
     }
   }
 
-  const FUENTES_POR_SITIO = {};
-  for (const fuente of fuentesRows) {
-    if (!FUENTES_POR_SITIO[fuente.SITIO_SLUG]) {
-      FUENTES_POR_SITIO[fuente.SITIO_SLUG] = [];
-    }
-    FUENTES_POR_SITIO[fuente.SITIO_SLUG].push(fuente);
-  }
+  const dedicatedFuentes = fuentesRows.filter(f => f.SITIO_SLUG && f.SITIO_SLUG !== 'null');
+  const globalFuentes = fuentesRows.filter(f => !f.SITIO_SLUG || f.SITIO_SLUG === 'null');
+
+  // Per-site limit pattern: each site gets articles independently
+  const MAX_PER_SITE = isFirstRun ? 2 : 1;
 
   const validSites = (SITIOS_LIST || []).filter(isValidSiteSlug);
 
@@ -647,7 +675,7 @@ export async function runRSSIngest(env) {
     return 0;
   }
 
-  console.log(`[RSS INGEST] Total sites: ${validSites.length}, Fuentes: ${fuentesRows.length}, Max articles: ${MAX_ARTICLES}`);
+  console.log(`[RSS INGEST] Total sites: ${validSites.length}, Fuentes: ${fuentesRows.length}, Max per site: ${MAX_PER_SITE}`);
 
   let articlesPublished = 0;
   let urlsProcessed = 0;
@@ -655,17 +683,25 @@ export async function runRSSIngest(env) {
   let urlsSkippedNoImage = 0;
   let urlsSkippedShortContent = 0;
 
-  // Procesar fuentes configuradas por sitio
-  for (const [siteSlug, fuentes] of Object.entries(FUENTES_POR_SITIO)) {
-    if (articlesPublished >= MAX_ARTICLES) break;
+  // Process each site independently with its own counter
+  for (const siteSlug of validSites) {
+    // Find fuentes for this site
+    let siteFuentes = dedicatedFuentes.filter(f => f.SITIO_SLUG === siteSlug);
+    if (siteFuentes.length === 0 && globalFuentes.length > 0) {
+      siteFuentes = [globalFuentes[0]];
+    }
 
-    // Si siteSlug es null, asignar a todos los sitios (legacy)
-    const sitosDestino = siteSlug === 'null' || siteSlug === null ? validSites : [siteSlug];
+    if (siteFuentes.length === 0) {
+      RSS_LOG(`[${siteSlug}] No fuentes configured, skipping`);
+      continue;
+    }
 
-    for (const fuente of fuentes) {
-      if (articlesPublished >= MAX_ARTICLES) break;
+    let siteArticlesPublished = 0;
 
-      RSS_LOG(`Processing fuente: ${fuente.NOMBRE} (${fuente.TIPO}) → ${sitosDestino.join(',')}`);
+    for (const fuente of siteFuentes) {
+      if (siteArticlesPublished >= MAX_PER_SITE) break;
+
+      RSS_LOG(`[${siteSlug}] Processing fuente: ${fuente.NOMBRE} (${fuente.TIPO})`);
 
       let articleUrls = [];
 
@@ -676,10 +712,10 @@ export async function runRSSIngest(env) {
         articleUrls = await scrapeSectionForLinks(fuente.URL);
       }
 
-      RSS_LOG(`Found ${articleUrls.length} candidate URLs from ${fuente.NOMBRE}`);
+      RSS_LOG(`[${siteSlug}] Found ${articleUrls.length} candidate URLs from ${fuente.NOMBRE}`);
 
       for (const link of articleUrls) {
-        if (articlesPublished >= MAX_ARTICLES) break;
+        if (siteArticlesPublished >= MAX_PER_SITE) break;
 
         urlsProcessed++;
 
@@ -704,22 +740,22 @@ export async function runRSSIngest(env) {
         const { title, content, imageUrl, url } = scrapedArticle;
 
         if (content.length < 200) {
-          RSS_LOG('Skip: Content too short');
+          RSS_LOG(`[${siteSlug}] Skip: Content too short`);
           urlsSkippedShortContent++;
           continue;
         }
 
-        // Insert article into DB — asignar SOLO a los sitios de esta fuente
+        // Insert article into DB — asignar SOLO a este sitio
         try {
           const now = new Date().toISOString();
           const paraId = crypto.randomUUID();
           let slug = articleSlugify(title);
           if (!slug || slug.trim() === '') {
             slug = `articulo-${Date.now()}`;
-            RSS_LOG(`Generated fallback slug: ${slug}`);
+            RSS_LOG(`[${siteSlug}] Generated fallback slug: ${slug}`);
           }
 
-          const sitiosDestinoStr = sitosDestino.join(',');
+          const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
 
           const statements = [];
           statements.push(
@@ -728,29 +764,28 @@ export async function runRSSIngest(env) {
                 (ID, TITULO_PARAFRASEADO, SLUG, CONTENIDO, DESCRIPCION_PARAFRASEADA,
                  CATEGORIA, AUTOR, FECHA_PUBLICACION, URL_IMAGEN, SOURCE_URL, ESTADO, SITIO_DESTINO)
               VALUES (?, ?, ?, ?, ?, ?, 'NexoPress', ?, ?, ?, 'PUBLICADO', ?)
-            `).bind(paraId, title, slug, content, content.substring(0, 200), fuente.CATEGORIA || 'NACIONAL', now, imageUrl, url, sitiosDestinoStr)
+            `).bind(paraId, title, slug, content, content.substring(0, 200), fuente.CATEGORIA || 'NACIONAL', now, imageUrl, url, siteSlug)
           );
 
-          for (const targetSite of sitosDestino) {
-            const siteId = crypto.randomUUID();
-            const tableName = `ARTICULOS_SITIO_${targetSite.toUpperCase()}`;
-            statements.push(
-              env.DB.prepare(`
-                INSERT INTO ${tableName} (ID, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID)
-                VALUES (?, ?, datetime('now'), 0, NULL, NULL)
-              `).bind(siteId, paraId)
-            );
-          }
+          statements.push(
+            env.DB.prepare(`
+              INSERT INTO ${tableName} (ID, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID)
+              VALUES (?, ?, datetime('now'), 0, NULL, NULL)
+            `).bind(crypto.randomUUID(), paraId)
+          );
 
           await env.DB.batch(statements);
 
-          RSS_LOG(`✓ Published: "${title.substring(0, 40)}..." to ${sitosDestino.length} site(s)`);
+          RSS_LOG(`[${siteSlug}] ✓ Published: "${title.substring(0, 40)}..."`);
+          siteArticlesPublished++;
           articlesPublished++;
         } catch (dbErr) {
-          RSS_ERR('DB Error:', dbErr.message);
+          RSS_ERR(`[${siteSlug}] DB Error:`, dbErr.message);
         }
       }
     }
+
+    RSS_LOG(`[${siteSlug}] Completed: ${siteArticlesPublished} articles this run`);
   }
 
   console.log(`[RSS INGEST] ===== SUMMARY =====`);

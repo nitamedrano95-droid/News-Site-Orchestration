@@ -29,7 +29,7 @@
     <script src="components.js" defer></script>
     <script>
     (async function(){
-        const apiUrl = 'https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=diariomexicano&limit=12';
+        function isWeatherArticle(t){return t&&(t.includes('Clima')||t.includes('No Circula')||t.includes('Hoy No'));}const apiUrl = 'https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=diariomexicano&limit=12';
         let articles = [];
         try {
             const res = await fetch(apiUrl);
@@ -47,7 +47,7 @@
                 const dims = i % 3 === 0 ? '400x600' : i % 3 === 1 ? '600x300' : '400x400';
                 const descLen = i % 3 === 0 ? 200 : 80;
                 return '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="masonry-brick brick-' + shape + '">' +
-                    '<div class="brick-img"><img src="' + (a.imageUrl || './logo-header.png') + '" alt="' + a.title + '"></div>' +
+                    '<div class="brick-img"><img src="' + (isWeatherArticle(a.title)?'./logo.png':(a.imageUrl||'./logo-header.png')) + '" alt="' + a.title + '"></div>' +
                     '<div class="brick-body"><span class="brick-cat">' + (a.category || 'Noticias') + '</span>' +
                     '<h3>' + a.title + '</h3><p>' + (a.excerpt ? a.excerpt.substring(0, descLen) + '...' : '') + '</p></div></a>';
             }).join('') + '</div>';

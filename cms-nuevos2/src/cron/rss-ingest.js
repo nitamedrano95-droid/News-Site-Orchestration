@@ -73,6 +73,32 @@ export function cleanArticleContent(text) {
   cleaned = cleaned.replace(/\.[\w-]+\{[^}]*\}/gi, '');
   cleaned = cleaned.replace(/\{[^}]*--[\w-]+:[^}]*\}/gi, '');
 
+  // Marcas de sitio original (SUN, ARCHIVO, ESPECIAL, CANVA)
+  cleaned = cleaned.replace(/\bSUN\b/gi, '');
+  cleaned = cleaned.replace(/\bARCHIVO\b/gi, '');
+  cleaned = cleaned.replace(/\bESPECIAL\b/gi, '');
+  cleaned = cleaned.replace(/\bCANVA\b/gi, '');
+  cleaned = cleaned.replace(/\* \* \* Mantente al d\u00EDa.*?T\u00E9rminos y Condiciones/gi, '');
+  cleaned = cleaned.replace(/Registrarse implica aceptar los T\u00E9rminos y Condiciones/gi, '');
+  cleaned = cleaned.replace(/\u00FAnete a nuestro canal de WhatsApp/gi, '');
+  cleaned = cleaned.replace(/WhatsApp/gi, '');
+
+  // Atribuciones de foto
+  cleaned = cleaned.replace(/Foto:\s*(?:AP|Reuters|EPA|AFP)[^\n]*\n/gi, '');
+
+  // Fechas de publicacion (jueves, 7 de mayo de 2026 \u00B7 22:09)
+  cleaned = cleaned.replace(/(?:lunes|martes|mi\u00E9rcoles|jueves|viernes|s\u00E1bado|domingo),?\s*\d{1,2}\s+de\s+(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\s+de\s+\d{4}\s*\u00B7\s*\d{2}:\d{2}\n/gi, '');
+
+  // googletag\u6B8B\u7559
+  cleaned = cleaned.replace(/googletag\.cmd\.push\s*\(\s*function\s*\(\s*\)\s*\{\s*\}\s*\)\s*;/g, '');
+
+  // Entidades HTML double-encoded
+  cleaned = cleaned.replace(/&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;nbsp;/g, '&nbsp;');
+  cleaned = cleaned.replace(/&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;/g, '&amp;');
+
+  // Marcas de clima otras ciudades (El Informador)
+  cleaned = cleaned.replace(/\u00BFC\u00F3mo estar\u00E1 el clima en otras ciudades\?[\s\S]*?$/g, '');
+
   cleaned = cleaned.replace(/[\uFFFD]/g, '');
   cleaned = cleaned.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, '');
   cleaned = cleaned.replace(/\r\n/g, '\n');

@@ -40,7 +40,7 @@
 <script src="script.js"></script>
 <script>
 (function() {
-    const apiUrl = 'https://cms-originaux.sebastianvernis.workers.dev/api/articles?site=cbnnoticias&limit=20';
+    function isWeatherArticle(t){return t&&(t.includes('Clima')||t.includes('No Circula')||t.includes('Hoy No'));}const apiUrl = 'https://cms-originaux.sebastianvernis.workers.dev/api/articles?site=cbnnoticias&limit=20';
 
     async function loadArticles() {
         try {
@@ -67,7 +67,7 @@
         const heroHtml = `
             <div class="hero-horizontal">
                 <a href="articulo/index.html?slug=${encodeURIComponent(hero.slug || '')}">
-                    <img src="${hero.imageUrl || 'logo.png'}" alt="${escHtml(hero.title || '')}" loading="lazy">
+                    <img src="${isWeatherArticle(hero.title)?'logo.png':hero.imageUrl||'logo.png'}" alt="${escHtml(hero.title || '')}" loading="lazy">
                 </a>
                 <div class="hero-overlay">
                     <span class="card-category-badge cat-${escHtml((hero.category || 'general').toLowerCase())}">${escHtml(hero.category || 'General')}</span>
@@ -88,7 +88,7 @@
             listHtml += `
                 <article class="article-card">
                     <a href="articulo/index.html?slug=${encodeURIComponent(a.slug || '')}">
-                        <img src="${a.imageUrl || 'logo.png'}" alt="${escHtml(a.title || '')}" loading="lazy">
+                        <img src="${isWeatherArticle(a.title)?'logo.png':a.imageUrl||'logo.png'}" alt="${escHtml(a.title || '')}" loading="lazy">
                     </a>
                     <div class="horizontal-card-content">
                         <span class="card-category-badge cat-${escHtml((a.category || 'general').toLowerCase())}">${escHtml(a.category || 'General')}</span>
@@ -116,7 +116,7 @@
             html += `
                 <article class="article-card" style="flex-direction:column;">
                     <a href="articulo/index.html?slug=${encodeURIComponent(a.slug || '')}">
-                        <img src="${a.imageUrl || 'logo.png'}" alt="${escHtml(a.title || '')}" loading="lazy" style="width:100%;height:200px;object-fit:cover;">
+                        <img src="${isWeatherArticle(a.title)?'logo.png':a.imageUrl||'logo.png'}" alt="${escHtml(a.title || '')}" loading="lazy" style="width:100%;height:200px;object-fit:cover;">
                     </a>
                     <div class="horizontal-card-content">
                         <span class="card-category-badge cat-${escHtml((a.category || 'general').toLowerCase())}">${escHtml(a.category || 'General')}</span>

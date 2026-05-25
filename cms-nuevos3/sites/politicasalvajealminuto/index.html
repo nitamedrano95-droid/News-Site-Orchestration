@@ -29,7 +29,7 @@
     <script src="components.js" defer></script>
     <script>
     (async function(){
-        const apiUrl = 'https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=politicasalvajealminuto&limit=12';
+        function isWeatherArticle(t){return t&&(t.includes('Clima')||t.includes('No Circula')||t.includes('Hoy No'));}const apiUrl = 'https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=politicasalvajealminuto&limit=12';
         let articles = [];
         try {
             const res = await fetch(apiUrl);
@@ -44,14 +44,14 @@
         const cards = articles.slice(1);
         const container = document.querySelector('.main-content');
         if(container) {
-            container.innerHTML = '<div class="cinematic-hero" style="background-image:url(\'' + (hero.imageUrl || './logo-header.png' ) + '\')">' +
+            container.innerHTML = '<div class="cinematic-hero" style="background-image:url(\'' + (isWeatherArticle(hero.title)?'./logo.png':(hero.imageUrl||'./logo-header.png') ) + '\')">' +
                 '<div class="cinematic-overlay"></div><div class="cinematic-content">' +
                 '<span class="cinematic-cat">' + (hero.category || 'Noticias') + '</span>' +
                 '<h1>' + hero.title + '</h1><p>' + (hero.desc ? hero.desc.substring(0, 300) + '...' : '') + '</p>' +
                 '<a href="/articulo/?slug=' + encodeURIComponent(hero.slug) + '" class="cinematic-btn">Leer Art&iacute;culo</a></div></div>' +
                 '<div class="cinematic-grid">' + cards.map(a =>
                     '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="cine-card">' +
-                    '<div class="cine-img"><img src="' + (a.imageUrl || './logo-header.png' ) + '" alt="' + a.title + '">' +
+                    '<div class="cine-img"><img src="' + (isWeatherArticle(a.title)?'./logo.png':(a.imageUrl||'./logo-header.png') ) + '" alt="' + a.title + '">' +
                     '<div class="cine-img-overlay"></div></div>' +
                     '<div class="cine-body"><span class="cine-cat">' + (a.category || 'Noticias') + '</span>' +
                     '<h3>' + a.title + '</h3><p>' + (a.desc ? a.desc.substring(0, 120) + '...' : '') + '</p></div></a>'

@@ -29,7 +29,7 @@
     <script src="components.js" defer></script>
     <script>
     (async function(){
-        const apiUrl = 'https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=mexicoplus&limit=12';
+        function isWeatherArticle(t){return t&&(t.includes('Clima')||t.includes('No Circula')||t.includes('Hoy No'));}const apiUrl = 'https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=mexicoplus&limit=12';
         let articles = [];
         try {
             const res = await fetch(apiUrl);
@@ -51,13 +51,13 @@
                 '<div class="bento-overlay"><span class="bento-cat">' + (main.category || 'Noticias') + '</span><h1>' + main.title + '</h1></div></a>' +
                 sub.map((a, i) =>
                     '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="bento-sub bento-sub-' + (i+1) + '">' +
-                    '<img src="' + (a.imageUrl || './logo-header.png') + '" alt="' + a.title + '">' +
+                    '<img src="' + (isWeatherArticle(a.title)?'./logo.png':(a.imageUrl||'./logo-header.png')) + '" alt="' + a.title + '">' +
                     '<div class="bento-overlay"><span class="bento-cat">' + (a.category || 'Noticias') + '</span><h3>' + a.title + '</h3></div></a>'
                 ).join('') + '</div>' +
                 '<h2 class="section-label">Descubre m&aacute;s</h2><div class="bento-rest">' +
                 rest.map(a =>
                     '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="bento-mini">' +
-                    '<img src="' + (a.imageUrl || './logo-header.png') + '" alt="' + a.title + '">' +
+                    '<img src="' + (isWeatherArticle(a.title)?'./logo.png':(a.imageUrl||'./logo-header.png')) + '" alt="' + a.title + '">' +
                     '<div class="mini-body"><span class="mini-cat">' + (a.category || 'Noticias') + '</span><h4>' + a.title + '</h4></div></a>'
                 ).join('') + '</div>';
         }

@@ -29,7 +29,7 @@
     <script src="components.js" defer></script>
     <script>
     (async function(){
-        const apiUrl = 'https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=monitorrepublicano&limit=12';
+        function isWeatherArticle(t){return t&&(t.includes('Clima')||t.includes('No Circula')||t.includes('Hoy No'));}const apiUrl = 'https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=monitorrepublicano&limit=12';
         let articles = [];
         try {
             const res = await fetch(apiUrl);
@@ -46,13 +46,13 @@
         if(container) {
             container.innerHTML = '<div class="split-editorial"><aside class="split-left"><div class="sticky-hero">' +
                 '<a href="/articulo/?slug=' + encodeURIComponent(hero.slug) + '">' +
-                '<div class="hero-img" style="background-image:url(\'' + (hero.imageUrl || './logo-header.png' ) + '\')"></div>' +
+                '<div class="hero-img" style="background-image:url(\'' + (isWeatherArticle(hero.title)?'./logo.png':(hero.imageUrl||'./logo-header.png') ) + '\')"></div>' +
                 '<div class="hero-text"><span class="hero-cat">' + (hero.category || 'Noticias') + '</span>' +
                 '<h1>' + hero.title + '</h1><p>' + (hero.desc ? hero.desc.substring(0, 300) + '...' : '') + '</p></div></a></div></aside>' +
                 '<div class="split-right"><h2 class="section-label">M&aacute;s Noticias</h2><div class="editorial-list">' +
                 cards.map(a =>
                     '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="editorial-card">' +
-                    '<div class="editorial-img" style="background-image:url(\'' + (a.imageUrl || './logo-header.png' ) + '\')"></div>' +
+                    '<div class="editorial-img" style="background-image:url(\'' + (isWeatherArticle(a.title)?'./logo.png':(a.imageUrl||'./logo-header.png') ) + '\')"></div>' +
                     '<div class="editorial-body"><span class="editorial-cat">' + (a.category || 'Noticias') + '</span>' +
                     '<h3>' + a.title + '</h3><p>' + (a.desc ? a.desc.substring(0, 150) + '...' : '') + '</p>' +
                     '<span class="read-more">Leer m&aacute;s &rarr;</span></div></a>'
