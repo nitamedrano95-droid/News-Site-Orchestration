@@ -8,11 +8,11 @@
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" media="print" onload="this.media='all'"/>
-    <link href="style.css" rel="stylesheet" media="print" onload="this.media='all'"/>
-    <link href="style-custom.css" rel="stylesheet" media="print" onload="this.media='all'"/>
+    <link href="/style.css" rel="stylesheet" media="print" onload="this.media='all'"/>
+    <link href="/style-custom.css" rel="stylesheet" media="print" onload="this.media='all'"/>
     <link rel="alternate" type="application/rss+xml" title="mexicannewsoftheworld RSS" href="/rss.xml"/>
-    <link rel="manifest" href="manifest.json">
-    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/favicon.png">
     <meta name="theme-color" content="#1e3a5f">
 </head>
 <body>
@@ -24,44 +24,80 @@
 
     <div id="site-footer"></div>
     
-    <script src="pwa-manager.js" defer></script>
-    <script src="script.js" defer></script>
-    <script src="components.js" defer></script>
+    <script src="/pwa-manager.js" defer></script>
+    <script src="/script.js" defer></script>
+    <script src="/components.js" defer></script>
     <script>
     (async function(){
         const apiUrl = 'https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=mexicannewsoftheworld&limit=12';
+        const defaultImg = '/logo-header.png';
         let articles = [];
+
+        const esc = (s='') => String(s)
+          .replaceAll('&','&amp;')
+          .replaceAll('<','<')
+          .replaceAll('>','>')
+          .replaceAll('"','"')
+          .replaceAll("'","&#39;");
+
+        const safeUrl = (url) => {
+          try { return new URL(url || defaultImg, location.origin).href; }
+          catch { return defaultImg; }
+        };
+
         try {
             const res = await fetch(apiUrl);
             if(!res.ok) throw new Error('Network');
             const data = await res.json();
-            articles = data.articles || [];
+            articles = Array.isArray(data.articles) ? data.articles : [];
         } catch(e) {
-            if (window.PWAManager) articles = await PWAManager.getLocalArticles();
+            if (window.PWAManager?.getLocalArticles) {
+              articles = await PWAManager.getLocalArticles();
+            }
         }
-        if(!articles?.length) return;
+
+        if(!articles.length) return;
         const headline = articles[0];
         const subheads = articles.slice(1, 4);
         const columns = articles.slice(4);
         const container = document.querySelector('.main-content');
-        if(container) {
-            container.innerHTML = '<div class="newspaper-masthead"><h1 class="paper-title">mexicannewsoftheworld - News</h1>' +
-                '<div class="paper-date">' + new Date().toLocaleDateString('es-MX', {weekday:'long', year:'numeric', month:'long', day:'numeric'}) + '</div></div>' +
-                '<div class="newspaper-headline"><a href="/articulo/?slug=' + encodeURIComponent(headline.slug) + '">' +
-                '<h1>' + headline.title + '</h1>' +
-                '<img src="' + (headline.imageUrl || ' + base + 'logo-header.png' ) + '" alt="' + headline.title + '">' +
-                '<p>' + (headline.desc ? headline.desc.substring(0, 400) + '...' : '') + '</p></a></div>' +
-                '<div class="newspaper-subheads">' + subheads.map(a =>
-                    '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="subhead-item">' +
-                    '<h3>' + a.title + '</h3><p>' + (a.desc ? a.desc.substring(0, 200) + '...' : '') + '</p></a>'
-                ).join('') + '</div>' +
-                '<div class="newspaper-columns">' + columns.map(a =>
-                    '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="column-item">' +
-                    '<h4>' + a.title + '</h4><p>' + (a.desc ? a.desc.substring(0, 160) + '...' : '') + '</p></a>'
-                ).join('') + '</div>';
-        }
+        if(!container) return;
+
+        container.innerHTML = `
+          <div class="newspaper-masthead">
+            <h1 class="paper-title">mexicannewsoftheworld - News</h1>
+            <div class="paper-date">${esc(new Date().toLocaleDateString('es-MX', {weekday:'long', year:'numeric', month:'long', day:'numeric'}))}</div>
+          </div>
+          <div class="newspaper-headline">
+            <a href="/articulo/?slug=${encodeURIComponent(headline?.slug || '')}">
+              <h1>${esc(headline?.title || '')}</h1>
+              <img src="${safeUrl(headline?.imageUrl)}" alt="${esc(headline?.title || '')}">
+              <p>${esc((headline?.desc || '').slice(0, 400))}${headline?.desc ? '...' : ''}</p>
+            </a>
+          </div>
+          <div class="newspaper-subheads">
+            ${subheads.map(a => `
+              <a href="/articulo/?slug=${encodeURIComponent(a?.slug || '')}" class="subhead-item">
+                <h3>${esc(a?.title || '')}</h3>
+                <p>${esc((a?.desc || '').slice(0, 200))}${a?.desc ? '...' : ''}</p>
+              </a>
+            `).join('')}
+          </div>
+          <div class="newspaper-columns">
+            ${columns.map(a => `
+              <a href="/articulo/?slug=${encodeURIComponent(a?.slug || '')}" class="column-item">
+                <h4>${esc(a?.title || '')}</h4>
+                <p>${esc((a?.desc || '').slice(0, 160))}${a?.desc ? '...' : ''}</p>
+              </a>
+            `).join('')}
+          </div>
+        `;
     })();
     </script>
+    <script>
+      if('serviceWorker' in navigator){
+        window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+      }
+    </script>
 </body>
-    <script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}))}</script>
 </html>

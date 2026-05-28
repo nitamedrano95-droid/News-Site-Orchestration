@@ -8,11 +8,11 @@
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" media="print" onload="this.media='all'"/>
-    <link href="style.css" rel="stylesheet" media="print" onload="this.media='all'"/>
-    <link href="style-custom.css" rel="stylesheet" media="print" onload="this.media='all'"/>
+    <link href="/style.css" rel="stylesheet" media="print" onload="this.media='all'"/>
+    <link href="/style-custom.css" rel="stylesheet" media="print" onload="this.media='all'"/>
     <link rel="alternate" type="application/rss+xml" title="Enfoque Mexicano RSS" href="/rss.xml"/>
-    <link rel="manifest" href="manifest.json">
-    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/favicon.png">
     <meta name="theme-color" content="#1e40af">
 </head>
 <body>
@@ -24,49 +24,91 @@
 
     <div id="site-footer"></div>
     
-    <script src="pwa-manager.js" defer></script>
-    <script src="script.js" defer></script>
-    <script src="components.js" defer></script>
+    <script src="/pwa-manager.js" defer></script>
+    <script src="/script.js" defer></script>
+    <script src="/components.js" defer></script>
     <script>
     (async function(){
         const apiUrl = 'https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=enfoquemexicano&limit=12';
+        const defaultImg = '/logo-header.png';
         let articles = [];
+
+        const esc = (s='') => String(s)
+          .replaceAll('&','&amp;')
+          .replaceAll('<','<')
+          .replaceAll('>','>')
+          .replaceAll('"','"')
+          .replaceAll("'","&#39;");
+
+        const safeUrl = (url) => {
+          try { return new URL(url || defaultImg, location.origin).href; }
+          catch { return defaultImg; }
+        };
+
         try {
             const res = await fetch(apiUrl);
             if(!res.ok) throw new Error('Network');
             const data = await res.json();
-            articles = data.articles || [];
+            articles = Array.isArray(data.articles) ? data.articles : [];
         } catch(e) {
-            if (window.PWAManager) articles = await PWAManager.getLocalArticles();
+            if (window.PWAManager?.getLocalArticles) {
+              articles = await PWAManager.getLocalArticles();
+            }
         }
-        if(!articles?.length) return;
+
+        if(!articles.length) return;
         const hero = articles[0];
         const secondary = articles.slice(1, 4);
         const grid = articles.slice(4);
-        const heroContainer = document.getElementById('latest-container');
         const mainContainer = document.querySelector('.main-content');
-        if(mainContainer) {
-            mainContainer.innerHTML = '<div class="magazine-layout"><div class="magazine-hero">' +
-                '<a href="/articulo/?slug=' + encodeURIComponent(hero.slug) + '" class="hero-main">' +
-                '<img src="' + (hero.imageUrl || ' + base + 'logo-header.png' ) + '" alt="' + hero.title + '">' +
-                '<div class="hero-overlay"><span class="hero-cat">' + (hero.category || 'Noticias') + '</span>' +
-                '<h1>' + hero.title + '</h1><p>' + (hero.desc ? hero.desc.substring(0, 200) + '...' : '') + '</p>' +
-                '<span class="hero-date">' + (hero.publishedAt ? new Date(hero.publishedAt).toLocaleDateString('es-MX') : '') + '</span></div></a>' +
-                '<div class="magazine-sidebar">' + secondary.map(a =>
-                    '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="side-item">' +
-                    '<img src="' + (a.imageUrl || ' + base + 'logo-header.png' ) + '" alt="' + a.title + '">' +
-                    '<div class="side-content"><span class="side-cat">' + (a.category || 'Noticias') + '</span><h4>' + a.title + '</h4></div></a>'
-                ).join('') + '</div></div>' +
-                '<h2 class="section-label">Más Noticias</h2><div class="news-grid">' + grid.map(a =>
-                    '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="news-card">' +
-                    '<div class="card-img-wrap"><img src="' + (a.imageUrl || ' + base + 'logo-header.png' ) + '" alt="' + a.title + '"></div>' +
-                    '<div class="news-content"><span class="news-category">' + (a.category || 'Noticias') + '</span>' +
-                    '<h3 class="news-title">' + a.title + '</h3><p class="news-desc">' + (a.desc ? a.desc.substring(0, 120) + '...' : '') + '</p>' +
-                    '<span class="news-date">' + (a.publishedAt ? new Date(a.publishedAt).toLocaleDateString('es-MX') : '') + '</span></div></a>'
-                ).join('') + '</div></div>';
-        }
+        if(!mainContainer) return;
+
+        mainContainer.innerHTML = `
+          <div class="magazine-layout">
+            <div class="magazine-hero">
+              <a href="/articulo/?slug=${encodeURIComponent(hero?.slug || '')}" class="hero-main">
+                <img src="${safeUrl(hero?.imageUrl)}" alt="${esc(hero?.title || '')}">
+                <div class="hero-overlay">
+                  <span class="hero-cat">${esc(hero?.category || 'Noticias')}</span>
+                  <h1>${esc(hero?.title || '')}</h1>
+                  <p>${esc((hero?.desc || '').slice(0, 200))}${hero?.desc ? '...' : ''}</p>
+                  <span class="hero-date">${hero?.publishedAt ? new Date(hero.publishedAt).toLocaleDateString('es-MX') : ''}</span>
+                </div>
+              </a>
+              <div class="magazine-sidebar">
+                ${secondary.map(a => `
+                  <a href="/articulo/?slug=${encodeURIComponent(a?.slug || '')}" class="side-item">
+                    <img src="${safeUrl(a?.imageUrl)}" alt="${esc(a?.title || '')}">
+                    <div class="side-content">
+                      <span class="side-cat">${esc(a?.category || 'Noticias')}</span>
+                      <h4>${esc(a?.title || '')}</h4>
+                    </div>
+                  </a>
+                `).join('')}
+              </div>
+            </div>
+            <h2 class="section-label">Más Noticias</h2>
+            <div class="news-grid">
+              ${grid.map(a => `
+                <a href="/articulo/?slug=${encodeURIComponent(a?.slug || '')}" class="news-card">
+                  <div class="card-img-wrap"><img src="${safeUrl(a?.imageUrl)}" alt="${esc(a?.title || '')}"></div>
+                  <div class="news-content">
+                    <span class="news-category">${esc(a?.category || 'Noticias')}</span>
+                    <h3 class="news-title">${esc(a?.title || '')}</h3>
+                    <p class="news-desc">${esc((a?.desc || '').slice(0, 120))}${a?.desc ? '...' : ''}</p>
+                    <span class="news-date">${a?.publishedAt ? new Date(a.publishedAt).toLocaleDateString('es-MX') : ''}</span>
+                  </div>
+                </a>
+              `).join('')}
+            </div>
+          </div>
+        `;
     })();
     </script>
+    <script>
+      if('serviceWorker' in navigator){
+        window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+      }
+    </script>
 </body>
-    <script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}))}</script>
 </html>

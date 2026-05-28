@@ -8,11 +8,11 @@
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" media="print" onload="this.media='all'"/>
-    <link href="style.css" rel="stylesheet" media="print" onload="this.media='all'"/>
-    <link href="style-custom.css" rel="stylesheet" media="print" onload="this.media='all'"/>
+    <link href="/style.css" rel="stylesheet" media="print" onload="this.media='all'"/>
+    <link href="/style-custom.css" rel="stylesheet" media="print" onload="this.media='all'"/>
     <link rel="alternate" type="application/rss+xml" title="expresomexicano RSS" href="/rss.xml"/>
-    <link rel="manifest" href="manifest.json">
-    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/favicon.png">
     <meta name="theme-color" content="#ea580c">
 </head>
 <body>
@@ -24,45 +24,83 @@
 
     <div id="site-footer"></div>
     
-    <script src="pwa-manager.js" defer></script>
-    <script src="script.js" defer></script>
-    <script src="components.js" defer></script>
+    <script src="/pwa-manager.js" defer></script>
+    <script src="/script.js" defer></script>
+    <script src="/components.js" defer></script>
     <script>
     (async function(){
         const apiUrl = 'https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=expresomexicano&limit=12';
+        const defaultImg = '/logo-header.png';
         let articles = [];
+
+        const esc = (s='') => String(s)
+          .replaceAll('&','&amp;')
+          .replaceAll('<','<')
+          .replaceAll('>','>')
+          .replaceAll('"','"')
+          .replaceAll("'","&#39;");
+
+        const safeUrl = (url) => {
+          try { return new URL(url || defaultImg, location.origin).href; }
+          catch { return defaultImg; }
+        };
+
         try {
             const res = await fetch(apiUrl);
             if(!res.ok) throw new Error('Network');
             const data = await res.json();
-            articles = data.articles || [];
+            articles = Array.isArray(data.articles) ? data.articles : [];
         } catch(e) {
-            if (window.PWAManager) articles = await PWAManager.getLocalArticles();
+            if (window.PWAManager?.getLocalArticles) {
+              articles = await PWAManager.getLocalArticles();
+            }
         }
-        if(!articles?.length) return;
+
+        if(!articles.length) return;
         const main = articles[0];
         const sub = articles.slice(1, 5);
         const rest = articles.slice(5);
         const container = document.querySelector('.main-content');
-        if(container) {
-            container.innerHTML = '<div class="bento-grid">' +
-                '<a href="/articulo/?slug=' + encodeURIComponent(main.slug) + '" class="bento-main">' +
-                '<img src="' + (main.imageUrl || ' + base + 'logo-header.png' ) + '" alt="' + main.title + '">' +
-                '<div class="bento-overlay"><span class="bento-cat">' + (main.category || 'Noticias') + '</span><h1>' + main.title + '</h1></div></a>' +
-                sub.map((a, i) =>
-                    '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="bento-sub bento-sub-' + (i+1) + '">' +
-                    '<img src="' + (a.imageUrl || ' + base + 'logo-header.png' ) + '" alt="' + a.title + '">' +
-                    '<div class="bento-overlay"><span class="bento-cat">' + (a.category || 'Noticias') + '</span><h3>' + a.title + '</h3></div></a>'
-                ).join('') + '</div>' +
-                '<h2 class="section-label">Descubre m&aacute;s</h2><div class="bento-rest">' +
-                rest.map(a =>
-                    '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="bento-mini">' +
-                    '<img src="' + (a.imageUrl || ' + base + 'logo-header.png' ) + '" alt="' + a.title + '">' +
-                    '<div class="mini-body"><span class="mini-cat">' + (a.category || 'Noticias') + '</span><h4>' + a.title + '</h4></div></a>'
-                ).join('') + '</div>';
-        }
+        if(!container) return;
+
+        container.innerHTML = `
+          <div class="bento-grid">
+            <a href="/articulo/?slug=${encodeURIComponent(main?.slug || '')}" class="bento-main">
+              <img src="${safeUrl(main?.imageUrl)}" alt="${esc(main?.title || '')}">
+              <div class="bento-overlay">
+                <span class="bento-cat">${esc(main?.category || 'Noticias')}</span>
+                <h1>${esc(main?.title || '')}</h1>
+              </div>
+            </a>
+            ${sub.map((a, i) => `
+              <a href="/articulo/?slug=${encodeURIComponent(a?.slug || '')}" class="bento-sub bento-sub-${i + 1}">
+                <img src="${safeUrl(a?.imageUrl)}" alt="${esc(a?.title || '')}">
+                <div class="bento-overlay">
+                  <span class="bento-cat">${esc(a?.category || 'Noticias')}</span>
+                  <h3>${esc(a?.title || '')}</h3>
+                </div>
+              </a>
+            `).join('')}
+          </div>
+          <h2 class="section-label">Descubre más</h2>
+          <div class="bento-rest">
+            ${rest.map(a => `
+              <a href="/articulo/?slug=${encodeURIComponent(a?.slug || '')}" class="bento-mini">
+                <img src="${safeUrl(a?.imageUrl)}" alt="${esc(a?.title || '')}">
+                <div class="mini-body">
+                  <span class="mini-cat">${esc(a?.category || 'Noticias')}</span>
+                  <h4>${esc(a?.title || '')}</h4>
+                </div>
+              </a>
+            `).join('')}
+          </div>
+        `;
     })();
     </script>
+    <script>
+      if('serviceWorker' in navigator){
+        window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+      }
+    </script>
 </body>
-    <script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}))}</script>
 </html>

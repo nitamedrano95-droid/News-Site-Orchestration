@@ -1,65 +1,139 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>elanalisismexicano - News</title>
-    <meta content="News site" name="description"/>
-    <link href="https://fonts.googleapis.com" rel="preconnect"/>
-    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" media="print" onload="this.media='all'"/>
-    <link href="style.css" rel="stylesheet" media="print" onload="this.media='all'"/>
-    <link href="style-custom.css" rel="stylesheet" media="print" onload="this.media='all'"/>
-    <link rel="alternate" type="application/rss+xml" title="elanalisismexicano RSS" href="/rss.xml"/>
-    <link rel="manifest" href="manifest.json">
-    <link rel="icon" type="image/png" href="favicon.png">
-    <meta name="theme-color" content="#4338ca">
-</head>
-<body>
-    <div id="site-preloader"><div class="loader"></div></div>
-    <div id="site-header"></div>
-    
-    <main class="main-content" style="margin-top: 10px;">
-    </main>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>El Análisis Mexicano - News</title>
+        <meta name="description" content="News site" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+            media="print"
+            onload="this.media = 'all'"
+        />
+        <link
+            rel="stylesheet"
+            href="/style.css"
+            media="print"
+            onload="this.media = 'all'"
+        />
+        <link
+            rel="stylesheet"
+            href="/style-custom.css"
+            media="print"
+            onload="this.media = 'all'"
+        />
+        <link
+            rel="alternate"
+            type="application/rss+xml"
+            title="El Análisis Mexicano RSS"
+            href="/rss.xml"
+        />
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="icon" type="image/png" href="/favicon.png" />
+        <meta name="theme-color" content="#4338ca" />
+    </head>
+    <body>
+        <div id="site-preloader"><div class="loader"></div></div>
+        <div id="site-header"></div>
 
-    <div id="site-footer"></div>
-    
-    <script src="pwa-manager.js" defer></script>
-    <script src="script.js" defer></script>
-    <script src="components.js" defer></script>
-    <script>
-    (async function(){
-        function isWeatherArticle(t){return t&&(t.includes('Clima')||t.includes('No Circula')||t.includes('Hoy No'));}const apiUrl = 'https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=elanalisismexicano&limit=12';
-        let articles = [];
-        try {
-            const res = await fetch(apiUrl);
-            if(!res.ok) throw new Error('Network');
-            const data = await res.json();
-            articles = data.articles || [];
-        } catch(e) {
-            if (window.PWAManager) articles = await PWAManager.getLocalArticles();
-        }
-        if(!articles?.length) return;
-        const hero = articles[0];
-        const cards = articles.slice(1);
-        const container = document.querySelector('.main-content');
-        if(container) {
-            container.innerHTML = '<div class="split-editorial"><aside class="split-left"><div class="sticky-hero">' +
-                '<a href="/articulo/?slug=' + encodeURIComponent(hero.slug) + '">' +
-                '<div class="hero-img" style="background-image:url(\'' + (hero.imageUrl || ' + base + 'logo-header.png' ) + '\')"></div>' +
-                '<div class="hero-text"><span class="hero-cat">' + (hero.category || 'Noticias') + '</span>' +
-                '<h1>' + hero.title + '</h1><p>' + (hero.desc ? hero.desc.substring(0, 300) + '...' : '') + '</p></div></a></div></aside>' +
-                '<div class="split-right"><h2 class="section-label">M&aacute;s Noticias</h2><div class="editorial-list">' +
-                cards.map(a =>
-                    '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="editorial-card">' +
-                    '<div class="editorial-img" style="background-image:url(\'' + (a.imageUrl || ' + base + 'logo-header.png' ) + '\')"></div>' +
-                    '<div class="editorial-body"><span class="editorial-cat">' + (a.category || 'Noticias') + '</span>' +
-                    '<h3>' + a.title + '</h3><p>' + (a.desc ? a.desc.substring(0, 150) + '...' : '') + '</p>' +
-                    '<span class="read-more">Leer m&aacute;s &rarr;</span></div></a>'
-                ).join('') + '</div></div></div>';
-        }
-    })();
-    </script>
-</body>
-    <script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}))}</script>
+        <main class="main-content" style="margin-top: 10px"></main>
+
+        <div id="site-footer"></div>
+
+        <script src="/pwa-manager.js" defer></script>
+        <script src="/script.js" defer></script>
+        <script src="/components.js" defer></script>
+        <script>
+            (async function () {
+                const apiUrl =
+                    "https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=elanalisismexicano&limit=12";
+                const defaultImg = "/logo-header.png";
+                let articles = [];
+
+                try {
+                    const res = await fetch(apiUrl);
+                    if (!res.ok) throw new Error("Network");
+                    const data = await res.json();
+                    articles = Array.isArray(data.articles)
+                        ? data.articles
+                        : [];
+                } catch (e) {
+                    if (window.PWAManager?.getLocalArticles) {
+                        articles = await PWAManager.getLocalArticles();
+                    }
+                }
+
+                if (!articles.length) return;
+
+                const hero = articles[0];
+                const list = articles.slice(1);
+                const container = document.querySelector(".main-content");
+                if (!container) return;
+
+                const escapeHtml = (str = "") =>
+                    String(str)
+                        .replaceAll("&", "&amp;")
+                        .replaceAll("<", "&lt;")
+                        .replaceAll(">", "&gt;")
+                        .replaceAll('"', "&quot;")
+                        .replaceAll("'", "&#39;");
+
+                const safeSrc = (url) => {
+                    try {
+                        return new URL(url || defaultImg, location.origin).href;
+                    } catch {
+                        return defaultImg;
+                    }
+                };
+
+                container.innerHTML = `
+        <div class="split-editorial">
+          <aside class="split-left">
+            <div class="sticky-hero">
+              <a href="/articulo/?slug=${encodeURIComponent(hero.slug || "")}">
+                <div class="hero-img" style="background-image:url('${safeSrc(hero.imageUrl)}')"></div>
+                <div class="hero-text">
+                  <span class="hero-cat">${escapeHtml(hero.category || "Noticias")}</span>
+                  <h1>${escapeHtml(hero.title || "")}</h1>
+                  <p>${escapeHtml((hero.desc || "").slice(0, 300))}${hero.desc ? "..." : ""}</p>
+                </div>
+              </a>
+            </div>
+          </aside>
+
+          <div class="split-right">
+            <h2 class="section-label">Más Noticias</h2>
+            <div class="editorial-list">
+              ${list
+                  .map(
+                      (a) => `
+                <a href="/articulo/?slug=${encodeURIComponent(a.slug || "")}" class="editorial-card">
+                  <div class="editorial-img" style="background-image:url('${safeSrc(a.imageUrl)}')"></div>
+                  <div class="editorial-body">
+                    <span class="editorial-cat">${escapeHtml(a.category || "Noticias")}</span>
+                    <h3>${escapeHtml(a.title || "")}</h3>
+                    <p>${escapeHtml((a.desc || "").slice(0, 150))}${a.desc ? "..." : ""}</p>
+                    <span class="read-more">Leer más &rarr;</span>
+                  </div>
+                </a>
+              `,
+                  )
+                  .join("")}
+            </div>
+          </div>
+        </div>
+      `;
+            })();
+        </script>
+        <script>
+            if ("serviceWorker" in navigator) {
+                window.addEventListener("load", () => {
+                    navigator.serviceWorker.register("/sw.js").catch(() => {});
+                });
+            }
+        </script>
+    </body>
 </html>

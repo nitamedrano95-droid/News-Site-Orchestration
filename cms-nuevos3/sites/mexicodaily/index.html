@@ -1,64 +1,123 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>mexicodaily - News</title>
-    <meta content="News site" name="description"/>
-    <link href="https://fonts.googleapis.com" rel="preconnect"/>
-    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" media="print" onload="this.media='all'"/>
-    <link href="style.css" rel="stylesheet" media="print" onload="this.media='all'"/>
-    <link href="style-custom.css" rel="stylesheet" media="print" onload="this.media='all'"/>
-    <link rel="alternate" type="application/rss+xml" title="mexicodaily RSS" href="/rss.xml"/>
-    <link rel="manifest" href="manifest.json">
-    <link rel="icon" type="image/png" href="favicon.png">
-    <meta name="theme-color" content="#0369a1">
-</head>
-<body>
-    <div id="site-preloader"><div class="loader"></div></div>
-    <div id="site-header"></div>
-    
-    <main class="main-content" style="margin-top: 10px;">
-    </main>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Mexico Daily - News</title>
+        <meta name="description" content="News site" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+            media="print"
+            onload="this.media = 'all'"
+        />
+        <link
+            rel="stylesheet"
+            href="style.css"
+            media="print"
+            onload="this.media = 'all'"
+        />
+        <link
+            rel="stylesheet"
+            href="style-custom.css"
+            media="print"
+            onload="this.media = 'all'"
+        />
+        <link
+            rel="alternate"
+            type="application/rss+xml"
+            title="mexicodaily RSS"
+            href="/rss.xml"
+        />
+        <link rel="manifest" href="manifest.json" />
+        <link rel="icon" type="image/png" href="favicon.png" />
+        <meta name="theme-color" content="#0369a1" />
+    </head>
+    <body>
+        <div id="site-preloader"><div class="loader"></div></div>
+        <div id="site-header"></div>
 
-    <div id="site-footer"></div>
-    
-    <script src="pwa-manager.js" defer></script>
-    <script src="script.js" defer></script>
-    <script src="components.js" defer></script>
-    <script>
-    (async function(){
-        const apiUrl = 'https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=mexicodaily&limit=12';
-        let articles = [];
-        try {
-            const res = await fetch(apiUrl);
-            if(!res.ok) throw new Error('Network');
-            const data = await res.json();
-            articles = data.articles || [];
-        } catch(e) {
-            if (window.PWAManager) articles = await PWAManager.getLocalArticles();
-        }
-        if(!articles?.length) return;
-        const featured = articles[0];
-        const list = articles.slice(1);
-        const container = document.querySelector('.main-content');
-        if(container) {
-            container.innerHTML = '<div class="list-layout">' +
-                '<a href="/articulo/?slug=' + encodeURIComponent(featured.slug) + '" class="list-featured">' +
-                '<img src="' + (featured.imageUrl || ' + base + 'logo-header.png' ) + '" alt="' + featured.title + '">' +
-                '<div class="featured-body"><span class="featured-cat">' + (featured.category || 'Noticias') + '</span>' +
-                '<h1>' + featured.title + '</h1><p>' + (featured.desc ? featured.desc.substring(0, 300) + '...' : '') + '</p></div></a>' +
-                '<div class="article-list">' + list.map((a, i) =>
-                    '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="list-item">' +
-                    '<span class="list-num">' + String(i+1).padStart(2, '0') + '</span>' +
-                    '<div class="list-img"><img src="' + (a.imageUrl || ' + base + 'logo-header.png' ) + '" alt="' + a.title + '"></div>' +
-                    '<div class="list-body"><span class="list-cat">' + (a.category || 'Noticias') + '</span>' +
-                    '<h3>' + a.title + '</h3><p>' + (a.desc ? a.desc.substring(0, 140) + '...' : '') + '</p></div></a>'
-                ).join('') + '</div></div>';
-        }
-    })();
-    </script>
-</body>
-    <script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}))}</script>
+        <main class="main-content" style="margin-top: 10px"></main>
+
+        <div id="site-footer"></div>
+
+        <script src="pwa-manager.js" defer></script>
+        <script src="script.js" defer></script>
+        <script src="components.js" defer></script>
+        <script>
+            (async function () {
+                const apiUrl =
+                    "https://cms-nuevos3.sebastianvernis.workers.dev/api/articles?site=mexicodaily&limit=12";
+                const defaultImg = "/logo-header.png";
+                let articles = [];
+
+                try {
+                    const res = await fetch(apiUrl);
+                    if (!res.ok) throw new Error("Network");
+                    const data = await res.json();
+                    articles = Array.isArray(data.articles)
+                        ? data.articles
+                        : [];
+                } catch (e) {
+                    if (window.PWAManager?.getLocalArticles) {
+                        articles = await PWAManager.getLocalArticles();
+                    }
+                }
+
+                if (!articles.length) return;
+
+                const featured = articles[0];
+                const list = articles.slice(1);
+                const container = document.querySelector(".main-content");
+                if (!container) return;
+
+                const escapeHtml = (str = "") =>
+                    String(str)
+                        .replaceAll("&", "&amp;")
+                        .replaceAll("<", "&lt;")
+                        .replaceAll(">", "&gt;")
+                        .replaceAll('"', "&quot;")
+                        .replaceAll("'", "&#39;");
+
+                container.innerHTML = `
+        <div class="list-layout">
+          <a href="/articulo/?slug=${encodeURIComponent(featured.slug || "")}" class="list-featured">
+            <img src="${escapeHtml(featured.imageUrl || defaultImg)}" alt="${escapeHtml(featured.title || "")}">
+            <div class="featured-body">
+              <span class="featured-cat">${escapeHtml(featured.category || "Noticias")}</span>
+              <h1>${escapeHtml(featured.title || "")}</h1>
+              <p>${escapeHtml((featured.desc || "").slice(0, 300))}${featured.desc ? "..." : ""}</p>
+            </div>
+          </a>
+          <div class="article-list">
+            ${list
+                .map(
+                    (a, i) => `
+              <a href="/articulo/?slug=${encodeURIComponent(a.slug || "")}" class="list-item">
+                <span class="list-num">${String(i + 1).padStart(2, "0")}</span>
+                <div class="list-img"><img src="${escapeHtml(a.imageUrl || defaultImg)}" alt="${escapeHtml(a.title || "")}"></div>
+                <div class="list-body">
+                  <span class="list-cat">${escapeHtml(a.category || "Noticias")}</span>
+                  <h3>${escapeHtml(a.title || "")}</h3>
+                  <p>${escapeHtml((a.desc || "").slice(0, 140))}${a.desc ? "..." : ""}</p>
+                </div>
+              </a>
+            `,
+                )
+                .join("")}
+          </div>
+        </div>
+      `;
+            })();
+        </script>
+        <script>
+            if ("serviceWorker" in navigator) {
+                window.addEventListener("load", () => {
+                    navigator.serviceWorker.register("/sw.js").catch(() => {});
+                });
+            }
+        </script>
+    </body>
 </html>
