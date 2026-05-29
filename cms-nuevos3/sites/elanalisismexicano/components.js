@@ -53,15 +53,9 @@
   function injectTicker() {
     const el = document.getElementById("site-header");
     if (!el) return;
-    const now = new Date();
-    const dateStr = now.getDate() + " " + MONTHS[now.getMonth()];
     el.insertAdjacentHTML(
       "beforebegin",
-      `
-      <div class="anam-ticker">
-        <a href="${base}" class="ticker-anam-logo"><img src="${DEFAULT_IMG}" alt="El Análisis Mexicano"></a>
-        <div class="ticker-anam-label"><i class="fas fa-chart-line"></i>ANÁLISIS</div>
-        <div class="ticker-anam-date">${dateStr}</div>
+      `<div class="anam-ticker">
         <div class="ticker-anam-track" id="ticker-anam-track"><span class="ticker-loading">Cargando...</span></div>
       </div>
     `,
@@ -111,10 +105,11 @@
 
   function injectHeader() {
     const el = document.getElementById("site-header");
+    const now = new Date();
+    const dateStr = now.getDate() + " " + MONTHS[now.getMonth()];
     if (!el) return;
     el.innerHTML = `
       <header class="site-header-anam">
-        <div class="anam-header-bar"><span class="anam-header-tag">OPINIÓN Y ANÁLISIS</span></div>
         <nav class="header-anam-nav">
           <div class="nav-anam-inner">
             <a href="${base}" class="nav-anam-link active">Inicio</a>
@@ -123,6 +118,7 @@
             <a href="${base}categoria/index.html?cat=economia" class="nav-anam-link">Economía</a>
           </div>
         </nav>
+        <div class="ticker-anam-date">${dateStr}</div>
       </header>
     `;
   }

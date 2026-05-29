@@ -689,7 +689,6 @@ header {
 }
 .ticker-anam-track {
   flex: 1;
-  overflow: hidden;
   white-space: nowrap;
   display: flex;
   align-items: center;
@@ -710,6 +709,11 @@ header {
 .site-header-anam {
   background: #312e81;
   padding: 0;
+  display: flex;
+  flex-direction: inline;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
 }
 .anam-header-bar {
   background: #c7d2fe;

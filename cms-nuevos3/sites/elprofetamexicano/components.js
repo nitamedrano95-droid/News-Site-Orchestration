@@ -1,4 +1,4 @@
-(function() {
+(function () {
   const path = window.location.pathname;
   const isSubdir = /\/(articulo|categoria|admin)\//.test(path);
   const base = isSubdir ? '../' : './';
@@ -10,14 +10,11 @@
     window.addEventListener('load', () => { setTimeout(() => el.classList.add('hidden'), 500); });
   }
 
+
   function injectTicker() {
     const el = document.getElementById('site-header');
     if (!el) return;
-    const now = new Date();
-    const day = now.getDate();
-    const month = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][now.getMonth()];
-    const dateStr = day + ' ' + month;
-    el.insertAdjacentHTML('afterend', '<div class="prof-ticker"><a href="' + base + '" class="ticker-prof-logo"><img src="' + base + 'logo-header.png" alt="elprofetamexicano"></a><div class="ticker-prof-marker"><i class="fas fa-eye"></i></div><div class="ticker-prof-track" id="ticker-prof-track"><span class="ticker-loading">Cargando...</span></div><div class="ticker-prof-right"><div class="ticker-prof-date">' + dateStr + '</div><div class="ticker-prof-social"><a href="https://twitter.com/intent/tweet?url=' + encodeURIComponent(window.location.href) + '&text=' + encodeURIComponent(document.title) + '" target="_blank" rel="noopener"><i class="fab fa-twitter"></i></a><a href="https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(window.location.href) + '" target="_blank" rel="noopener"><i class="fab fa-facebook-f"></i></a></div></div></div>');
+    el.insertAdjacentHTML('beforeend', '<div class="prof-ticker"><div class="ticker-prof-track" id="ticker-prof-track"><span class="ticker-loading">Cargando...</span></div><div class="ticker-prof-right"></div></div>');
     fetchTicker();
   }
 
@@ -33,7 +30,7 @@
       const items = articles.map(a => '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="ticker-prof-item">' + a.title + '</a>').join('<span class="ticker-prof-sep">✦</span>');
       track.innerHTML = items;
       startProfTicker();
-    } catch(e) {
+    } catch (e) {
       track.innerHTML = '<span>El Profeta Mexicano • La verdad que necesitas saber</span>';
       startProfTicker();
     }
@@ -53,8 +50,25 @@
 
   function injectHeader() {
     const el = document.getElementById('site-header');
+    const now = new Date();
+    const day = now.getDate();
+    const month = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'][now.getMonth()];
+    const dateStr = day + ' ' + month;
     if (!el) return;
-    el.innerHTML = '<header class="site-header-prof"><div class="prof-header-eyebrow"><span class="prof-header-tag"><i class="fas fa-eye"></i> EL PROFETA MEXICANO</span></div><nav class="header-prof-nav"><div class="nav-prof-inner"><a href="' + base + '" class="nav-prof-link active">Inicio</a><a href="' + base + 'categoria/index.html?cat=nacional" class="nav-prof-link">Nacional</a><a href="' + base + 'categoria/index.html?cat=politica" class="nav-prof-link">Política</a><a href="' + base + 'categoria/index.html?cat=economia" class="nav-prof-link">Economía</a></div></nav></header>';
+    el.innerHTML =
+      '<header class="site-header-prof"><div style="display:flex;align-items:center;justify-content:space-between;gap:16px;">' +
+      '<nav class="header-prof-nav" style="display:flex;align-items:center;gap:16px;">' +
+      '<a href="' + base + '" class="nav-prof-link active">Inicio</a>' +
+      '<a href="' + base + 'categoria/index.html?cat=nacional" class="nav-prof-link">Nacional</a>' +
+      '<a href="' + base + 'categoria/index.html?cat=politica" class="nav-prof-link">Política</a>' +
+      '<a href="' + base + 'categoria/index.html?cat=economia" class="nav-prof-link">Economía</a>' +
+      '</nav>' +
+      '<div style="display:flex;align-items:center;gap:16px;">' +
+      '<div class="ticker-prof-date" style="white-space:nowrap;">' + dateStr + '</div>' +
+      '<div class="ticker-prof-social" style="display:flex;align-items:center;gap:12px;">' +
+      '<a href="https://twitter.com/intent/tweet?url=' + encodeURIComponent(window.location.href) + '&text=' + encodeURIComponent(document.title) + '" target="_blank" rel="noopener"><i class="fab fa-twitter"></i></a>' +
+      '<a href="https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(window.location.href) + '" target="_blank" rel="noopener"><i class="fab fa-facebook-f"></i></a>' +
+      '</div></div></div></header>';
   }
 
   function injectFooter() {

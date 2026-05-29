@@ -1,4 +1,4 @@
-(function() {
+(function () {
   const path = window.location.pathname;
   const isSubdir = /\/(articulo|categoria|admin)\//.test(path);
   const base = isSubdir ? '../' : './';
@@ -15,7 +15,8 @@
     if (!el) return;
     el.insertAdjacentHTML('afterend', `
 <div class="news-ticker-banner" id="ticker-banner">
-  <div class="ticker-label"><i class="fas fa-chart-line"></i>MERCADOS</div>
+  <div class="ticker-label"><i class="fas fa-chart-line"></i>
+  MERCADOS
   <div class="ticker-scroll-wrapper">
     <div class="ticker-scroll-content" id="ticker-content">
       <span class="ticker-item">IPC BMV <span class="up">+0.82%</span></span>
@@ -43,15 +44,16 @@
       <span class="ticker-item headline">Sector manufacturing crece 3.2% trimestral</span>
     </div>
   </div>
+  </div>
 </div>`);
   }
 
   function injectHeader() {
     const el = document.getElementById('site-header');
     if (!el) return;
-    el.innerHTML = '<header style="background:linear-gradient(135deg,#065f46 0%,#34d399 100%);color:#fff;padding:10px 0;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,0.1);"><div class="container" style="display:flex;align-items:center;justify-content:space-between;max-width:1200px;margin:0 auto;padding:0 24px;"><a href="' + base + '" style="display:flex;align-items:center;text-decoration:none;gap:12px;"><img src="' + base + 'logo-header.png" alt="financemarketsmx" style="height:42px;width:auto;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2));"></a><nav style="display:flex;gap:20px;"><a href="' + base + '" style="color:rgba(255,255,255,0.9);text-decoration:none;font-weight:600;font-size:0.88em;">Inicio</a><a href="' + base + 'categoria/index.html?cat=nacional" style="color:rgba(255,255,255,0.9);text-decoration:none;font-weight:600;font-size:0.88em;">Nacional</a><a href="' + base + 'categoria/index.html?cat=politica" style="color:rgba(255,255,255,0.9);text-decoration:none;font-weight:600;font-size:0.88em;">Politica</a><a href="' + base + 'categoria/index.html?cat=economia" style="color:rgba(255,255,255,0.9);text-decoration:none;font-weight:600;font-size:0.88em;">Economia</a></nav></div></header>';
+    el.innerHTML = '<header style="background:linear-gradient(135deg,#065f46 0%,#34d399 100%);color:#fff;padding:10px 0;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,0.1);"><div class="container" style="display:flex;align-items:center;justify-content:space-between;max-width:1200px;margin:0 auto;padding:0 24px;"><a href="' + base + '" style="display:flex;align-items:center;text-decoration:none;gap:12px;"><img src="' + base + 'logo-header.png" alt="financemarketsmx" style="height:42px;width:auto;object-fit:contain;filter:brightness(5) drop-shadow(2px 4px 6px white);"></a><nav style="display:flex;gap:20px;"><a href="' + base + '" style="color:rgba(255,255,255,0.9);text-decoration:none;font-weight:600;font-size:0.88em;">Inicio</a><a href="' + base + 'categoria/index.html?cat=nacional" style="color:rgba(255,255,255,0.9);text-decoration:none;font-weight:600;font-size:0.88em;">Nacional</a><a href="' + base + 'categoria/index.html?cat=politica" style="color:rgba(255,255,255,0.9);text-decoration:none;font-weight:600;font-size:0.88em;">Politica</a><a href="' + base + 'categoria/index.html?cat=economia" style="color:rgba(255,255,255,0.9);text-decoration:none;font-weight:600;font-size:0.88em;">Economia</a></nav></div></header>';
   }
-
+  
   function injectFooter() {
     const el = document.getElementById('site-footer');
     if (!el) return;

@@ -17,7 +17,7 @@
     const day = now.getDate();
     const month = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][now.getMonth()];
     const dateStr = day + ' ' + month;
-    el.insertAdjacentHTML('afterend', '<div class="xpr-ticker"><div class="ticker-xpr-left"><div class="ticker-xpr-date">' + dateStr + '</div><div class="ticker-xpr-label">EXPRESO</div></div><div class="ticker-xpr-track" id="ticker-xpr-track"><span class="ticker-loading">Cargando...</span></div><div class="ticker-xpr-social"><a href="https://twitter.com/intent/tweet?url=' + encodeURIComponent(window.location.href) + '&text=' + encodeURIComponent(document.title) + '" target="_blank" rel="noopener"><i class="fab fa-twitter"></i></a><a href="https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(window.location.href) + '" target="_blank" rel="noopener"><i class="fab fa-facebook-f"></i></a></div><a href="' + base + '" class="ticker-xpr-logo"><img src="' + base + 'logo-header.png" alt="expresomexicano"></a></div>');
+    el.insertAdjacentHTML('afterend', '<div class="xpr-ticker"><div class="ticker-xpr-left"><div class="ticker-xpr-date">' + dateStr + '</div><div class="ticker-xpr-label">EXPRESO</div></div><div class="ticker-xpr-track" id="ticker-xpr-track"><span class="ticker-loading">Cargando...</span></div><div class="ticker-xpr-social"><a href="https://twitter.com/intent/tweet?url=' + encodeURIComponent(window.location.href) + '&text=' + encodeURIComponent(document.title) + '" target="_blank" rel="noopener"><i class="fab fa-twitter"></i></a><a href="https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(window.location.href) + '" target="_blank" rel="noopener"><i class="fab fa-facebook-f"></i></a></div></div>');
     fetchTicker();
   }
 
@@ -42,12 +42,27 @@
   function startXprTicker() {
     const track = document.getElementById('ticker-xpr-track');
     if (!track) return;
+
+    const content = track.innerHTML;
+    track.innerHTML = '<div class="ticker-xpr-marquee" id="ticker-xpr-marquee">' + content + '<span class="ticker-xpr-sep">›</span>' + content + '</div>';
+
+    const marquee = document.getElementById('ticker-xpr-marquee');
+    if (!marquee) return;
+
     let pos = 0;
-    const totalWidth = track.scrollWidth / 2;
+    let totalWidth = marquee.scrollWidth / 2;
+
+    function recalc() {
+      totalWidth = marquee.scrollWidth / 2;
+    }
+
+    requestAnimationFrame(recalc);
+    window.addEventListener('resize', recalc);
+
     setInterval(() => {
       pos -= 0.7;
-      if (pos < -totalWidth) pos = 0;
-      track.style.transform = 'translateX(' + pos + 'px)';
+      if (pos <= -totalWidth) pos = 0;
+      marquee.style.transform = 'translateX(' + pos + 'px)';
     }, 20);
   }
 

@@ -3,7 +3,7 @@
 import { SITIOS_LIST, SITE_DOMAIN_MAP } from '../config.js';
 import { decodeHTMLEntities, articleSlugify, fetchWithTimeout, notifyTelegram } from '../utils/helpers.js';
 
-const FB_INTERVAL_MS = 6 * 60 * 60 * 1000;
+const FB_INTERVAL_MS = 12 * 60 * 60 * 1000;
 
 // ============================================================
 // publishToFBIndividual — Publica un artículo a Facebook
@@ -110,6 +110,26 @@ export async function publishToFBIndividual(env, article, siteSlug) {
 }
 
 // ============================================================
+// isNighttimeBlackout — Check if it's currently within the
+// nighttime posting blackout (22:00 to 08:00 local time)
+// ============================================================
+function isNighttimeBlackout(env, siteSlug) {
+  // Get timezone from env or default to Mexico City
+  const tz = env.SITE_TIMEZONE || 'America/Mexico_City';
+  const now = new Date();
+  // Get local hour in the site's timezone
+  const localHour = parseInt(
+    now.toLocaleString('en-US', { timeZone: tz, hour: 'numeric', hour12: false }),
+    10
+  );
+  if (localHour >= 22 || localHour < 8) {
+    console.log(`[FB TIMER] ${siteSlug}: skipped (nighttime blackout ${localHour}:00)`);
+    return true;
+  }
+  return false;
+}
+
+// ============================================================
 // processFBTimer — 1 artículo por sitio cada 6 horas (= 4/día)
 // ============================================================
 export async function processFBTimer(env) {
@@ -123,6 +143,12 @@ export async function processFBTimer(env) {
   };
 
   for (const siteSlug of SITIOS_LIST) {
+    // Nighttime blackout check
+    if (isNighttimeBlackout(env, siteSlug)) {
+      stats.skipped++;
+      continue;
+    }
+
     const kvKey = `last_fb_post_${siteSlug}`;
     const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
 
@@ -161,34 +187,8 @@ export async function processFBTimer(env) {
         LIMIT 1
       `).first();
 
-      if (!article) {
-        article = await env.DB.prepare(`
-          SELECT
-            s.ID as SITIO_ID,
-            s.ID_PARAFRASEADO,
-            p.TITULO_PARAFRASEADO as TITULO,
-            p.SLUG,
-            p.URL_IMAGEN
-          FROM ${tableName} s
-          JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
-          WHERE s.FB_PUBLICADO = 1
-            AND s.FECHA_ASIGNACION >= datetime('now', '-30 days')
-            AND s.FB_FECHA < datetime('now', '-1 day')
-            AND p.URL_IMAGEN IS NOT NULL
-            AND p.URL_IMAGEN != ''
-            AND p.URL_IMAGEN NOT LIKE '%logo.png'
-            AND p.URL_IMAGEN NOT LIKE '%fallback%'
-            AND p.SLUG IS NOT NULL
-            AND p.SLUG != ''
-          ORDER BY s.FB_FECHA ASC
-          LIMIT 1
-        `).first();
-        
-        if (article) {
-          await env.DB.prepare(`UPDATE ${tableName} SET FB_PUBLICADO = 0 WHERE ID = ?`).bind(article.SITIO_ID).run();
-          console.log(`[FB TIMER] ${siteSlug}: re-publicando artículo antiguo`);
-        }
-      }
+            // Re-publicación deshabilitada
+
 
       if (!article) {
         console.log(`[FB TIMER] ${siteSlug}: skipped (no pending articles)`);
@@ -305,6 +305,10 @@ export async function processFBRetries(env) {
   let totalSuccess = 0;
 
   for (const siteSlug of SITIOS_LIST) {
+    // Nighttime blackout check — skip retries during nighttime
+    if (isNighttimeBlackout(env, siteSlug)) {
+      continue;
+    }
     const kvKey = `fb_retries_${siteSlug}`;
     const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
 
@@ -382,6 +386,11 @@ export async function processFBRetries(env) {
 }
 
 export async function processFBTimerForSite(env, siteSlug) {
+  // Nighttime blackout check
+  if (isNighttimeBlackout(env, siteSlug)) {
+    return { processed: 0, success: 0, failed: 0, skipped: 1 };
+  }
+
   const kvKey = `last_fb_post_${siteSlug}`;
   const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
 
@@ -431,7 +440,7 @@ export async function processFBTimerForSite(env, siteSlug) {
         FROM ${tableName} s
         JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
         WHERE s.FB_PUBLICADO = 1
-          AND s.FB_FECHA < datetime('now', '-1 day')
+          AND s.FB_FECHA IS NOT NULL AND s.FB_FECHA < datetime('now', '-7 days')
           AND p.URL_IMAGEN IS NOT NULL
           AND p.URL_IMAGEN != ''
           AND p.URL_IMAGEN NOT LIKE '%logo.png'
@@ -495,6 +504,11 @@ export async function processFBTimerForSite(env, siteSlug) {
 }
 
 export async function processFBRetriesForSite(env, siteSlug) {
+  // Nighttime blackout check — skip retries during nighttime
+  if (isNighttimeBlackout(env, siteSlug)) {
+    return { retried: 0, succeeded: 0 };
+  }
+
   const kvKey = `fb_retries_${siteSlug}`;
   const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
 

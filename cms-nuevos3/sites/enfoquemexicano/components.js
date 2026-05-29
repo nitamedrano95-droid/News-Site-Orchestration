@@ -6,7 +6,7 @@
   function injectPreloader() {
     const el = document.getElementById('site-preloader');
     if (!el) return;
-    el.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;"><div class="enfq-loader"><div class="enfq-ring"></div><div class="enfq-ring"></div><div class="enfq-ring"></div></div><p style="font-weight:700;color:#1e40af;font-size:0.85em;letter-spacing:2px;text-transform:uppercase;">Cargando...</p></div>';
+    el.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;"><div class="enfq-loader"><div class="enfq-ring"></div><div class="enfq-ring"></div><div class="enfq-ring"></div></div><p style="font-weight:700;color:#1e40af;font-size:0.85em;letter-spacing:2px;text-transform:uppercase;">Cargando...</p></div></div>';
     window.addEventListener('load', () => { setTimeout(() => el.classList.add('hidden'), 500); });
   }
 
@@ -17,7 +17,7 @@
     const day = now.getDate();
     const month = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][now.getMonth()];
     const dateStr = day + ' ' + month;
-    el.insertAdjacentHTML('afterend', '<div class="enfq-ticker"><a href="' + base + '" class="ticker-enfq-logo"><img src="' + base + 'logo-header.png" alt="enfoquemexicano"></a><div class="ticker-enfq-cross"><i class="fas fa-bullseye"></i></div><div class="ticker-enfq-track" id="ticker-enfq-track"><span class="ticker-loading">Cargando...</span></div><div class="ticker-enfq-right"><div class="ticker-enfq-date">' + dateStr + '</div><div class="ticker-enfq-social"><a href="https://twitter.com/intent/tweet?url=' + encodeURIComponent(window.location.href) + '&text=' + encodeURIComponent(document.title) + '" target="_blank" rel="noopener"><i class="fab fa-twitter"></i></a><a href="https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(window.location.href) + '" target="_blank" rel="noopener"><i class="fab fa-facebook-f"></i></a></div></div></div>');
+    el.insertAdjacentHTML('afterend', '<div class="enfq-ticker"><div class="ticker-enfq-track" id="ticker-enfq-track"><span class="ticker-loading">Cargando...</span></div><div class="ticker-enfq-right"></div></div>');
     fetchTicker();
   }
 
@@ -54,7 +54,11 @@
   function injectHeader() {
     const el = document.getElementById('site-header');
     if (!el) return;
-    el.innerHTML = '<header class="site-header-enfq"><div class="enfq-header-bar"><span class="enfq-header-tag"><i class="fas fa-crosshairs"></i>ENFOQUE MEXICANO</span></div><nav class="header-enfq-nav"><div class="nav-enfq-inner"><a href="' + base + '" class="nav-enfq-link active">Inicio</a><a href="' + base + 'categoria/index.html?cat=nacional" class="nav-enfq-link">Nacional</a><a href="' + base + 'categoria/index.html?cat=politica" class="nav-enfq-link">Política</a><a href="' + base + 'categoria/index.html?cat=economia" class="nav-enfq-link">Economía</a></div></nav></header>';
+    const now = new Date();
+    const day = now.getDate();
+    const month = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][now.getMonth()];
+    const dateStr = day + ' ' + month;
+    el.innerHTML = '<header class="site-header-enfq"><div class="enfq-header-bar" style="display:flex;justify-content:space-between;align-items:center;"><nav class="header-enfq-nav"><div class="nav-enfq-inner"><a href="' + base + '" class="nav-enfq-link active">Inicio</a><a href="' + base + 'categoria/index.html?cat=nacional" class="nav-enfq-link">Nacional</a><a href="' + base + 'categoria/index.html?cat=politica" class="nav-enfq-link">Política</a><a href="' + base + 'categoria/index.html?cat=economia" class="nav-enfq-link">Economía</a></div></nav><div style="display:flex;align-items:center;gap:12px;"><div class="ticker-enfq-date">' + dateStr + '</div><div class="ticker-enfq-social"><a href="https://twitter.com/intent/tweet?url=' + encodeURIComponent(window.location.href) + '&text=' + encodeURIComponent(document.title) + '" target="_blank" rel="noopener"><i class="fab fa-twitter"></i></a><a href="https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(window.location.href) + '" target="_blank" rel="noopener"><i class="fab fa-facebook-f"></i></a></div></div></div></header>';
   }
 
   function injectFooter() {

@@ -691,6 +691,25 @@ header {
   display: flex;
   align-items: center;
   padding: 0 16px;
+  position: relative;
+  z-index: 1;
+}
+.ticker-xpr-marquee {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  will-change: transform;
+}
+.ticker-xpr-track::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 160px;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  background: linear-gradient(90deg, rgba(124,45,18,0) 0%, #7c2d12 45%, #c2410c 100%);
 }
 .ticker-xpr-item {
   color: rgba(255,255,255,0.9);
@@ -708,6 +727,9 @@ header {
   gap: 8px;
   padding: 0 12px;
   flex-shrink: 0;
+  position: relative;
+  z-index: 3;
+  background: linear-gradient(135deg, #7c2d12 0%, #c2410c 100%);
 }
 .ticker-xpr-social a {
   color: rgba(255,255,255,0.7);
@@ -729,6 +751,8 @@ header {
   height: 100%;
   background: #fff;
   flex-shrink: 0;
+  position: relative;
+  z-index: 4;
 }
 .ticker-xpr-logo img { height: 28px; width: auto; object-fit: contain; filter: brightness(0) invert(1); }
 

@@ -705,11 +705,11 @@ header {
 }
 .ticker-prof-track {
   flex: 1;
+  min-width: 0;
   overflow: hidden;
   white-space: nowrap;
   display: flex;
   align-items: center;
-  padding: 0 16px;
 }
 .ticker-prof-item {
   color: rgba(255,255,255,0.9);
@@ -718,6 +718,7 @@ header {
   padding: 0 16px;
   white-space: nowrap;
   transition: color 0.3s;
+  width:auto;
 }
 .ticker-prof-item:hover { color: #e9d5ff; }
 .ticker-prof-sep { color: #a855f7; padding: 0 4px; }
