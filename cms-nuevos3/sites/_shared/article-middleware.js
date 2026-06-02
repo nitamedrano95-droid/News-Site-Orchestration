@@ -135,6 +135,7 @@ export async function handleArticleRequest(context, siteSlug) {
               <meta property="og:type" content="article" />
               <meta property="og:title" content="${escapedTitle}" />
               <meta property="og:description" content="${escapedDescription}" />
+              <meta property="og:image" content="${escapedImage}" />
               <meta property="og:image:secure_url" content="${escapedImage}" />
               <meta property="og:image:width" content="1200" />
               <meta property="og:image:height" content="630" />
