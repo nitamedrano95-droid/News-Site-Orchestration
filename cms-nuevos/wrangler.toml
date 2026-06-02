@@ -71,3 +71,4 @@ invocation_logs = true
 
 [ai]
 binding = "AI"
+migrations_dir = "./migrations"

@@ -44,34 +44,27 @@ export async function publishToFBIndividual(env, article, siteSlug) {
 
     if (article.URL_IMAGEN && article.URL_IMAGEN.startsWith('http')) {
       try {
-        console.log(`[FB] Fetching image: ${article.URL_IMAGEN.substring(0, 60)}...`);
-        const imgRes = await fetchWithTimeout(article.URL_IMAGEN, {
-          headers: { 'User-Agent': 'Mozilla/5.0' }
-        }, 10000);
+        console.log(`[FB] Uploading image via URL: ${article.URL_IMAGEN.substring(0, 60)}...`);
+        const photoForm = new FormData();
+        photoForm.append('access_token', token);
+        photoForm.append('published', 'false');
+        photoForm.append('url', article.URL_IMAGEN);
 
-        if (imgRes.ok) {
-          const imgBlob = await imgRes.blob();
-          const photoForm = new FormData();
-          photoForm.append('access_token', token);
-          photoForm.append('published', 'false');
-          photoForm.append('source', imgBlob, 'image.jpg');
+        const photoRes = await fetch(
+          `https://graph.facebook.com/v19.0/${site.FACEBOOK_PAGE_ID}/photos`,
+          { method: 'POST', body: photoForm }
+        );
 
-          const photoRes = await fetch(
-            `https://graph.facebook.com/v19.0/${site.FACEBOOK_PAGE_ID}/photos`,
-            { method: 'POST', body: photoForm }
-          );
+        const photoData = await photoRes.json();
 
-          const photoData = await photoRes.json();
-
-          if (photoRes.ok && photoData.id) {
-            photoId = photoData.id;
-            console.log(`[FB] Photo uploaded: ${photoId}`);
-          } else {
-            console.warn(`[FB] Photo upload failed: ${photoData.error?.message || 'unknown'}`);
-          }
+        if (photoRes.ok && photoData.id) {
+          photoId = photoData.id;
+          console.log(`[FB] Photo uploaded via URL: ${photoId}`);
+        } else {
+          console.warn(`[FB] Photo upload via URL failed: ${photoData.error?.message || JSON.stringify(photoData.error) || 'unknown'}`);
         }
       } catch (imgErr) {
-        console.warn(`[FB] Image fetch/upload failed: ${imgErr.message}`);
+        console.warn(`[FB] Image URL upload failed: ${imgErr.message}`);
       }
     }
 

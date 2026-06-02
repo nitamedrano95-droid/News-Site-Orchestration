@@ -204,11 +204,100 @@ async function scrapeArticleFromURL(url, env) {
     if (titleMatch) title = decodeHTMLEntities(titleMatch[1]).trim();
 
     let imageUrl = '';
+
+    // Método 1: OG Image
     const ogMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i)
       || html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
     if (ogMatch) imageUrl = ogMatch[1];
 
+    // Método 2: Twitter Card Image
+    if (!imageUrl) {
+      const twMatch = html.match(/<meta[^>]*name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i)
+        || html.match(/<meta[^>]*name=["']twitter:image:src["'][^>]*content=["']([^"']+)["']/i);
+      if (twMatch) imageUrl = twMatch[1];
+    }
+
+    // Método 3: JSON-LD Image
+    if (!imageUrl) {
+      const jsonLdMatch = html.match(/"image"\s*:\s*\[\s*\{\s*"url"\s*:\s*"([^"]+)"/i)
+        || html.match(/"image"\s*:\s*\{\s*"url"\s*:\s*"([^"]+)"/i)
+        || html.match(/"image"\s*:\s*"([^"]+)"/i);
+      if (jsonLdMatch) imageUrl = jsonLdMatch[1];
+    }
+
+    // Método 4: Primer <img> en el artículo
+    if (!imageUrl) {
+      const imgSelectors = [
+        /<img[^>]+class=["'][^"']*(?:figure|main|featured|hero|article|lead|portada)[^"']*["'][^>]+src=["']([^"']+)["']/i,
+        /<(figure|div)[^>]+class=["'][^"']*(?:figure|image|media|img)[^"']*["'][^>]*>[^<]*<img[^>]+src=["']([^"']+)["']/i,
+        /<img[^>]+src=["']([^"']+)["'][^>]+(?:width|height)=["'][^"']*[4-9]\d{2,}/i,
+        /<img[^>]+src=["']([^"']+)["']/i,
+      ];
+      for (const selector of imgSelectors) {
+        const match = html.match(selector);
+        if (match) {
+          imageUrl = match[1] || match[2];
+          break;
+        }
+      }
+    }
+
+    // Método 5: data-src / data-lazy-src
+    if (!imageUrl) {
+      const dataSrcMatch = html.match(/<img[^>]+data-src=["']([^"']+)["']/i)
+        || html.match(/<img[^>]+data-lazy-src=["']([^"']+)["']/i)
+        || html.match(/<img[^>]+data-original=["']([^"']+)["']/i);
+      if (dataSrcMatch) imageUrl = dataSrcMatch[1];
+    }
+
+    // Método 6: srcset
+    if (!imageUrl) {
+      const srcsetMatch = html.match(/srcset=["']([^"']+)["']/i);
+      if (srcsetMatch) {
+        const sources = srcsetMatch[1].split(',').map(s => s.trim());
+        const largestSource = sources[sources.length - 1];
+        const urlMatch = largestSource.match(/([^ ]+)/);
+        if (urlMatch) imageUrl = urlMatch[1];
+      }
+    }
+
+    // Método 7: picture + source srcset
+    if (!imageUrl) {
+      const pictureMatch = html.match(/<picture[^>]*>[^<]*<source[^>]+srcset=["']([^"']+)["'][^>]*>[^<]*<img[^>]+src=["']([^"']+)["']/i);
+      if (pictureMatch) {
+        const srcsetSources = pictureMatch[1].split(',').map(s => s.trim());
+        const firstSource = srcsetSources[0];
+        const urlMatch = firstSource.match(/([^ ]+)/);
+        imageUrl = urlMatch ? urlMatch[1] : pictureMatch[2];
+      }
+    }
+
+    // Método 8: background-image CSS
+    if (!imageUrl) {
+      const bgMatch = html.match(/background-image:\s*url\(["']?([^"')]+)["']?\)/i);
+      if (bgMatch) imageUrl = bgMatch[1];
+    }
+
+    // Resolver URLs relativas
     if (imageUrl && imageUrl.startsWith('/')) imageUrl = domain + imageUrl;
+    if (imageUrl && imageUrl.startsWith('//')) imageUrl = 'https:' + imageUrl;
+
+    // Filtrar imágenes inválidas
+    if (imageUrl) {
+      const lowerUrl = imageUrl.toLowerCase();
+      if (lowerUrl.includes('logo') && !lowerUrl.includes('article') && !lowerUrl.includes('noticia')) {
+        RSS_LOG('Image rejected (generic logo):', imageUrl.substring(0, 60));
+        imageUrl = '';
+      }
+      if (lowerUrl.includes('favicon') || lowerUrl.includes('icon') || lowerUrl.includes('pixel')) {
+        RSS_LOG('Image rejected (icon/pixel):', imageUrl.substring(0, 60));
+        imageUrl = '';
+      }
+      if (lowerUrl.includes('avatar') || lowerUrl.includes('userpic')) {
+        RSS_LOG('Image rejected (avatar):', imageUrl.substring(0, 60));
+        imageUrl = '';
+      }
+    }
 
     let content = '';
     const articleMatch = html.match(/<article[^>]*>([\s\S]*?)<\/article>/i)
@@ -261,10 +350,22 @@ async function scrapeArticleFromURL(url, env) {
 
     if (imageUrl && imageUrl.startsWith('http') && !imageUrl.includes('/logo.png') && !imageUrl.includes('/fallback')) {
       try {
-        const uploadedUrl = await uploadToR2(imageUrl, env);
-        if (uploadedUrl) imageUrl = uploadedUrl;
+        // Verificar que la imagen sea accesible y tenga content-type válido
+        const imgCheck = await fetchWithTimeout(imageUrl, {
+          method: 'GET',
+          redirect: 'follow',
+          headers: { 'User-Agent': 'Mozilla/5.0' }
+        }, 8000);
+        if (!imgCheck.ok || !imgCheck.headers.get('content-type')?.startsWith('image/')) {
+          RSS_WARN('Image not valid, skipping upload:', imgCheck.status, imgCheck.headers.get('content-type'));
+          imageUrl = '';
+        } else {
+          const uploadedUrl = await uploadToR2(imageUrl, env);
+          if (uploadedUrl) imageUrl = uploadedUrl;
+        }
       } catch (r2Err) {
         RSS_WARN('R2 upload failed:', r2Err.message);
+        imageUrl = '';
       }
     }
 

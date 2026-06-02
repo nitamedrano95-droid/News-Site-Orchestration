@@ -1,0 +1,188 @@
+version: "3.9"
+
+networks:
+  nexopress-net:
+    driver: bridge
+
+volumes:
+  redis_data:
+  minio_data:
+  n8n_data:
+
+services:
+  # ── Deploy Wizard UI/Backend ──────────────────────────────────
+  wizard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    restart: always
+    networks:
+      - nexopress-net
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./envs:/app/envs:ro
+      - ./data:/app/data
+
+  # ── Nginx Reverse Proxy ───────────────────────────────────────
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - wizard
+      - cms-originaux
+      - cms-nuevos
+      - cms-nuevos2
+      - cms-nuevos3
+    restart: always
+    networks:
+      - nexopress-net
+
+  # ── CMS Workers (Hono → Node.js adapter) ─────────────────────
+  cms-originaux:
+    build:
+      context: ./cms-adapter
+      dockerfile: Dockerfile
+      args:
+        CMS_NAME: cms-originaux
+    env_file:
+      - ./envs/cms-originaux.env
+    volumes:
+      - ./data/cms-originaux:/app/data
+      - ../cms-originaux/src:/app/src:ro
+      - ../cms-originaux/migrations:/app/migrations:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - nexopress-net
+
+  cms-nuevos:
+    build:
+      context: ./cms-adapter
+      dockerfile: Dockerfile
+      args:
+        CMS_NAME: cms-nuevos
+    env_file:
+      - ./envs/cms-nuevos.env
+    volumes:
+      - ./data/cms-nuevos:/app/data
+      - ../cms-nuevos/src:/app/src:ro
+      - ../cms-nuevos/migrations:/app/migrations:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - nexopress-net
+
+  cms-nuevos2:
+    build:
+      context: ./cms-adapter
+      dockerfile: Dockerfile
+      args:
+        CMS_NAME: cms-nuevos2
+    env_file:
+      - ./envs/cms-nuevos2.env
+    volumes:
+      - ./data/cms-nuevos2:/app/data
+      - ../cms-nuevos2/src:/app/src:ro
+      - ../cms-nuevos2/migrations:/app/migrations:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - nexopress-net
+
+  cms-nuevos3:
+    build:
+      context: ./cms-adapter
+      dockerfile: Dockerfile
+      args:
+        CMS_NAME: cms-nuevos3
+    env_file:
+      - ./envs/cms-nuevos3.env
+    volumes:
+      - ./data/cms-nuevos3:/app/data
+      - ../cms-nuevos3/src:/app/src:ro
+      - ../cms-nuevos3/migrations:/app/migrations:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - nexopress-net
+
+  # ── Redis (KV store polyfill) ─────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    restart: unless-stopped
+    networks:
+      - nexopress-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ── MinIO (R2 polyfill) ───────────────────────────────────────
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    environment:
+      MINIO_ROOT_USER: nexopress
+      MINIO_ROOT_PASSWORD: nexopress123
+    restart: unless-stopped
+    networks:
+      - nexopress-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  # ── n8n Workflow Automation ───────────────────────────────────
+  n8n:
+    image: n8nio/n8n:latest
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n:/home/node/.n8n/workflows:ro
+    environment:
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=America/Mexico_City
+    depends_on:
+      - wizard
+    restart: unless-stopped
+    networks:
+      - nexopress-net

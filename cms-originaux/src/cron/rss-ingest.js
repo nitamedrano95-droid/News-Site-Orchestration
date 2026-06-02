@@ -280,66 +280,119 @@ export async function scrapeArticleFromURL(url, env) {
     
     // Extraer imagen
     let imageUrl = null;
-    
-    // Método 1: OG Image
-    const ogImageMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i);
+
+    // Método 1: OG Image (soporta comillas simples y dobles, con o sin espacios)
+    const ogImageMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i) ||
+                         html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i) ||
+                         html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i);
     if (ogImageMatch) imageUrl = ogImageMatch[1];
-    
+
     // Método 2: Twitter Card Image
     if (!imageUrl) {
-      const twitterImageMatch = html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i);
+      const twitterImageMatch = html.match(/<meta[^>]*name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i) ||
+                                html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']twitter:image["']/i) ||
+                                html.match(/<meta[^>]*name=["']twitter:image:src["'][^>]*content=["']([^"']+)["']/i);
       if (twitterImageMatch) imageUrl = twitterImageMatch[1];
     }
-    
+
     // Método 3: JSON-LD Image
     if (!imageUrl) {
-      const jsonLdImageMatch = html.match(/"image"\s*:\s*\[\s*\{\s*"url"\s*:\s*"([^"]+)"/i);
+      const jsonLdImageMatch = html.match(/"image"\s*:\s*\[\s*\{\s*"url"\s*:\s*"([^"]+)"/i) ||
+                             html.match(/"image"\s*:\s*\{\s*"url"\s*:\s*"([^"]+)"/i) ||
+                             html.match(/"image"\s*:\s*"([^"]+)"/i);
       if (jsonLdImageMatch) imageUrl = jsonLdImageMatch[1];
     }
-    
-    // Método 4: Primer <img> grande en el artículo
+
+    // Método 4: Primer <img> en el contenido del artículo
     if (!imageUrl) {
-      // Buscar selectores específicos por medio
       const imgSelectors = [
-        /<img[^>]+class=["'][^"']*(?:figure|main|featured|hero|article)[^"']*["'][^>]+src=["']([^"']+\.(jpg|jpeg|png|webp|avif))["']/i,
-        /<div[^>]+class=["'][^"']*(?:figure|image-container)[^"']*["'][^>]*<img[^>]+src=["']([^"']+\.(jpg|jpeg|png|webp|avif))["']/i,
-        /<img[^>]+src=["']([^"']+\.(jpg|jpeg|png|webp|avif))["'][^>]+(?:width|height)=["'][^"']*[5-9]\d{2,}/i,
-        /<img[^>]+src=["']([^"']+\.(jpg|jpeg|png|webp|avif))["']/i,
+        // Imagen destacada con clase específica
+        /<img[^>]+class=["'][^"']*(?:figure|main|featured|hero|article|lead|portada)[^"']*["'][^>]+src=["']([^"']+)["']/i,
+        // Imagen dentro de figure/div.image
+        /<(?:figure|div)[^>]+class=["'][^"']*(?:figure|image|media|img)[^"']*["'][^>]*>[^<]*<img[^>]+src=["']([^"']+)["']/i,
+        // Imagen grande (width/height >= 400)
+        /<img[^>]+src=["']([^"']+)["'][^>]+(?:width|height)=["'][^"']*[4-9]\d{2,}/i,
+        // Cualquier imagen con src
+        /<img[^>]+src=["']([^"']+)["']/i,
       ];
-      
+
       for (const selector of imgSelectors) {
         const match = html.match(selector);
         if (match) {
           imageUrl = match[1];
-          console.log('[SCRAPE ARTICLE] Found image with selector');
+          console.log('[SCRAPE ARTICLE] Found image with selector:', imageUrl.substring(0, 60));
           break;
         }
       }
     }
-    
-    // Método 5: data-src (lazy loading)
+
+    // Método 5: data-src, data-lazy-src, data-original (lazy loading)
     if (!imageUrl) {
-      const dataSrcMatch = html.match(/<img[^>]+data-src=["']([^"']+\.(jpg|jpeg|png|webp|avif))["']/i);
+      const dataSrcMatch = html.match(/<img[^>]+data-src=["']([^"']+)["']/i) ||
+                           html.match(/<img[^>]+data-lazy-src=["']([^"']+)["']/i) ||
+                           html.match(/<img[^>]+data-original=["']([^"']+)["']/i);
       if (dataSrcMatch) imageUrl = dataSrcMatch[1];
     }
-    
+
     // Método 6: srcset (tomar la imagen más grande)
     if (!imageUrl) {
       const srcsetMatch = html.match(/srcset=["']([^"']+)["']/i);
       if (srcsetMatch) {
         const sources = srcsetMatch[1].split(',').map(s => s.trim());
-        // Tomar la última (generalmente la más grande)
         const largestSource = sources[sources.length - 1];
         const urlMatch = largestSource.match(/([^ ]+)/);
         if (urlMatch) imageUrl = urlMatch[1];
       }
     }
-    
+
+    // Método 7: <picture> con <source srcset>
+    if (!imageUrl) {
+      const pictureMatch = html.match(/<picture[^>]*>[^<]*<source[^>]+srcset=["']([^"']+)["'][^>]*>[^<]*<img[^>]+src=["']([^"']+)["']/i);
+      if (pictureMatch) {
+        // Tomar la primera imagen del srcset (generalmente la más grande)
+        const srcsetSources = pictureMatch[1].split(',').map(s => s.trim());
+        const firstSource = srcsetSources[0];
+        const urlMatch = firstSource.match(/([^ ]+)/);
+        imageUrl = urlMatch ? urlMatch[1] : pictureMatch[2];
+      }
+    }
+
+    // Método 8: Imagen en background-image CSS inline
+    if (!imageUrl) {
+      const bgImageMatch = html.match(/background-image:\s*url\(["']?([^"')]+)["']?\)/i);
+      if (bgImageMatch) imageUrl = bgImageMatch[1];
+    }
+
+    // Filtrar imágenes inválidas (logos genéricos, íconos, tracking pixels)
+    if (imageUrl) {
+      const lowerUrl = imageUrl.toLowerCase();
+      if (lowerUrl.includes('logo') && !lowerUrl.includes('article') && !lowerUrl.includes('noticia')) {
+        console.log('[SCRAPE ARTICLE] Image rejected (generic logo):', imageUrl.substring(0, 60));
+        imageUrl = null;
+      }
+      if (lowerUrl.includes('favicon') || lowerUrl.includes('icon') || lowerUrl.includes('pixel')) {
+        console.log('[SCRAPE ARTICLE] Image rejected (icon/pixel):', imageUrl.substring(0, 60));
+        imageUrl = null;
+      }
+      if (lowerUrl.includes('avatar') || lowerUrl.includes('userpic')) {
+        console.log('[SCRAPE ARTICLE] Image rejected (avatar):', imageUrl.substring(0, 60));
+        imageUrl = null;
+      }
+    }
+
     if (!imageUrl) {
       console.log('[SCRAPE ARTICLE] No image found');
       return null;
     }
-    
+
+    // Resolver URLs relativas
+    if (imageUrl.startsWith('/')) {
+      const baseUrl = new URL(url);
+      imageUrl = `${baseUrl.protocol}//${baseUrl.host}${imageUrl}`;
+    } else if (imageUrl.startsWith('//')) {
+      imageUrl = `https:${imageUrl}`;
+    }
+
     console.log('[SCRAPE ARTICLE] Image found:', imageUrl.substring(0, 60));
     
     // Verificar imagen

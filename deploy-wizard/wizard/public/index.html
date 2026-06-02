@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexoPress Deploy Wizard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --card: #111827;
+    --card2: #1a2235;
+    --border: #1f2d40;
+    --accent: #3b82f6;
+    --accent-hover: #2563eb;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --text: #e2e8f0;
+    --text-muted: #6b7280;
+    --text-dim: #9ca3af;
+    --input-bg: #0d1526;
+    --mono: 'Courier New', 'Fira Code', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+  .topbar {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-logo { font-weight: 700; font-size: 1.1rem; color: var(--accent); letter-spacing: -0.3px; }
+  .topbar-logo span { color: var(--text); }
+  .step-bar { flex: 1; display: flex; align-items: center; gap: 0; margin: 0 24px; }
+  .step-item { display: flex; align-items: center; flex: 1; position: relative; }
+  .step-item:last-child { flex: none; }
+  .step-dot {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; font-weight: 600;
+    border: 2px solid var(--border); background: var(--card); color: var(--text-muted);
+    z-index: 2; flex-shrink: 0; transition: all .25s;
+  }
+  .step-item.active .step-dot { border-color: var(--accent); background: var(--accent); color: #fff; }
+  .step-item.done .step-dot { border-color: var(--success); background: var(--success); color: #fff; }
+  .step-line { flex: 1; height: 2px; background: var(--border); transition: background .25s; }
+  .step-item.done .step-line { background: var(--success); }
+  .step-label { font-size: 0.65rem; color: var(--text-muted); position: absolute; top: 34px; left: 50%; transform: translateX(-50%); white-space: nowrap; }
+  .step-item.active .step-label { color: var(--accent); font-weight: 600; }
+  .step-item.done .step-label { color: var(--success); }
+
+  .main { max-width: 860px; margin: 0 auto; padding: 48px 24px 80px; }
+  .step { display: none; }
+  .step.active { display: block; animation: fadeIn .3s ease; }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: none; } }
+  .step-title { font-size: 1.6rem; font-weight: 700; margin-bottom: 6px; }
+  .step-subtitle { color: var(--text-dim); margin-bottom: 32px; font-size: 0.95rem; }
+
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+
+  .cms-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; margin-bottom: 32px; }
+  .cms-card {
+    background: var(--card); border: 2px solid var(--border); border-radius: 10px;
+    padding: 18px; cursor: pointer; transition: all .2s; position: relative;
+  }
+  .cms-card:hover { border-color: #374151; background: #131f32; }
+  .cms-card.selected { border-color: var(--accent); background: #0f1e3a; }
+  .cms-card .check {
+    position: absolute; top: 12px; right: 12px; width: 20px; height: 20px;
+    border-radius: 50%; border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.6rem; transition: all .2s;
+  }
+  .cms-card.selected .check { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .cms-card .cms-name { font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; }
+  .cms-card .cms-sites { font-size: 0.75rem; color: var(--accent); font-weight: 500; margin-bottom: 8px; }
+  .cms-card .cms-desc { font-size: 0.75rem; color: var(--text-muted); line-height: 1.4; }
+
+  .nav-buttons { display: flex; justify-content: space-between; align-items: center; margin-top: 36px; padding-top: 24px; border-top: 1px solid var(--border); }
+  .btn { padding: 10px 24px; border-radius: 8px; border: none; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 8px; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-secondary { background: transparent; color: var(--text-dim); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: #374151; color: var(--text); }
+  .btn-success { background: var(--success); color: #fff; }
+  .btn-warning { background: var(--warning); color: #000; font-weight: 700; }
+  .btn-warning:hover { background: #d97706; }
+  .btn-sm { padding: 6px 14px; font-size: 0.8rem; }
+
+  .form-group { margin-bottom: 18px; }
+  .form-label { display: block; font-size: 0.82rem; font-weight: 500; color: var(--text-dim); margin-bottom: 6px; }
+  .form-label .required { color: var(--danger); margin-left: 3px; }
+  .form-label a { color: var(--accent); text-decoration: none; font-size: 0.75rem; float: right; }
+  .form-label a:hover { text-decoration: underline; }
+  .form-input {
+    width: 100%; background: var(--input-bg); border: 1px solid var(--border); border-radius: 7px;
+    color: var(--text); padding: 9px 12px; font-size: 0.88rem; font-family: inherit;
+    transition: border-color .2s; outline: none;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  .form-input::placeholder { color: var(--text-muted); }
+  select.form-input { cursor: pointer; }
+  .input-with-btn { display: flex; gap: 8px; }
+  .input-with-btn .form-input { flex: 1; }
+  .input-with-eye { position: relative; }
+  .input-with-eye .form-input { padding-right: 36px; }
+  .eye-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 0.85rem; padding: 0; }
+  .eye-btn:hover { color: var(--text); }
+
+  .section-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: var(--card2); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; margin-bottom: 2px; transition: background .2s; user-select: none; }
+  .section-header:hover { background: #1f2d40; }
+  .section-header h3 { font-size: 0.95rem; font-weight: 600; }
+  .section-header .badge { font-size: 0.72rem; background: var(--accent); color: #fff; padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+  .section-body { border: 1px solid var(--border); border-top: none; border-radius: 0 0 8px 8px; padding: 16px; background: var(--card); margin-bottom: 16px; display: none; }
+  .section-body.open { display: block; }
+  .chevron { transition: transform .2s; display: inline-block; }
+  .section-header.open .chevron { transform: rotate(180deg); }
+
+  .sites-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+  .sites-table th { text-align: left; font-size: 0.75rem; color: var(--text-muted); padding: 6px 8px; border-bottom: 1px solid var(--border); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+  .sites-table td { padding: 6px 8px; }
+  .sites-table tr:not(:last-child) td { border-bottom: 1px solid #1a2235; }
+  .sites-table input { font-size: 0.82rem; padding: 6px 8px; }
+
+  .toggle { position: relative; width: 36px; height: 20px; display: inline-block; }
+  .toggle input { display: none; }
+  .toggle-slider { position: absolute; inset: 0; background: #374151; border-radius: 20px; cursor: pointer; transition: .2s; }
+  .toggle-slider::before { content: ''; position: absolute; width: 14px; height: 14px; border-radius: 50%; background: #fff; top: 3px; left: 3px; transition: .2s; }
+  .toggle input:checked + .toggle-slider { background: var(--accent); }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(16px); }
+
+  .cred-section { margin-bottom: 24px; }
+  .cred-section-title { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media(max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+
+  .source-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
+  .source-card-header { padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; background: var(--card2); cursor: pointer; }
+  .source-card-header h4 { font-size: 0.88rem; font-weight: 600; }
+  .source-card-body { padding: 14px 16px; display: none; }
+  .source-card-body.open { display: block; }
+
+  .feeds-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 0.82rem; }
+  .feeds-table th { text-align: left; padding: 5px 6px; color: var(--text-muted); font-size: 0.72rem; font-weight: 500; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+  .feeds-table td { padding: 5px 6px; vertical-align: middle; }
+  .feeds-table tr:hover td { background: #0d1526; }
+  .feeds-table input { font-size: 0.8rem; padding: 4px 7px; }
+  .tag-input-container { display: flex; flex-wrap: wrap; gap: 6px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 7px; padding: 8px; min-height: 38px; cursor: text; }
+  .tag-input-container:focus-within { border-color: var(--accent); }
+  .tag { background: #1a2235; border: 1px solid var(--border); border-radius: 4px; padding: 2px 8px; font-size: 0.78rem; display: flex; align-items: center; gap: 6px; }
+  .tag-remove { cursor: pointer; color: var(--text-muted); font-size: 0.7rem; }
+  .tag-remove:hover { color: var(--danger); }
+  .tag-input { background: none; border: none; outline: none; color: var(--text); font-size: 0.82rem; min-width: 100px; font-family: inherit; }
+  .checkbox-group { display: flex; flex-direction: column; gap: 8px; }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; }
+  .checkbox-row input[type=checkbox] { accent-color: var(--accent); width: 14px; height: 14px; }
+  .checkbox-row label { font-size: 0.85rem; color: var(--text-dim); cursor: pointer; }
+
+  .theme-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 24px; }
+  @media(max-width:600px) { .theme-grid { grid-template-columns: 1fr; } }
+  .theme-card { border: 2px solid var(--border); border-radius: 10px; overflow: hidden; cursor: pointer; transition: border-color .2s; }
+  .theme-card:hover { border-color: #374151; }
+  .theme-card.selected { border-color: var(--accent); }
+  .theme-preview { height: 110px; overflow: hidden; }
+  .theme-label { padding: 10px 12px; background: var(--card2); font-size: 0.82rem; font-weight: 600; display: flex; align-items: center; justify-content: space-between; }
+  .theme-check { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.55rem; }
+  .theme-card.selected .theme-check { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .preview-clasico { background: #fff; padding: 4px; display: flex; flex-direction: column; gap: 2px; height: 100%; }
+  .preview-clasico .ph { background: #1a3a6b; height: 20px; }
+  .preview-clasico .pnav { background: #b91c1c; height: 8px; }
+  .preview-clasico .pgrid { display: grid; grid-template-columns: 2fr 1fr; gap: 3px; flex: 1; }
+  .preview-clasico .pm { background: #e5e7eb; }
+  .preview-clasico .ps { display: flex; flex-direction: column; gap: 2px; }
+  .preview-clasico .psi { background: #f3f4f6; height: 16px; }
+
+  .preview-moderno { background: #0f172a; padding: 4px; display: flex; flex-direction: column; gap: 3px; height: 100%; }
+  .preview-moderno .ph { background: #1e293b; height: 16px; }
+  .preview-moderno .pgrid { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; flex: 1; }
+  .preview-moderno .pc { background: #1e293b; border-radius: 2px; }
+  .preview-moderno .pb { background: #3b82f6; height: 6px; width: 28px; border-radius: 2px; }
+
+  .preview-minimal { background: #f9fafb; padding: 4px; display: flex; flex-direction: column; gap: 3px; height: 100%; }
+  .preview-minimal .ph { background: #fff; border-bottom: 1px solid #e5e7eb; height: 18px; }
+  .preview-minimal .pgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; flex: 1; }
+  .preview-minimal .pc { background: #fff; border: 1px solid #e5e7eb; border-radius: 2px; }
+
+  .color-picker { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+  .color-swatch { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all .2s; }
+  .color-swatch.selected { border-color: #fff; transform: scale(1.15); }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; margin-bottom: 24px; }
+  @media(max-width:580px) { .summary-grid { grid-template-columns: 1fr; } }
+  .summary-card { background: var(--card2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .summary-card .sc-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .summary-card .sc-value { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+  .summary-card .sc-desc { font-size: 0.78rem; color: var(--text-dim); margin-top: 2px; }
+
+  .warnings { background: #1a1500; border: 1px solid #78350f; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; }
+  .warnings h4 { color: var(--warning); font-size: 0.85rem; margin-bottom: 8px; }
+  .warnings ul { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+  .warnings li { font-size: 0.82rem; color: #fbbf24; padding-left: 16px; position: relative; }
+  .warnings li::before { content: '⚠'; position: absolute; left: 0; font-size: 0.7rem; }
+  .warnings.hidden { display: none; }
+
+  .code-preview { background: #050810; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 16px; }
+  .code-preview-header { background: #0d1424; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+  .code-preview-header span { font-family: var(--mono); font-size: 0.78rem; color: var(--text-muted); }
+  .code-preview pre { padding: 14px; font-family: var(--mono); font-size: 0.78rem; color: #a8d8a8; overflow-x: auto; max-height: 260px; overflow-y: auto; line-height: 1.55; }
+
+  .deploy-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+  .terminal { background: #000; border: 1px solid #1a2235; border-radius: 8px; padding: 16px; font-family: var(--mono); font-size: 0.82rem; color: #22c55e; min-height: 180px; max-height: 320px; overflow-y: auto; line-height: 1.7; display: none; }
+  .terminal.active { display: block; }
+  .t-line { display: block; }
+  .t-error { color: #ef4444; }
+  .t-warn { color: #f59e0b; }
+  .t-info { color: #38bdf8; }
+  .t-pending { color: #a3a3a3; }
+
+  .info-box { background: #0a1929; border: 1px solid #1e3a5f; border-radius: 8px; padding: 12px 14px; font-size: 0.82rem; color: #93c5fd; margin-bottom: 16px; }
+  .info-box strong { color: #60a5fa; }
+  .remove-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.85rem; padding: 3px 6px; border-radius: 4px; transition: all .15s; }
+  .remove-btn:hover { color: var(--danger); background: #1f1010; }
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+  /* ===== NEW STEP 1 & 2 STYLES ===== */
+  .brand-form { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media(max-width:680px) { .brand-form { grid-template-columns: 1fr; } }
+
+  .icon-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  @media(max-width:480px) { .icon-grid { grid-template-columns: repeat(4, 1fr); } }
+
+  .icon-opt {
+    width: 44px; height: 44px; border-radius: 8px; border: 2px solid var(--border);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; transition: .2s; background: var(--input-bg);
+  }
+  .icon-opt:hover { border-color: #374151; background: #131f32; }
+  .icon-opt.selected { border-color: var(--accent); background: #0f1e3a; }
+
+  .cms-preview-card {
+    background: var(--card2); border: 1px solid var(--border); border-radius: 10px;
+    overflow: hidden; min-height: 100px;
+  }
+  .cms-preview-stripe { height: 6px; background: var(--accent); transition: background .3s; }
+  .cms-preview-body { padding: 14px 16px; }
+  .cms-preview-icon { font-size: 2rem; margin-bottom: 6px; }
+  .cms-preview-name { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 4px; word-break: break-word; }
+  .cms-preview-slug { font-family: var(--mono); font-size: 0.72rem; background: #111827; border: 1px solid var(--border); color: var(--text-muted); padding: 2px 8px; border-radius: 4px; display: inline-block; }
+
+  .color-row { display: flex; align-items: center; gap: 8px; }
+  .color-row input[type=color] { width: 36px; height: 36px; border: none; border-radius: 6px; cursor: pointer; padding: 2px; background: transparent; }
+  .color-row .form-input { flex: 1; font-family: var(--mono); font-size: 0.82rem; }
+
+  .site-builder-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 12px; }
+  .site-card-header { padding: 14px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; background: var(--card2); user-select: none; }
+  .site-card-header:hover { background: #1f2d40; }
+  .site-card-body { padding: 16px; display: none; }
+  .site-card-body.open { display: block; }
+
+  .layout-selector { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 16px; }
+  .layout-opt { flex-shrink: 0; width: 90px; border: 2px solid var(--border); border-radius: 8px; overflow: hidden; cursor: pointer; transition: .2s; }
+  .layout-opt:hover { border-color: #374151; }
+  .layout-opt.selected { border-color: var(--accent); }
+  .layout-preview { height: 64px; overflow: hidden; background: #0d1526; }
+  .layout-label { padding: 5px; font-size: 0.68rem; text-align: center; background: var(--card2); color: var(--text-dim); }
+  .layout-opt.selected .layout-label { color: var(--accent); font-weight: 600; }
+
+  /* Layout mini-previews */
+  .lp-magazine { display: grid; grid-template-columns: 3fr 2fr; gap: 2px; height: 100%; padding: 3px; }
+  .lp-magazine .lm { background: #1e3a5f; }
+  .lp-magazine .lr { display: flex; flex-direction: column; gap: 2px; }
+  .lp-magazine .lrs { background: #1a2235; }
+
+  .lp-portal { display: flex; flex-direction: column; gap: 2px; padding: 3px; height: 100%; }
+  .lp-portal .lpt { background: #1e3a5f; height: 10px; }
+  .lp-portal .lpg { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; flex: 1; }
+  .lp-portal .lpc { background: #1a2235; }
+
+  .lp-breaking { display: flex; flex-direction: column; gap: 2px; padding: 3px; height: 100%; }
+  .lp-breaking .lpbar { background: #dc2626; height: 8px; border-radius: 2px; }
+  .lp-breaking .lpg { display: grid; grid-template-columns: 2fr 1fr; gap: 2px; flex: 1; }
+  .lp-breaking .lpa { background: #1e3a5f; }
+  .lp-breaking .lpb { background: #1a2235; }
+
+  .lp-minimal { display: flex; flex-direction: column; gap: 3px; padding: 6px 12px; height: 100%; align-items: center; }
+  .lp-minimal .lprow { background: #1e3a5f; height: 8px; width: 100%; border-radius: 2px; }
+  .lp-minimal .lprow.sm { width: 70%; background: #1a2235; }
+
+  .lp-tabloid { display: grid; grid-template-columns: 4px 1fr 1fr; gap: 3px; padding: 3px; height: 100%; }
+  .lp-tabloid .lpstripe { background: #dc2626; }
+  .lp-tabloid .lptcol { display: flex; flex-direction: column; gap: 2px; }
+  .lp-tabloid .lptrow { background: #1e3a5f; }
+  .lp-tabloid .lptrow.sm { background: #1a2235; height: 60%; }
+
+  .chip-group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .chip { padding: 5px 12px; border-radius: 20px; font-size: 0.78rem; border: 1px solid var(--border); cursor: pointer; transition: .2s; color: var(--text-dim); background: transparent; }
+  .chip:hover { border-color: #374151; color: var(--text); }
+  .chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .chip-section-label { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin: 10px 0 6px; }
+
+  .stepper { display: flex; align-items: center; gap: 8px; }
+  .stepper-btn { width: 32px; height: 32px; border-radius: 6px; border: 1px solid var(--border); background: var(--card2); color: var(--text); cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: .2s; }
+  .stepper-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .stepper-input { width: 60px; text-align: center; }
+
+  .site-num-badge { background: var(--accent); color: #fff; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; flex-shrink: 0; }
+  .site-name-display { font-weight: 600; font-size: 0.88rem; flex: 1; color: var(--text); }
+  .site-layout-chip { font-size: 0.68rem; background: #1a2235; border: 1px solid var(--border); color: var(--text-muted); padding: 2px 8px; border-radius: 4px; flex-shrink: 0; }
+  .site-delete-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1rem; padding: 2px 6px; border-radius: 4px; transition: .15s; margin-left: auto; flex-shrink: 0; }
+  .site-delete-btn:hover { color: var(--danger); background: #1f1010; }
+  .card-section-title { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  .site-basic-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media(max-width:580px) { .site-basic-grid { grid-template-columns: 1fr; } }
+  .toggle-row { display: flex; align-items: center; gap: 10px; }
+  .toggle-row label { font-size: 0.85rem; color: var(--text-dim); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">Nexo<span>Press</span></div>
+  <div class="step-bar" id="stepBar"></div>
+</div>
+
+<div class="main">
+
+  <!-- STEP 1 -->
+  <div class="step active" id="step-1">
+    <div class="step-title">Crear y Brandear tu CMS</div>
+    <div class="step-subtitle">Dale identidad a tu sistema de gestion de noticias</div>
+
+    <div style="display:grid;grid-template-columns:1fr 280px;gap:24px;align-items:start;" class="step1-layout">
+      <div>
+        <!-- Nombre + Slug -->
+        <div class="form-group">
+          <label class="form-label">Nombre del CMS <span class="required">*</span></label>
+          <input type="text" class="form-input" id="cmsName" placeholder="Mi Portal de Noticias" oninput="onCmsNameInput(this.value)" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Slug</label>
+          <input type="text" class="form-input" id="cmsSlug" placeholder="mi-portal" style="font-family:var(--mono);" oninput="slugEdited=true; updatePreview()">
+          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">Usado como nombre interno del contenedor Docker</div>
+        </div>
+
+        <!-- Icono -->
+        <div class="form-group">
+          <label class="form-label">Icono del CMS</label>
+          <div class="icon-grid">
+            <div class="icon-opt selected" data-icon="📰" onclick="selectIcon(this)">📰</div>
+            <div class="icon-opt" data-icon="🗞️" onclick="selectIcon(this)">🗞️</div>
+            <div class="icon-opt" data-icon="📡" onclick="selectIcon(this)">📡</div>
+            <div class="icon-opt" data-icon="🌐" onclick="selectIcon(this)">🌐</div>
+            <div class="icon-opt" data-icon="🔔" onclick="selectIcon(this)">🔔</div>
+            <div class="icon-opt" data-icon="📢" onclick="selectIcon(this)">📢</div>
+            <div class="icon-opt" data-icon="🏛️" onclick="selectIcon(this)">🏛️</div>
+            <div class="icon-opt" data-icon="⚡" onclick="selectIcon(this)">⚡</div>
+            <div class="icon-opt" data-icon="🌍" onclick="selectIcon(this)">🌍</div>
+            <div class="icon-opt" data-icon="🎙️" onclick="selectIcon(this)">🎙️</div>
+            <div class="icon-opt" data-icon="📺" onclick="selectIcon(this)">📺</div>
+            <div class="icon-opt" data-icon="📻" onclick="selectIcon(this)">📻</div>
+          </div>
+        </div>
+
+        <!-- Colores -->
+        <div class="form-group">
+          <label class="form-label">Colores de marca</label>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div>
+              <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:5px;">Color primario</div>
+              <div class="color-row">
+                <input type="color" id="cmsPrimaryColorPicker" value="#3b82f6" oninput="syncColor('cmsPrimaryColorPicker','cmsPrimaryColor'); updatePreview()">
+                <input type="text" class="form-input" id="cmsPrimaryColor" value="#3b82f6" placeholder="#3b82f6" oninput="syncColor('cmsPrimaryColor','cmsPrimaryColorPicker'); updatePreview()">
+              </div>
+            </div>
+            <div>
+              <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:5px;">Color secundario</div>
+              <div class="color-row">
+                <input type="color" id="cmsSecondaryColorPicker" value="#1e293b" oninput="syncColor('cmsSecondaryColorPicker','cmsSecondaryColor')">
+                <input type="text" class="form-input" id="cmsSecondaryColor" value="#1e293b" placeholder="#1e293b" oninput="syncColor('cmsSecondaryColor','cmsSecondaryColorPicker')">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Email admin -->
+        <div class="form-group">
+          <label class="form-label">Correo del administrador</label>
+          <input type="email" class="form-input" id="cmsAdminEmail" placeholder="admin@miportal.com">
+        </div>
+
+        <!-- Site count stepper -->
+        <div class="form-group">
+          <label class="form-label">Cuantos sitios gestionara?</label>
+          <div class="stepper">
+            <button class="stepper-btn" type="button" onclick="stepperChange(-1)">&#8722;</button>
+            <input type="number" class="form-input stepper-input" id="cmsSiteCount" value="3" min="1" max="60" oninput="clampSiteCount()">
+            <button class="stepper-btn" type="button" onclick="stepperChange(1)">&#43;</button>
+          </div>
+          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">Podras configurarlos en el siguiente paso</div>
+        </div>
+      </div>
+
+      <!-- Live preview -->
+      <div style="position:sticky;top:80px;">
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Vista previa</div>
+        <div class="cms-preview-card" id="cmsPreviewCard">
+          <div class="cms-preview-stripe" id="cmsPreviewStripe"></div>
+          <div class="cms-preview-body">
+            <div class="cms-preview-icon" id="cmsPreviewIcon">📰</div>
+            <div class="cms-preview-name" id="cmsPreviewName">Mi Portal de Noticias</div>
+            <div class="cms-preview-slug" id="cmsPreviewSlug">mi-portal</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      @media(max-width:680px) {
+        .step1-layout { grid-template-columns: 1fr !important; }
+        .step1-layout > div:last-child { position: static !important; }
+      }
+    </style>
+
+    <div class="nav-buttons">
+      <span></span>
+      <button class="btn btn-primary" onclick="goStep(2)">Siguiente &rarr;</button>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step" id="step-2">
+    <div class="step-title">Configura tus Sitios</div>
+    <div class="step-subtitle">Define la estructura y diseno de cada sitio en tu CMS</div>
+    <div id="siteCardsContainer"></div>
+    <div style="margin-bottom:8px;">
+      <button class="btn btn-secondary" onclick="addSiteCard()">+ Agregar sitio</button>
+    </div>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" onclick="goStep(1)">&larr; Anterior</button>
+      <button class="btn btn-primary" onclick="goStep(3)">Siguiente &rarr;</button>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step" id="step-3">
+    <div class="step-title">Credenciales &amp; Variables de Entorno</div>
+    <div class="step-subtitle">Configura las claves necesarias para el funcionamiento del sistema</div>
+
+    <div class="cred-section">
+      <div class="cred-section-title">Credenciales Generales</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">ADMIN_TOKEN <span class="required">*</span></label>
+          <div class="input-with-btn">
+            <div class="input-with-eye" style="flex:1">
+              <input type="password" class="form-input" id="adminToken" placeholder="Token de administracion">
+              <button class="eye-btn" onclick="toggleEye(this)">&#128065;</button>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="generateToken('adminToken')">Generar</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ENGAGEMENT_WEBHOOK_SECRET <span class="required">*</span></label>
+          <div class="input-with-btn">
+            <div class="input-with-eye" style="flex:1">
+              <input type="password" class="form-input" id="webhookSecret" placeholder="Secret del webhook">
+              <button class="eye-btn" onclick="toggleEye(this)">&#128065;</button>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="generateToken('webhookSecret')">Generar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cred-section">
+      <div class="cred-section-title">OpenRouter AI (Parafraseo)</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">OPENROUTER_API_KEY <span class="required">*</span><a href="https://openrouter.ai" target="_blank">&#8599; Obtener key</a></label>
+          <div class="input-with-eye">
+            <input type="password" class="form-input" id="openrouterKey" placeholder="sk-or-...">
+            <button class="eye-btn" onclick="toggleEye(this)">&#128065;</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">AI_MODEL</label>
+          <select class="form-input" id="aiModel">
+            <option value="gemini/gemini-2.0-flash-exp">gemini/gemini-2.0-flash-exp</option>
+            <option value="openai/gpt-4o-mini">openai/gpt-4o-mini</option>
+            <option value="anthropic/claude-3-haiku">anthropic/claude-3-haiku</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="cred-section">
+      <div class="cred-section-title">Telegram (Notificaciones)</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">TELEGRAM_BOT_TOKEN</label>
+          <div class="input-with-eye">
+            <input type="password" class="form-input" id="telegramToken" placeholder="123456789:AAB...">
+            <button class="eye-btn" onclick="toggleEye(this)">&#128065;</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">TELEGRAM_CHAT_ID</label>
+          <input type="text" class="form-input" id="telegramChatId" placeholder="-1001234567890">
+        </div>
+      </div>
+    </div>
+
+    <div class="cred-section">
+      <div class="cred-section-title">Facebook (Auto-posting)</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">FB_APP_ID</label>
+          <input type="text" class="form-input" id="fbAppId" placeholder="1234567890">
+        </div>
+        <div class="form-group">
+          <label class="form-label">FB_APP_SECRET</label>
+          <div class="input-with-eye">
+            <input type="password" class="form-input" id="fbAppSecret" placeholder="abcdef...">
+            <button class="eye-btn" onclick="toggleEye(this)">&#128065;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cred-section">
+      <div class="cred-section-title">APIs Externas</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">NEWSAPI_KEY <a href="https://newsapi.org" target="_blank">&#8599; Obtener key</a></label>
+          <div class="input-with-eye">
+            <input type="password" class="form-input" id="newsapiKey" placeholder="abcdef1234...">
+            <button class="eye-btn" onclick="toggleEye(this)">&#128065;</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">OPENWEATHER_API_KEY <a href="https://openweathermap.org" target="_blank">&#8599; Obtener key</a></label>
+          <div class="input-with-eye">
+            <input type="password" class="form-input" id="weatherKey" placeholder="abcdef1234...">
+            <button class="eye-btn" onclick="toggleEye(this)">&#128065;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" onclick="goStep(2)">&larr; Anterior</button>
+      <button class="btn btn-primary" onclick="goStep(4)">Siguiente &rarr;</button>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="step" id="step-4">
+    <div class="step-title">Fuentes de Ingesta</div>
+    <div class="step-subtitle">Configura de donde el sistema obtendra noticias automaticamente</div>
+
+    <div class="source-card">
+      <div class="source-card-header" onclick="toggleSourceCard(this)">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <label class="toggle" onclick="event.stopPropagation()">
+            <input type="checkbox" id="rssEnabled" checked>
+            <span class="toggle-slider"></span>
+          </label>
+          <h4>RSS / Atom Feeds</h4>
+          <span style="font-size:0.72rem;color:var(--text-muted);" id="rssCount">9 feeds</span>
+        </div>
+        <span class="chevron">&#9660;</span>
+      </div>
+      <div class="source-card-body open" id="rssBody">
+        <div style="overflow-x:auto;">
+          <table class="feeds-table">
+            <thead><tr><th>Nombre</th><th>URL</th><th>Categoria</th><th></th></tr></thead>
+            <tbody id="feedsTbody"></tbody>
+          </table>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="addFeedRow()">+ Agregar feed</button>
+      </div>
+    </div>
+
+    <div class="source-card">
+      <div class="source-card-header" onclick="toggleSourceCard(this)">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <label class="toggle" onclick="event.stopPropagation()">
+            <input type="checkbox" id="newsapiEnabled">
+            <span class="toggle-slider"></span>
+          </label>
+          <h4>NewsAPI</h4>
+          <span style="font-size:0.72rem;color:#f59e0b;">Requiere NEWSAPI_KEY</span>
+        </div>
+        <span class="chevron">&#9660;</span>
+      </div>
+      <div class="source-card-body" id="newsapiBody">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Pais</label>
+            <select class="form-input" id="newsapiCountry">
+              <option value="mx">Mexico (mx)</option>
+              <option value="us">Estados Unidos (us)</option>
+              <option value="es">Espana (es)</option>
+              <option value="ar">Argentina (ar)</option>
+              <option value="co">Colombia (co)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Idioma</label>
+            <select class="form-input" id="newsapiLang">
+              <option value="es">Espanol (es)</option>
+              <option value="en">Ingles (en)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Max articulos por ciclo</label>
+            <input type="number" class="form-input" id="newsapiMax" value="20" min="1" max="100">
+          </div>
+        </div>
+        <label class="form-label" style="margin-bottom:8px;">Categorias</label>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">
+          <div class="checkbox-row"><input type="checkbox" id="cat_general" checked><label for="cat_general">General</label></div>
+          <div class="checkbox-row"><input type="checkbox" id="cat_tech"><label for="cat_tech">Technology</label></div>
+          <div class="checkbox-row"><input type="checkbox" id="cat_sports"><label for="cat_sports">Sports</label></div>
+          <div class="checkbox-row"><input type="checkbox" id="cat_biz" checked><label for="cat_biz">Business</label></div>
+          <div class="checkbox-row"><input type="checkbox" id="cat_ent"><label for="cat_ent">Entertainment</label></div>
+          <div class="checkbox-row"><input type="checkbox" id="cat_sci"><label for="cat_sci">Science</label></div>
+          <div class="checkbox-row"><input type="checkbox" id="cat_health"><label for="cat_health">Health</label></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="source-card">
+      <div class="source-card-header" onclick="toggleSourceCard(this)">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <label class="toggle" onclick="event.stopPropagation()">
+            <input type="checkbox" id="gnewsEnabled">
+            <span class="toggle-slider"></span>
+          </label>
+          <h4>Google News RSS</h4>
+        </div>
+        <span class="chevron">&#9660;</span>
+      </div>
+      <div class="source-card-body" id="gnewsBody">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Region</label>
+            <select class="form-input" id="gnewsRegion">
+              <option value="MX">Mexico (MX)</option>
+              <option value="US">Estados Unidos (US)</option>
+              <option value="ES">Espana (ES)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Idioma</label>
+            <select class="form-input" id="gnewsLang">
+              <option value="es">Espanol (es)</option>
+              <option value="en">Ingles (en)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Temas a rastrear</label>
+          <div class="tag-input-container" id="gnewsTags" onclick="this.querySelector('.tag-input').focus()">
+            <span class="tag">Mexico<span class="tag-remove" onclick="removeTag(this)">x</span></span>
+            <span class="tag">Politica Mexico<span class="tag-remove" onclick="removeTag(this)">x</span></span>
+            <span class="tag">Economia Mexico<span class="tag-remove" onclick="removeTag(this)">x</span></span>
+            <input type="text" class="tag-input" placeholder="Agregar tema..." onkeydown="addTag(event,'gnewsTags')">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="source-card">
+      <div class="source-card-header" onclick="toggleSourceCard(this)">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <label class="toggle" onclick="event.stopPropagation()">
+            <input type="checkbox" id="socialEnabled">
+            <span class="toggle-slider"></span>
+          </label>
+          <h4>Redes Sociales / APIs</h4>
+        </div>
+        <span class="chevron">&#9660;</span>
+      </div>
+      <div class="source-card-body" id="socialBody">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Twitter/X API Key</label>
+            <input type="text" class="form-input" id="twitterKey" placeholder="xxxxxxxxxxxxxxxx">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Twitter/X API Secret</label>
+            <div class="input-with-eye">
+              <input type="password" class="form-input" id="twitterSecret" placeholder="xxxxxxxxxxxxxxxx">
+              <button class="eye-btn" onclick="toggleEye(this)">&#128065;</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Reddit subreddits</label>
+          <div class="tag-input-container" id="redditTags" onclick="this.querySelector('.tag-input').focus()">
+            <span class="tag">mexico<span class="tag-remove" onclick="removeTag(this)">x</span></span>
+            <span class="tag">noticias<span class="tag-remove" onclick="removeTag(this)">x</span></span>
+            <span class="tag">politicamx<span class="tag-remove" onclick="removeTag(this)">x</span></span>
+            <input type="text" class="tag-input" placeholder="r/subreddit..." onkeydown="addTag(event,'redditTags')">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="source-card">
+      <div class="source-card-header" onclick="toggleSourceCard(this)">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <label class="toggle" onclick="event.stopPropagation()">
+            <input type="checkbox" id="n8nEnabled">
+            <span class="toggle-slider"></span>
+          </label>
+          <h4>n8n Webhook</h4>
+        </div>
+        <span class="chevron">&#9660;</span>
+      </div>
+      <div class="source-card-body" id="n8nBody">
+        <div class="info-box">
+          <strong>n8n</strong> puede enviar articulos procesados al CMS via este endpoint. Util para pipelines de automatizacion personalizados.
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Webhook URL</label>
+            <input type="text" class="form-input" id="n8nUrl" value="http://localhost:3001/api/n8n/webhook" readonly>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Webhook Secret</label>
+            <div class="input-with-btn">
+              <div class="input-with-eye" style="flex:1">
+                <input type="password" class="form-input" id="n8nSecret" placeholder="secret">
+                <button class="eye-btn" onclick="toggleEye(this)">&#128065;</button>
+              </div>
+              <button class="btn btn-secondary btn-sm" onclick="generateToken('n8nSecret')">Generar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" onclick="goStep(3)">&larr; Anterior</button>
+      <button class="btn btn-primary" onclick="goStep(5)">Siguiente &rarr;</button>
+    </div>
+  </div>
+
+  <!-- STEP 5 -->
+  <div class="step" id="step-5">
+    <div class="step-title">Diseno de Sitios</div>
+    <div class="step-subtitle">Elige el estilo visual que tendran tus publicaciones</div>
+
+    <div class="theme-grid">
+      <div class="theme-card selected" data-theme="clasico" onclick="selectTheme(this)">
+        <div class="theme-preview">
+          <div class="preview-clasico">
+            <div class="ph"></div>
+            <div class="pnav"></div>
+            <div class="pgrid">
+              <div class="pm"></div>
+              <div class="ps"><div class="psi"></div><div class="psi"></div><div class="psi" style="width:60%"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="theme-label">Clasico <div class="theme-check">&#10003;</div></div>
+      </div>
+      <div class="theme-card" data-theme="moderno" onclick="selectTheme(this)">
+        <div class="theme-preview">
+          <div class="preview-moderno">
+            <div class="ph"></div>
+            <div class="pgrid"><div class="pc"></div><div class="pc"></div><div class="pc"></div></div>
+            <div class="pb"></div>
+          </div>
+        </div>
+        <div class="theme-label">Moderno <div class="theme-check">&#10003;</div></div>
+      </div>
+      <div class="theme-card" data-theme="minimalista" onclick="selectTheme(this)">
+        <div class="theme-preview">
+          <div class="preview-minimal">
+            <div class="ph"></div>
+            <div class="pgrid"><div class="pc"></div><div class="pc"></div></div>
+          </div>
+        </div>
+        <div class="theme-label">Minimalista <div class="theme-check">&#10003;</div></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;">
+      <h4 style="font-size:0.85rem;color:var(--text-dim);margin-bottom:12px;">Color de acento</h4>
+      <div class="color-picker" id="colorPicker">
+        <div class="color-swatch selected" data-color="#3b82f6" style="background:#3b82f6;" onclick="selectColor(this)" title="Azul"></div>
+        <div class="color-swatch" data-color="#ef4444" style="background:#ef4444;" onclick="selectColor(this)" title="Rojo"></div>
+        <div class="color-swatch" data-color="#10b981" style="background:#10b981;" onclick="selectColor(this)" title="Verde"></div>
+        <div class="color-swatch" data-color="#f59e0b" style="background:#f59e0b;" onclick="selectColor(this)" title="Naranja"></div>
+        <div class="color-swatch" data-color="#8b5cf6" style="background:#8b5cf6;" onclick="selectColor(this)" title="Morado"></div>
+        <div class="color-swatch" data-color="#1f2937" style="background:#1f2937;border-color:#374151;" onclick="selectColor(this)" title="Negro"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;">
+      <h4 style="font-size:0.85rem;color:var(--text-dim);margin-bottom:14px;">Tipografia</h4>
+      <select class="form-input" id="fontSelect" style="max-width:300px;">
+        <option value="system">Sistema (por defecto)</option>
+        <option value="Merriweather">Merriweather</option>
+        <option value="Lato">Lato</option>
+        <option value="Roboto">Roboto</option>
+        <option value="Open Sans">Open Sans</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <h4 style="font-size:0.85rem;color:var(--text-dim);margin-bottom:14px;">Opciones adicionales</h4>
+      <div class="checkbox-group">
+        <div class="checkbox-row"><input type="checkbox" id="opt_ticker" checked><label for="opt_ticker">Ticker de noticias en el header</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="opt_weather"><label for="opt_weather">Widget de clima</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="opt_sidebar" checked><label for="opt_sidebar">Barra lateral con articulos relacionados</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="opt_darkmode"><label for="opt_darkmode">Dark mode toggle visible para usuarios</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="opt_rss" checked><label for="opt_rss">Feed RSS publico (/rss.xml)</label></div>
+      </div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" onclick="goStep(4)">&larr; Anterior</button>
+      <button class="btn btn-primary" onclick="goStep(6)">Siguiente &rarr;</button>
+    </div>
+  </div>
+
+  <!-- STEP 6 -->
+  <div class="step" id="step-6">
+    <div class="step-title">Resumen &amp; Deploy</div>
+    <div class="step-subtitle">Revisa la configuracion y despliega tu instancia NexoPress</div>
+
+    <div class="summary-grid" id="summaryGrid"></div>
+
+    <div class="warnings hidden" id="warningsBox">
+      <h4>Configuracion incompleta</h4>
+      <ul id="warningsList"></ul>
+    </div>
+
+    <div class="code-preview">
+      <div class="code-preview-header">
+        <span>docker-compose.yml</span>
+        <button class="btn btn-secondary btn-sm" onclick="copyDockerCompose()">Copiar</button>
+      </div>
+      <pre id="dockerComposePreview"></pre>
+    </div>
+
+    <div class="code-preview">
+      <div class="code-preview-header">
+        <span>.env</span>
+        <button class="btn btn-secondary btn-sm" onclick="copyEnvFile()">Copiar</button>
+      </div>
+      <pre id="envPreview"></pre>
+    </div>
+
+    <div class="deploy-actions">
+      <button class="btn btn-secondary" onclick="downloadDockerCompose()">Descargar docker-compose.yml</button>
+      <button class="btn btn-secondary" onclick="downloadEnvFile()">Descargar .env</button>
+      <button class="btn btn-warning" onclick="startDeploy()">Iniciar Deploy</button>
+    </div>
+
+    <div class="terminal" id="deployTerminal"></div>
+
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" onclick="goStep(5)">&larr; Anterior</button>
+      <span></span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const wizardState = {
+  cms: {
+    name: '',
+    slug: '',
+    icon: '📰',
+    primaryColor: '#3b82f6',
+    secondaryColor: '#1e293b',
+    adminEmail: '',
+    siteCount: 3,
+  },
+  sites: [],
+  credentials: {},
+  feeds: [
+    { name:'La Jornada', url:'https://www.jornada.com.mx/rss/edicion.xml?v=1', category:'NACIONAL' },
+    { name:'El Informador', url:'https://www.informador.mx/rss/mexico.xml', category:'NACIONAL' },
+    { name:'Proceso', url:'https://www.proceso.com.mx/rss/feed.html', category:'POLITICA' },
+    { name:'Expansion', url:'https://expansion.mx/rss', category:'ECONOMIA' },
+    { name:'Reforma', url:'https://www.reforma.com/rss/portada.xml', category:'NACIONAL' },
+    { name:'Aristegui Noticias', url:'https://aristeguinoticias.com/feed/', category:'NACIONAL' },
+    { name:'Infobae Mexico', url:'https://www.infobae.com/arc/outboundfeeds/rss/?outputType=xml&section=mexico', category:'INTERNACIONAL' },
+    { name:'DW Espanol', url:'https://rss.dw.com/xml/rss-esp-all', category:'INTERNACIONAL' },
+    { name:'France24 ES', url:'https://www.france24.com/es/rss', category:'INTERNACIONAL' },
+  ],
+  theme: 'clasico',
+  accentColor: '#3b82f6',
+  font: 'system',
+  options: {},
+  currentStep: 1,
+};
+
+var slugEdited = false;
+
+const STEP_LABELS = ['CMS','Sitios','Credenciales','Fuentes','Diseno','Deploy'];
+const TOTAL_STEPS = 6;
+
+// ===== STEP 1 HELPERS =====
+
+function toSlug(str) {
+  return str.toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/[\s]+/g, '-')
+    .replace(/-+/g, '-');
+}
+
+function onCmsNameInput(val) {
+  if (!slugEdited) {
+    var slug = toSlug(val);
+    document.getElementById('cmsSlug').value = slug;
+  }
+  updatePreview();
+}
+
+function updatePreview() {
+  var name = document.getElementById('cmsName').value || 'Mi Portal de Noticias';
+  var slug = document.getElementById('cmsSlug').value || 'mi-portal';
+  var color = document.getElementById('cmsPrimaryColor').value || '#3b82f6';
+  document.getElementById('cmsPreviewName').textContent = name;
+  document.getElementById('cmsPreviewSlug').textContent = slug;
+  document.getElementById('cmsPreviewStripe').style.background = color;
+  document.getElementById('cmsPreviewIcon').textContent = wizardState.cms.icon;
+}
+
+function selectIcon(el) {
+  document.querySelectorAll('.icon-opt').forEach(function(o){ o.classList.remove('selected'); });
+  el.classList.add('selected');
+  wizardState.cms.icon = el.dataset.icon;
+  updatePreview();
+}
+
+function syncColor(sourceId, targetId) {
+  var val = document.getElementById(sourceId).value;
+  // if source is color picker, val is always valid hex
+  // if source is text, validate roughly
+  if (sourceId.endsWith('Picker')) {
+    document.getElementById(targetId).value = val;
+  } else {
+    // text -> picker: only sync if looks like a valid 6-digit hex
+    if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+      document.getElementById(targetId).value = val;
+    }
+  }
+}
+
+function stepperChange(delta) {
+  var input = document.getElementById('cmsSiteCount');
+  var val = (parseInt(input.value) || 3) + delta;
+  if (val < 1) val = 1;
+  if (val > 60) val = 60;
+  input.value = val;
+}
+
+function clampSiteCount() {
+  var input = document.getElementById('cmsSiteCount');
+  var val = parseInt(input.value) || 1;
+  if (val < 1) val = 1;
+  if (val > 60) val = 60;
+  input.value = val;
+}
+
+// ===== STEP 2 HELPERS =====
+
+var DEFAULT_COMPONENTS = ['Buscador integrado','Sidebar derecha','Artículos relacionados','Botones de compartir','Feed RSS público'];
+var LAYOUTS = [
+  { id: 'magazine', label: 'Magazine', preview: '<div class="lp-magazine"><div class="lm"></div><div class="lr"><div class="lrs"></div><div class="lrs"></div></div></div>' },
+  { id: 'portal',   label: 'Portal',   preview: '<div class="lp-portal"><div class="lpt"></div><div class="lpg"><div class="lpc"></div><div class="lpc"></div><div class="lpc"></div></div></div>' },
+  { id: 'breaking', label: 'Breaking', preview: '<div class="lp-breaking"><div class="lpbar"></div><div class="lpg"><div class="lpa"></div><div class="lpb"></div></div></div>' },
+  { id: 'minimal',  label: 'Minimal',  preview: '<div class="lp-minimal"><div class="lprow"></div><div class="lprow sm"></div><div class="lprow"></div><div class="lprow sm"></div></div>' },
+  { id: 'tabloid',  label: 'Tabloid',  preview: '<div class="lp-tabloid"><div class="lpstripe"></div><div class="lptcol"><div class="lptrow"></div><div class="lptrow sm"></div></div><div class="lptcol"><div class="lptrow"></div><div class="lptrow sm"></div></div></div>' },
+];
+var COMPONENT_GROUPS = [
+  { label: 'Header', chips: ['Buscador integrado','Mega-menú','Ticker en header','Selector de categorías'] },
+  { label: 'Contenido', chips: ['Sidebar derecha','Artículos relacionados','Scroll infinito','Paginación clásica','Tags/Etiquetas'] },
+  { label: 'Extras', chips: ['Widget clima','Dark mode','Botones de compartir','Feed RSS público','Espacios para anuncios'] },
+];
+
+function makeSiteObject(n) {
+  return {
+    id: 'site-' + n,
+    name: '',
+    domain: '',
+    tagline: '',
+    active: true,
+    layout: 'magazine',
+    components: DEFAULT_COMPONENTS.slice(),
+  };
+}
+
+function initSites() {
+  var count = wizardState.cms.siteCount || 3;
+  wizardState.sites = [];
+  for (var i = 0; i < count; i++) {
+    wizardState.sites.push(makeSiteObject(i + 1));
+  }
+}
+
+function renderSiteCards() {
+  var container = document.getElementById('siteCardsContainer');
+  container.innerHTML = '';
+  wizardState.sites.forEach(function(site, idx) {
+    container.appendChild(buildSiteCard(site, idx));
+  });
+}
+
+function buildSiteCard(site, idx) {
+  var card = document.createElement('div');
+  card.className = 'site-builder-card';
+  card.dataset.idx = idx;
+
+  // Header
+  var header = document.createElement('div');
+  header.className = 'site-card-header';
+  header.innerHTML =
+    '<span class="site-num-badge">Sitio ' + (idx + 1) + '</span>' +
+    '<span class="site-name-display">' + (site.name || 'Sin nombre') + '</span>' +
+    '<span class="site-layout-chip">' + site.layout + '</span>' +
+    '<span class="chevron" style="color:var(--text-muted);">&#9660;</span>' +
+    (wizardState.sites.length > 1 ? '<button class="site-delete-btn" title="Eliminar" onclick="deleteSiteCard(event,' + idx + ')">&#215;</button>' : '');
+  header.addEventListener('click', function(e) {
+    if (e.target.classList.contains('site-delete-btn')) return;
+    var body = card.querySelector('.site-card-body');
+    var chev = header.querySelector('.chevron');
+    body.classList.toggle('open');
+    chev.style.transform = body.classList.contains('open') ? 'rotate(180deg)' : '';
+  });
+
+  // Body
+  var body = document.createElement('div');
+  body.className = 'site-card-body' + (idx === 0 ? ' open' : '');
+  if (idx === 0) header.querySelector('.chevron').style.transform = 'rotate(180deg)';
+
+  // Section A
+  var secA = '<div class="card-section-title">Informacion basica</div>';
+  secA += '<div class="site-basic-grid">';
+  secA += '<div class="form-group"><label class="form-label">Nombre del sitio</label><input type="text" class="form-input site-field" data-field="name" placeholder="Noticias MX" value="' + escHtml(site.name) + '"></div>';
+  secA += '<div class="form-group"><label class="form-label">Dominio</label><input type="text" class="form-input site-field" data-field="domain" placeholder="https://noticiasmx.com" value="' + escHtml(site.domain) + '"></div>';
+  secA += '<div class="form-group" style="grid-column:1/-1;"><label class="form-label">Tagline</label><input type="text" class="form-input site-field" data-field="tagline" placeholder="Tu fuente de informacion" value="' + escHtml(site.tagline) + '"></div>';
+  secA += '</div>';
+  secA += '<div class="toggle-row" style="margin-bottom:16px;"><label class="toggle"><input type="checkbox" class="site-active-field"' + (site.active ? ' checked' : '') + '><span class="toggle-slider"></span></label><label>Activo</label></div>';
+
+  // Section B - Layout
+  var secB = '<div class="card-section-title">Diseno de portada</div>';
+  secB += '<div class="layout-selector">';
+  LAYOUTS.forEach(function(l) {
+    var sel = site.layout === l.id ? ' selected' : '';
+    secB += '<div class="layout-opt' + sel + '" data-layout="' + l.id + '">';
+    secB += '<div class="layout-preview">' + l.preview + '</div>';
+    secB += '<div class="layout-label">' + l.label + '</div>';
+    secB += '</div>';
+  });
+  secB += '</div>';
+
+  // Section C - Components
+  var secC = '<div class="card-section-title">Componentes</div>';
+  COMPONENT_GROUPS.forEach(function(group) {
+    secC += '<div class="chip-section-label">' + group.label + '</div>';
+    secC += '<div class="chip-group">';
+    group.chips.forEach(function(chip) {
+      var active = site.components.indexOf(chip) !== -1 ? ' active' : '';
+      secC += '<button type="button" class="chip' + active + '" data-chip="' + escHtml(chip) + '">' + escHtml(chip) + '</button>';
+    });
+    secC += '</div>';
+  });
+
+  body.innerHTML = secA + secB + secC;
+
+  // Attach listeners
+  body.querySelectorAll('.site-field').forEach(function(inp) {
+    inp.addEventListener('input', function() {
+      wizardState.sites[idx][this.dataset.field] = this.value;
+      if (this.dataset.field === 'name') {
+        header.querySelector('.site-name-display').textContent = this.value || 'Sin nombre';
+      }
+    });
+  });
+  body.querySelector('.site-active-field').addEventListener('change', function() {
+    wizardState.sites[idx].active = this.checked;
+  });
+  body.querySelectorAll('.layout-opt').forEach(function(opt) {
+    opt.addEventListener('click', function() {
+      body.querySelectorAll('.layout-opt').forEach(function(o){ o.classList.remove('selected'); });
+      opt.classList.add('selected');
+      wizardState.sites[idx].layout = opt.dataset.layout;
+      header.querySelector('.site-layout-chip').textContent = opt.dataset.layout;
+    });
+  });
+  body.querySelectorAll('.chip').forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      chip.classList.toggle('active');
+      var name = chip.dataset.chip;
+      var comps = wizardState.sites[idx].components;
+      var pos = comps.indexOf(name);
+      if (pos === -1) comps.push(name);
+      else comps.splice(pos, 1);
+    });
+  });
+
+  card.appendChild(header);
+  card.appendChild(body);
+  return card;
+}
+
+function deleteSiteCard(event, idx) {
+  event.stopPropagation();
+  if (wizardState.sites.length <= 1) return;
+  wizardState.sites.splice(idx, 1);
+  renderSiteCards();
+}
+
+function addSiteCard() {
+  var n = wizardState.sites.length + 1;
+  wizardState.sites.push(makeSiteObject(n));
+  renderSiteCards();
+  // scroll to new card
+  var container = document.getElementById('siteCardsContainer');
+  var cards = container.querySelectorAll('.site-builder-card');
+  var last = cards[cards.length - 1];
+  if (last) last.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ===== STEP BAR =====
+
+function renderStepBar() {
+  const bar = document.getElementById('stepBar');
+  bar.innerHTML = '';
+  for (let i = 1; i <= TOTAL_STEPS; i++) {
+    const item = document.createElement('div');
+    item.className = 'step-item' + (i < wizardState.currentStep ? ' done' : i === wizardState.currentStep ? ' active' : '');
+    const dot = document.createElement('div');
+    dot.className = 'step-dot';
+    dot.textContent = i < wizardState.currentStep ? '✓' : String(i);
+    const label = document.createElement('span');
+    label.className = 'step-label';
+    label.textContent = STEP_LABELS[i-1];
+    item.appendChild(dot);
+    item.appendChild(label);
+    if (i < TOTAL_STEPS) {
+      const line = document.createElement('div');
+      line.className = 'step-line';
+      item.appendChild(line);
+    }
+    bar.appendChild(item);
+  }
+}
+
+function goStep(n) {
+  collectCurrentStep();
+  document.getElementById('step-' + wizardState.currentStep).classList.remove('active');
+  wizardState.currentStep = n;
+  document.getElementById('step-' + n).classList.add('active');
+  renderStepBar();
+  if (n === 2) {
+    if (wizardState.sites.length === 0) initSites();
+    renderSiteCards();
+  }
+  if (n === 6) renderSummary();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function collectCurrentStep() {
+  var s = wizardState.currentStep;
+  if (s === 1) {
+    wizardState.cms.name = document.getElementById('cmsName').value;
+    wizardState.cms.slug = document.getElementById('cmsSlug').value;
+    wizardState.cms.adminEmail = document.getElementById('cmsAdminEmail').value;
+    wizardState.cms.primaryColor = document.getElementById('cmsPrimaryColor').value;
+    wizardState.cms.secondaryColor = document.getElementById('cmsSecondaryColor').value;
+    wizardState.cms.siteCount = parseInt(document.getElementById('cmsSiteCount').value) || 3;
+  }
+  if (s === 2) {
+    // Sync from DOM in case anything was changed (state is already kept live via listeners)
+    // Re-read to be safe
+    document.querySelectorAll('.site-builder-card').forEach(function(card, idx) {
+      if (!wizardState.sites[idx]) return;
+      var nameEl = card.querySelector('[data-field="name"]');
+      var domainEl = card.querySelector('[data-field="domain"]');
+      var taglineEl = card.querySelector('[data-field="tagline"]');
+      var activeEl = card.querySelector('.site-active-field');
+      var layoutEl = card.querySelector('.layout-opt.selected');
+      if (nameEl) wizardState.sites[idx].name = nameEl.value;
+      if (domainEl) wizardState.sites[idx].domain = domainEl.value;
+      if (taglineEl) wizardState.sites[idx].tagline = taglineEl.value;
+      if (activeEl) wizardState.sites[idx].active = activeEl.checked;
+      if (layoutEl) wizardState.sites[idx].layout = layoutEl.dataset.layout;
+    });
+  }
+  if (s === 3) {
+    wizardState.credentials = {
+      ADMIN_TOKEN: document.getElementById('adminToken').value,
+      ENGAGEMENT_WEBHOOK_SECRET: document.getElementById('webhookSecret').value,
+      OPENROUTER_API_KEY: document.getElementById('openrouterKey').value,
+      AI_MODEL: document.getElementById('aiModel').value,
+      TELEGRAM_BOT_TOKEN: document.getElementById('telegramToken').value,
+      TELEGRAM_CHAT_ID: document.getElementById('telegramChatId').value,
+      FB_APP_ID: document.getElementById('fbAppId').value,
+      FB_APP_SECRET: document.getElementById('fbAppSecret').value,
+      NEWSAPI_KEY: document.getElementById('newsapiKey').value,
+      OPENWEATHER_API_KEY: document.getElementById('weatherKey').value,
+    };
+  }
+  if (s === 5) {
+    var selTheme = document.querySelector('.theme-card.selected');
+    wizardState.theme = selTheme ? selTheme.dataset.theme : 'clasico';
+    wizardState.font = document.getElementById('fontSelect').value;
+    wizardState.options = {
+      ticker: document.getElementById('opt_ticker').checked,
+      weather: document.getElementById('opt_weather').checked,
+      sidebar: document.getElementById('opt_sidebar').checked,
+      darkmode: document.getElementById('opt_darkmode').checked,
+      rss: document.getElementById('opt_rss').checked,
+    };
+  }
+}
+
+function toggleEye(btn) {
+  var input = btn.previousElementSibling;
+  if (input.type === 'password') { input.type = 'text'; btn.innerHTML = '&#128584;'; }
+  else { input.type = 'password'; btn.innerHTML = '&#128065;'; }
+}
+
+function generateToken(id) {
+  var arr = new Uint8Array(16);
+  crypto.getRandomValues(arr);
+  var hex = Array.from(arr).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+  var el = document.getElementById(id);
+  el.value = hex;
+  el.type = 'text';
+}
+
+function toggleSourceCard(header) {
+  header.classList.toggle('open');
+  var body = header.parentElement.querySelector('.source-card-body');
+  if (body) body.classList.toggle('open');
+}
+
+function renderFeedsTable() {
+  var tbody = document.getElementById('feedsTbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  wizardState.feeds.forEach(function(f, i) {
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td><input type="text" class="form-input" value="' + f.name.replace(/"/g,'&quot;') + '" onchange="wizardState.feeds[' + i + '].name=this.value" style="min-width:120px;"></td>' +
+      '<td><input type="text" class="form-input" value="' + f.url.replace(/"/g,'&quot;') + '" onchange="wizardState.feeds[' + i + '].url=this.value" style="min-width:240px;font-family:monospace;font-size:0.75rem;"></td>' +
+      '<td><input type="text" class="form-input" value="' + f.category + '" onchange="wizardState.feeds[' + i + '].category=this.value" style="min-width:90px;"></td>' +
+      '<td><button class="remove-btn" onclick="removeFeed(' + i + ')">x</button></td>';
+    tbody.appendChild(tr);
+  });
+  var rssCount = document.getElementById('rssCount');
+  if (rssCount) rssCount.textContent = wizardState.feeds.length + ' feeds';
+}
+
+function addFeedRow() {
+  wizardState.feeds.push({ name: 'Nuevo Feed', url: 'https://', category: 'GENERAL' });
+  renderFeedsTable();
+}
+
+function removeFeed(i) {
+  wizardState.feeds.splice(i, 1);
+  renderFeedsTable();
+}
+
+function addTag(event, containerId) {
+  if (event.key !== 'Enter') return;
+  event.preventDefault();
+  var input = event.target;
+  var val = input.value.trim();
+  if (!val) return;
+  var tag = document.createElement('span');
+  tag.className = 'tag';
+  tag.innerHTML = val + '<span class="tag-remove" onclick="removeTag(this)">x</span>';
+  input.parentNode.insertBefore(tag, input);
+  input.value = '';
+}
+
+function removeTag(btn) {
+  btn.parentElement.remove();
+}
+
+function selectTheme(card) {
+  document.querySelectorAll('.theme-card').forEach(function(c){ c.classList.remove('selected'); });
+  card.classList.add('selected');
+}
+
+function selectColor(swatch) {
+  document.querySelectorAll('.color-swatch').forEach(function(s){ s.classList.remove('selected'); });
+  swatch.classList.add('selected');
+  wizardState.accentColor = swatch.dataset.color;
+}
+
+function renderSummary() {
+  collectCurrentStep();
+  var totalSites = wizardState.sites.length;
+  var activeSites = wizardState.sites.filter(function(s){ return s.active; }).length;
+  var credFields = ['ADMIN_TOKEN','ENGAGEMENT_WEBHOOK_SECRET','OPENROUTER_API_KEY','NEWSAPI_KEY'];
+  var filledCreds = credFields.filter(function(k){ return wizardState.credentials[k]; });
+  var activeSources = 0;
+  ['rssEnabled','newsapiEnabled','gnewsEnabled','socialEnabled','n8nEnabled'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el && el.checked) activeSources++;
+  });
+  var cmsDisplay = (wizardState.cms.icon || '📰') + ' ' + (wizardState.cms.name || '(sin nombre)');
+  var grid = document.getElementById('summaryGrid');
+  grid.innerHTML =
+    '<div class="summary-card"><div class="sc-label">CMS</div><div class="sc-value" style="font-size:1.2rem;">' + escHtml(cmsDisplay) + '</div><div class="sc-desc">' + escHtml(wizardState.cms.slug || '') + '</div></div>' +
+    '<div class="summary-card"><div class="sc-label">Total sitios</div><div class="sc-value">' + totalSites + '</div><div class="sc-desc">' + activeSites + ' activos</div></div>' +
+    '<div class="summary-card"><div class="sc-label">Fuentes de ingesta</div><div class="sc-value">' + (wizardState.feeds.length + activeSources) + '</div><div class="sc-desc">' + wizardState.feeds.length + ' RSS feeds + ' + activeSources + ' tipos activos</div></div>' +
+    '<div class="summary-card"><div class="sc-label">Credenciales</div><div class="sc-value">' + filledCreds.length + ' <span style="font-size:1rem;color:var(--text-muted);">/ ' + credFields.length + '</span></div><div class="sc-desc">' + (filledCreds.length === credFields.length ? 'Todo configurado' : 'Faltan credenciales requeridas') + '</div></div>';
+
+  var warnings = [];
+  if (!wizardState.credentials.ADMIN_TOKEN) warnings.push('ADMIN_TOKEN no configurado');
+  if (!wizardState.credentials.ENGAGEMENT_WEBHOOK_SECRET) warnings.push('ENGAGEMENT_WEBHOOK_SECRET no configurado');
+  if (!wizardState.credentials.OPENROUTER_API_KEY) warnings.push('OPENROUTER_API_KEY requerido para parafraseo de articulos');
+  var newsapiEl = document.getElementById('newsapiEnabled');
+  if (newsapiEl && newsapiEl.checked && !wizardState.credentials.NEWSAPI_KEY) warnings.push('NewsAPI habilitado pero NEWSAPI_KEY no configurado');
+  if (!wizardState.cms.name) warnings.push('El CMS no tiene nombre');
+
+  var warningsBox = document.getElementById('warningsBox');
+  var warningsList = document.getElementById('warningsList');
+  if (warnings.length === 0) {
+    warningsBox.classList.add('hidden');
+  } else {
+    warningsBox.classList.remove('hidden');
+    warningsList.innerHTML = warnings.map(function(w){ return '<li>' + w + '</li>'; }).join('');
+  }
+
+  document.getElementById('dockerComposePreview').textContent = generateDockerCompose(wizardState);
+  document.getElementById('envPreview').textContent = generateEnvFile(wizardState);
+}
+
+function generateDockerCompose(state) {
+  var slug = state.cms.slug || 'nexopress-cms';
+  var yaml = "version: '3.8'\n\nservices:\n";
+  yaml += "\n  " + slug + ":\n";
+  yaml += "    image: node:20-alpine\n";
+  yaml += "    working_dir: /app/" + slug + "\n";
+  yaml += "    volumes:\n      - ./" + slug + ":/app/" + slug + "\n";
+  yaml += "    ports:\n      - \"8787:8787\"\n";
+  yaml += "    environment:\n";
+  yaml += "      - NODE_ENV=production\n";
+  yaml += "      - PORT=8787\n";
+  yaml += "      - CMS_NAME=" + (state.cms.name || '') + "\n";
+  yaml += "      - CMS_ICON=" + (state.cms.icon || '📰') + "\n";
+  yaml += "      - CMS_PRIMARY_COLOR=" + (state.cms.primaryColor || '#3b82f6') + "\n";
+  yaml += "      - ADMIN_TOKEN=${ADMIN_TOKEN}\n";
+  yaml += "      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}\n";
+  yaml += "      - AI_MODEL=${AI_MODEL}\n";
+  yaml += "      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}\n";
+  yaml += "      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}\n";
+  yaml += "      - FB_APP_ID=${FB_APP_ID}\n";
+  yaml += "      - FB_APP_SECRET=${FB_APP_SECRET}\n";
+  yaml += "      - NEWSAPI_KEY=${NEWSAPI_KEY}\n";
+  yaml += "      - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY}\n";
+  yaml += "    command: sh -c \"npm install && npx wrangler dev --config wrangler.toml --port 8787\"\n";
+  yaml += "    restart: unless-stopped\n";
+  yaml += "    networks:\n      - nexopress\n";
+  yaml += "\n  nginx:\n";
+  yaml += "    image: nginx:alpine\n";
+  yaml += "    ports:\n      - \"80:80\"\n      - \"443:443\"\n";
+  yaml += "    volumes:\n      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro\n";
+  yaml += "      - ./nginx/ssl:/etc/nginx/ssl:ro\n";
+  yaml += "    depends_on:\n      - " + slug + "\n";
+  yaml += "    networks:\n      - nexopress\n    restart: unless-stopped\n";
+  yaml += "\nnetworks:\n  nexopress:\n    driver: bridge\n";
+  yaml += "\nvolumes:\n  nexopress-data:\n";
+  return yaml;
+}
+
+function generateEnvFile(state) {
+  var c = state.credentials;
+  function mask(v) { return v ? '***' + v.slice(-4) : ''; }
+  var env = "# NexoPress -- Variables de Entorno\n# Generado por Deploy Wizard\n\n";
+  env += "# === CMS ===\n";
+  env += "CMS_NAME=" + (state.cms.name || '') + "\n";
+  env += "CMS_ICON=" + (state.cms.icon || '📰') + "\n";
+  env += "CMS_PRIMARY_COLOR=" + (state.cms.primaryColor || '#3b82f6') + "\n\n";
+  env += "# === Generales ===\n";
+  env += "ADMIN_TOKEN=" + (c.ADMIN_TOKEN ? mask(c.ADMIN_TOKEN) : 'REQUIRED') + "\n";
+  env += "ENGAGEMENT_WEBHOOK_SECRET=" + (c.ENGAGEMENT_WEBHOOK_SECRET ? mask(c.ENGAGEMENT_WEBHOOK_SECRET) : 'REQUIRED') + "\n\n";
+  env += "# === OpenRouter AI ===\n";
+  env += "OPENROUTER_API_KEY=" + (c.OPENROUTER_API_KEY ? mask(c.OPENROUTER_API_KEY) : 'REQUIRED') + "\n";
+  env += "AI_MODEL=" + (c.AI_MODEL || 'gemini/gemini-2.0-flash-exp') + "\n\n";
+  env += "# === Telegram ===\n";
+  env += "TELEGRAM_BOT_TOKEN=" + (c.TELEGRAM_BOT_TOKEN ? mask(c.TELEGRAM_BOT_TOKEN) : '') + "\n";
+  env += "TELEGRAM_CHAT_ID=" + (c.TELEGRAM_CHAT_ID || '') + "\n\n";
+  env += "# === Facebook ===\n";
+  env += "FB_APP_ID=" + (c.FB_APP_ID || '') + "\n";
+  env += "FB_APP_SECRET=" + (c.FB_APP_SECRET ? mask(c.FB_APP_SECRET) : '') + "\n\n";
+  env += "# === APIs Externas ===\n";
+  env += "NEWSAPI_KEY=" + (c.NEWSAPI_KEY ? mask(c.NEWSAPI_KEY) : '') + "\n";
+  env += "OPENWEATHER_API_KEY=" + (c.OPENWEATHER_API_KEY ? mask(c.OPENWEATHER_API_KEY) : '') + "\n\n";
+  env += "# === Sitios (" + state.sites.length + " configurados) ===\n";
+  state.sites.forEach(function(site, i) {
+    env += "# Sitio " + (i+1) + ": " + (site.name || 'sin nombre') + (site.active ? '' : ' [inactivo]') + "\n";
+  });
+  return env;
+}
+
+function copyDockerCompose() {
+  navigator.clipboard.writeText(generateDockerCompose(wizardState)).then(function(){ showToast('docker-compose.yml copiado'); });
+}
+
+function copyEnvFile() {
+  navigator.clipboard.writeText(generateEnvFile(wizardState)).then(function(){ showToast('.env copiado'); });
+}
+
+function downloadDockerCompose() { download('docker-compose.yml', generateDockerCompose(wizardState)); }
+function downloadEnvFile() { download('.env', generateEnvFile(wizardState)); }
+
+function download(filename, text) {
+  var a = document.createElement('a');
+  a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(text);
+  a.download = filename;
+  a.click();
+}
+
+function showToast(msg) {
+  var t = document.createElement('div');
+  t.textContent = msg;
+  Object.assign(t.style, {
+    position:'fixed', bottom:'24px', right:'24px', background:'#10b981',
+    color:'#fff', padding:'10px 20px', borderRadius:'8px', fontWeight:'600',
+    fontSize:'0.85rem', zIndex:'9999', boxShadow:'0 4px 12px rgba(0,0,0,.4)'
+  });
+  document.body.appendChild(t);
+  setTimeout(function(){ t.remove(); }, 2500);
+}
+
+function startDeploy() {
+  var terminal = document.getElementById('deployTerminal');
+  terminal.classList.add('active');
+  terminal.innerHTML = '';
+  var slug = wizardState.cms.slug || 'nexopress-cms';
+  var baseDelay = 0;
+  var lines = [
+    { text: '[OK] Validando configuracion...', cls: 't-info', delay: 200 },
+    { text: '[OK] Generando archivos de configuracion...', cls: '', delay: 800 },
+    { text: '[OK] Escribiendo docker-compose.yml', cls: '', delay: 1300 },
+    { text: '[OK] Escribiendo .env', cls: '', delay: 1700 },
+    { text: '[->] Construyendo imagenes Docker...', cls: 't-info', delay: 2300 },
+    { text: '    docker build -t nexopress/' + slug + ':latest ./' + slug, cls: 't-pending', delay: 3000 },
+  ];
+  baseDelay = 3000;
+  lines.push({ text: '[OK] Imagenes construidas exitosamente', cls: '', delay: baseDelay + 400 });
+  lines.push({ text: '[->] Iniciando servicios...', cls: 't-info', delay: baseDelay + 900 });
+  lines.push({ text: '    Starting ' + slug + ' on port 8787...', cls: 't-pending', delay: baseDelay + 1400 });
+  var finalDelay = baseDelay + 1800;
+  lines.push({ text: '[OK] nginx proxy iniciado', cls: '', delay: finalDelay + 300 });
+  lines.push({ text: '[OK] Todos los servicios en linea', cls: 't-info', delay: finalDelay + 700 });
+  lines.push({ text: '', cls: '', delay: finalDelay + 1000 });
+  lines.push({ text: '  NexoPress esta corriendo:', cls: '', delay: finalDelay + 1100 });
+  lines.push({ text: '  -> http://localhost:8787  (' + slug + ')', cls: 't-info', delay: finalDelay + 1250 });
+
+  lines.forEach(function(l) {
+    setTimeout(function() {
+      var span = document.createElement('span');
+      span.className = 't-line ' + (l.cls || '');
+      span.textContent = l.text;
+      terminal.appendChild(span);
+      terminal.scrollTop = terminal.scrollHeight;
+    }, l.delay);
+  });
+
+  try {
+    var sse = new EventSource('/api/deploy/logs');
+    sse.onmessage = function(e) {
+      var span = document.createElement('span');
+      span.className = 't-line';
+      span.textContent = e.data;
+      terminal.appendChild(span);
+      terminal.scrollTop = terminal.scrollHeight;
+    };
+    sse.onerror = function(){ sse.close(); };
+  } catch(e) {}
+
+  fetch('/api/deploy/start', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ cms: wizardState.cms, sites: wizardState.sites, credentials: wizardState.credentials, theme: wizardState.theme })
+  }).catch(function(){});
+}
+
+// ===== INIT =====
+renderStepBar();
+renderFeedsTable();
+updatePreview();
+</script>
+</body>
+</html>

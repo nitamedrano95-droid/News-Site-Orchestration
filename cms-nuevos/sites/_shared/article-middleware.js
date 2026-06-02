@@ -46,7 +46,10 @@ export async function handleArticleRequest(context, siteSlug) {
   }
 
   try {
-    if (!env.DB) return await next();
+    if (!env.DB) {
+      console.warn(`[OG MIDDLEWARE] ${siteSlug}: env.DB not available — OG tags will be empty. Check D1 binding in Pages dashboard.`);
+      return await next();
+    }
 
     const { article } = await resolveArticleBySlug(env.DB, requestedSlug);
     if (!article) {

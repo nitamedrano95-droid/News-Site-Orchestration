@@ -73,6 +73,9 @@ facebook.get('/monitor', async (c) => {
           s.FB_PUBLICADO,
           s.FB_FECHA,
           s.FB_POST_ID,
+          p.VALIDO_AI,
+          p.VALIDADO_EN,
+          p.RAZON_INVALIDO,
           '${siteSlug}' as SITIO,
           'PARA' as TIPO
         FROM ${tableName} s
@@ -478,17 +481,175 @@ facebook.get('/oauth/start-all', async (c) => {
   return c.html(html);
 });
 
+// ── GET /oauth/callback — OAuth callback para guardar tokens en todas las DBs ──
+facebook.get('/oauth/callback', async (c) => {
+  const code = c.req.query('code');
+  const error = c.req.query('error');
+  
+  if (error) {
+    return c.html(`<html><body>
+      <h1 style="color:red">OAuth Error: ${error}</h1>
+      <p>${c.req.query('error_description') || ''}</p>
+    </body></html>`);
+  }
+  
+  if (!code) {
+    return c.html('<html><body><h1>No code received</h1></body></html>');
+  }
+  
+  const FB_APP_ID = c.env.FB_APP_ID || '2726604081032124';
+  const FB_APP_SECRET = c.env.FB_APP_SECRET;
+  
+  try {
+    console.log('[OAUTH] Received code, attempting token exchange');
+    // 1. Exchange code for user access token
+    const tokenUrl = `https://graph.facebook.com/v19.0/oauth/access_token?client_id=${FB_APP_ID}&client_secret=${FB_APP_SECRET}&redirect_uri=${encodeURIComponent(c.req.url.split('?')[0])}&code=${code}`;
+    console.log('[OAUTH] Token URL:', tokenUrl.replace(FB_APP_SECRET, '***'));
+    
+    const tokenRes = await fetch(tokenUrl);
+    const tokenData = await tokenRes.json();
+    console.log('[OAUTH] Token response:', JSON.stringify(tokenData));
+    
+    if (!tokenData.access_token) {
+      throw new Error(tokenData.error?.message || 'Failed to get access token');
+    }
+    
+    const userAccessToken = tokenData.access_token;
+    console.log('[OAUTH] User token obtained successfully');
+    
+    // 2. Get all pages managed by this user
+    const pagesRes = await fetch(
+      `https://graph.facebook.com/v19.0/me/accounts?fields=id,name,access_token&access_token=${userAccessToken}`
+    );
+    const pagesData = await pagesRes.json();
+    
+    if (!pagesData.data) {
+      throw new Error(pagesData.error?.message || 'Failed to get pages');
+    }
+    
+    const pages = pagesData.data;
+    console.log(`[OAUTH] Found ${pages.length} pages`);
+    
+    // 3. Map Facebook page names to slugs
+    const nameToSlug = {
+      'we news mexico': 'wenewsmexico', 'diario mexicano': 'diariomexicano',
+      'el observador republicano': 'elobservadorrepublicano', 'mexico daily': 'mexicodaily',
+      'mexican news of the world': 'mexicannewsoftheworld', 'perspectiva mexicana': 'perspectivamexicana',
+      'nacion al instante': 'nacionalinstante', 'adn mexicano': 'adnmexicano',
+      'mexico & the world': 'mexicoandtheworld', 'politica salvaje al minuto': 'politicasalvajealminuto',
+      'mexico plus': 'mexicoplus', 'el profeta mexicano': 'elprofetamexicano',
+      'monitor republicano digital': 'monitorrepublicano', 'finance & markets mexico': 'financemarketsmx',
+      'el analisis mexicano': 'elanalisismexicano', 'actualidad sin fronteras': 'actualidadsinfronteras',
+      'diario mexico': 'diariomexico', 'expreso mexicano': 'expresomexicano',
+      'mexico en resumen': 'mexicoenresumen', 'pulso republicano noticias': 'pulsorepublicanonoticias',
+      'enfoque mexicano': 'enfoquemexicano', 'noticias al instante': 'noticiasalinstante',
+      'azteca mexico noticias': 'aztecamexiconoticias', 'social mexico news': 'socialmexiconews',
+      'noticias 123': 'noticias123', 'centro news': 'centronews',
+      'breaking center news mexico': 'breakingcentermexico', 'a la vista noticias': 'alavistanoticias',
+      'tmz news mexico': 'tmznews', 'radio abc': 'radioabc', 'noticias integra': 'noticiasintegra',
+      'boom informativo': 'boominformativo', 'capital press': 'capitalpress',
+      'diario express': 'diarioexpress', 'el pulso mexicano': 'elpulsomexicano',
+      'enfoque capital': 'enfoquecapital', 'enfoque directo': 'enfoquedirecto',
+      'formula cdmx': 'formulacdmx', 'mexican times': 'mexicantimes',
+      'mexico 360 noticias': 'mexico360noticias', 'm radio': 'mradio',
+      'noticias horizonte': 'noticiashorizonte', 'pulso diario': 'pulsodiario',
+      'punto clave': 'puntoclave', 'punto noticias': 'puntonoticias',
+      'radar informativo': 'radarinformativo', 'reporte diario': 'reportediario',
+      'abc television': 'televisionabc', 'nodo informativo': 'nodoinformativo',
+      'bitacora urbana': 'bitacoraurbana', 'vertice noticias': 'verticenoticias',
+      'mexico informado': 'mexicoinformado', 'radio cinco noticias': 'radiocinconoticias',
+      'central mexico news': 'centralmexico', 'cbn noticias': 'cbnnoticias',
+      'noticias objetivo': 'noticiasobjetivo', 'reporte central mx': 'reportecentralmx',
+      'tv mexico': 'tvmexico', 'radioredmx': 'radioredmx',
+    };
+    
+    // Normalize name helper
+    const normalizeName = (name) => name?.trim().toLowerCase().replace(/['']/g, '').replace(/é/g, 'e').replace(/ó/g, 'o') || '';
+    
+    // Build page_id -> slug mapping
+    const pageIdToSlug = {};
+    for (const page of pages) {
+      const normalized = normalizeName(page.name);
+      const slug = nameToSlug[normalized];
+      if (slug) {
+        pageIdToSlug[page.id] = { slug, token: page.access_token, name: page.name };
+        console.log(`[OAUTH] Page "${page.name}" (${page.id}) -> ${slug}`);
+      }
+    }
+    
+    // 4. Update tokens in all databases
+    console.log('[OAUTH] pageIdToSlug entries:', Object.keys(pageIdToSlug).length);
+    
+    // Instead of making cross-origin calls (which fail from Workers),
+    // generate a script that can be run locally to update all databases
+    const updateScript = Object.entries(pageIdToSlug).map(([pageId, { slug, token, name }]) => {
+      return { slug, token, pageId, name };
+    });
+    
+    const results = {
+      note: 'Cross-origin calls fail from Cloudflare Workers. Run this script locally:',
+      script: `cat << 'TOKENS' > /tmp/fb_tokens.json\n${JSON.stringify(updateScript, null, 2)}\nTOKENS`,
+      tokens: updateScript
+    };
+    
+    // Also try direct D1 for the current CMS
+    try {
+      for (const [pageId, { slug, token }] of Object.entries(pageIdToSlug)) {
+        const updateResult = await c.env.DB.prepare(`
+          UPDATE SITIOS SET FACEBOOK_PAGE_TOKEN = ?, FACEBOOK_TOKEN_UPDATED_AT = datetime('now') WHERE SLUG = ?
+        `).bind(token, slug).run();
+        if (updateResult.meta?.changes > 0) {
+          console.log(`[OAUTH] Updated ${slug} directly in cms-originaux DB`);
+          results[`cms-originaux/${slug}`] = 'updated_direct';
+        }
+      }
+    } catch (e) {
+      console.log('[OAUTH] Direct DB error:', e.message);
+    }
+    
+    return c.html(`<html><body style="font-family: monospace; padding: 2rem;">
+      <h1 style="color: green">✅ OAuth Successful!</h1>
+      <p>User access token obtained and processing ${pages.length} pages...</p>
+      <h2>Token Updates:</h2>
+      <pre>${JSON.stringify(results, null, 2)}</pre>
+      <h2>Pages Found:</h2>
+      <ul>
+        ${pages.map(p => `<li>${p.name} (${p.id})</li>`).join('')}
+      </ul>
+    </body></html>`);
+    
+  } catch (e) {
+    console.error('[OAUTH] Error:', e);
+    return c.html(`<html><body style="font-family: monospace; padding: 2rem;">
+      <h1 style="color: red">❌ OAuth Failed</h1>
+      <p>${e.message}</p>
+    </body></html>`);
+  }
+});
+
+// ── POST /update-token — Actualizar token de página en SITIOS ──
 facebook.post('/update-token', async (c) => {
-  const { slug, token } = await c.req.json();
-  if (!slug || !token) return c.json({ success: false, error: 'Missing slug or token' }, 400);
+  const { slug, token, page_id } = await c.req.json();
+  
+  if (!slug || !token) {
+    return c.json({ success: false, error: 'Missing slug or token' }, 400);
+  }
+  
   try {
     const result = await c.env.DB.prepare(`
-      UPDATE SITIOS SET FACEBOOK_PAGE_TOKEN = ?, FACEBOOK_TOKEN_UPDATED_AT = datetime('now') WHERE SLUG = ?
+      UPDATE SITIOS 
+      SET FACEBOOK_PAGE_TOKEN = ?, FACEBOOK_TOKEN_UPDATED_AT = datetime('now')
+      WHERE SLUG = ?
     `).bind(token, slug).run();
-    return result.meta?.changes > 0 
-      ? c.json({ success: true, slug })
-      : c.json({ success: false, error: 'Site not found' }, 404);
+    
+    if (result.meta?.changes > 0) {
+      console.log(`[UPDATE_TOKEN] Updated token for ${slug}`);
+      return c.json({ success: true, slug });
+    } else {
+      return c.json({ success: false, error: 'Site not found or token unchanged' }, 404);
+    }
   } catch (e) {
+    console.error(`[UPDATE_TOKEN] Error for ${slug}:`, e);
     return c.json({ success: false, error: e.message }, 500);
   }
 });

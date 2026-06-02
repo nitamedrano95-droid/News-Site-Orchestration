@@ -73,6 +73,9 @@ facebook.get('/monitor', async (c) => {
           s.FB_PUBLICADO,
           s.FB_FECHA,
           s.FB_POST_ID,
+          p.VALIDO_AI,
+          p.VALIDADO_EN,
+          p.RAZON_INVALIDO,
           '${siteSlug}' as SITIO,
           'PARA' as TIPO
         FROM ${tableName} s
