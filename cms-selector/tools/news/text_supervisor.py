@@ -66,16 +66,26 @@ def local_fix(article: Dict) -> Dict:
 
 
 def _prompt(article: Dict) -> List[Dict]:
+    # El supervisor solo corrige ortografia/gramatica/estructura. Para no malgastar
+    # tokens re-enviando el content completo (que puede ser >1000 palabras),
+    # mostramos el content y pedimos al modelo que devuelva SOLO las diferencias
+    # ortograficas/gramaticales en un JSON compacto. El llamador rellena los
+    # campos que el supervisor no devuelve.
     system = (
-        "Eres un corrector profesional. Solo corrige ortografía, gramática y estructura. "
-        "No cambies hechos ni agregues información nueva. No inventes datos. "
-        "Devuelve JSON con title, description, content y full_text."
+        "Eres un corrector profesional. Tu trabajo es SOLO corregir ortografia, "
+        "gramatica y estructura. NO cambies hechos, NO agregues informacion, "
+        "NO inventes datos. NO resumas. "
+        "Devuelve un JSON con: "
+        "  - title: el titulo corregido ortograficamente (si tiene errores) o igual al original "
+        "  - description: la descripcion corregida (si tiene errores) o igual "
+        "  - corrections: lista breve de cambios que hiciste (max 5 items) o [] si nada "
+        "Responde UNICAMENTE con el JSON, sin markdown, sin explicaciones."
     )
     user = {
         "title": article.get("title", ""),
         "description": article.get("description", ""),
-        "content": article.get("content", ""),
-        "full_text": article.get("full_text", ""),
+        "content": article.get("content", "")[:3000],  # truncamos para no inflar el prompt
+        "full_text": article.get("full_text", "")[:1000],
     }
     return [
         {"role": "system", "content": system},
@@ -96,14 +106,20 @@ def supervise_article(article: Dict, provider: str, model: str) -> Dict:
         return article
 
     try:
-        content = chat(provider, model, _prompt(article), temperature=0.2, max_tokens=1200)
+        # max_tokens=4000: deja margen para articulos muy largos aunque ahora
+        # el supervisor devuelve un JSON compacto (title + description + corrections).
+        # Mantenemos 4000 por si el modelo quiere devolver mas detalle.
+        content = chat(provider, model, _prompt(article), temperature=0.2, max_tokens=4000)
         data = _parse_json(content)
         fixed = dict(article)
+        # El supervisor devuelve title/description corregidos. Si no los
+        # devuelve (modelo minimalista), conservamos los originales.
         fixed.update({
-            "title": _clean_text(data.get("title", "")),
-            "description": _clean_text(data.get("description", "")),
-            "content": _clean_text(data.get("content", "")),
-            "full_text": _clean_text(data.get("full_text", "")),
+            "title": _clean_text(data.get("title", "") or article.get("title", "")),
+            "description": _clean_text(data.get("description", "") or article.get("description", "")),
+            "content": _clean_text(data.get("content", "") or article.get("content", "")),
+            "full_text": _clean_text(data.get("full_text", "") or article.get("full_text", "")),
+            "corrections": data.get("corrections", []),  # metadata util para debug
             "supervised": True,
             "supervisor_provider": provider,
             "supervisor_model": model,

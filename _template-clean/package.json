@@ -1,0 +1,17 @@
+{
+  "name": "news-site-template",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Plantilla limpia para generar sitios de noticias con Cloudflare Pages + D1.",
+  "bin": {
+    "new-site": "./scripts/new-site.mjs"
+  },
+  "scripts": {
+    "new-site":       "node ./scripts/new-site.mjs",
+    "new-site:dry":   "node ./scripts/new-site.mjs --config ./site.config.example.json --out /tmp/_test_site --dry-run"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

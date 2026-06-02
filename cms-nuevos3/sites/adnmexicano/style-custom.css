@@ -1,10 +1,10 @@
 :root {
-  --primary: #be123c;
-  --secondary: #f43f5e;
-  --light: #fecdd3;
-  --bg: #fff1f2;
-  --text: #881337;
-  --header: #be123c;
+  --primary: #BF2026;
+  --secondary: #8DC63F;
+  --light: #D9F99D;
+  --bg: #F0FDF4;
+  --text: #14532D;
+  --header: #166534;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -28,7 +28,7 @@ body {
   color: #fff; text-decoration: none; border-radius: 6px;
   font-weight: 700; transition: all 0.3s; border: 2px solid var(--primary); margin-top: 8px;
 }
-.btn-primary:hover { background: transparent; color: var(--primary); }
+.btn-primary:hover { background: linear-gradient(135deg, #8DC63F 0%, #BF2026 100%); color: #fff; box-shadow: 0 6px 20px #BF202640; }
 .section-title {
   font-size: 1.5em; margin-bottom: 24px; color: var(--text);
   font-weight: 800; position: relative; padding-bottom: 10px;
@@ -89,10 +89,7 @@ body {
   background: linear-gradient(135deg, #be123c25 0%, #f43f5e35 50%, #fecdd320 100%) !important;
 }
 
-.hero-dna .helix-bar {
-  background: linear-gradient(90deg, #be123c, #f43f5e) !important;
-  opacity: 0.6;
-}
+.hero-dna .helix-bar { background: linear-gradient(90deg, #BF2026, #8DC63F) !important; opacity: 0.6; }
 
 .hero-pulse {
   background: linear-gradient(180deg, #fff1f2 0%, #be123c08 50%, #fff1f2 100%);
@@ -103,25 +100,17 @@ body {
   background: radial-gradient(circle, #fecdd315 0%, transparent 70%);
 }
 
-.hero-aztec .step {
-  background: linear-gradient(90deg, #be123c, #f43f5e) !important;
-}
+.hero-aztec .step { background: linear-gradient(90deg, #BF2026, #8DC63F) !important; }
 
-.hero-analysis .chart-bars {
-  background: linear-gradient(180deg, #be123c10 0%, #be123c05 100%);
-}
+.hero-analysis .chart-bars { background: linear-gradient(180deg, #BF202610 0%, #BF202605 100%); }
 
 .hero-instant .clock-face {
   background: radial-gradient(circle, #be123c10 0%, transparent 70%);
 }
 
-.hero-bridge .bridge-connector {
-  background: linear-gradient(90deg, #be123c, #f43f5e);
-}
+.hero-bridge .bridge-connector { background: linear-gradient(90deg, #BF2026, #8DC63F); }
 
-.hero-bold .bold-content {
-  background: linear-gradient(135deg, #be123c12 0%, #fecdd315 100%);
-}
+.hero-bold .bold-content { background: linear-gradient(135deg, #BF202612 0%, #D9F99D15 100%); }
 
 .hero-observer .panorama-bar {
   background: linear-gradient(90deg, #be123c, #f43f5e, #fecdd3, #be123c);
@@ -131,9 +120,7 @@ body {
   background: linear-gradient(to bottom, #be123c12, transparent);
 }
 
-.hero-plus .layer {
-  background: linear-gradient(90deg, #be123c, #f43f5e) !important;
-}
+.hero-plus .layer { background: linear-gradient(90deg, #BF2026, #8DC63F) !important; }
 
 .hero-borderless .borderless-image {
   background: linear-gradient(135deg, #be123c35 0%, #f43f5e25 50%, #fecdd315 100%) !important;
@@ -163,17 +150,13 @@ body {
   background: radial-gradient(circle at center, #be123c08 0%, transparent 60%);
 }
 
-.hero-radio .wave-container .wave {
-  background: linear-gradient(to top, #be123c, #f43f5e) !important;
-}
+.hero-radio .wave-container .wave { background: linear-gradient(to top, #BF2026, #8DC63F) !important; }
 
 .hero-perspective .perspective-vanish {
   background: linear-gradient(180deg, #be123c08, transparent);
 }
 
-.hero-community .m-tile {
-  background: linear-gradient(135deg, #be123c, #f43f5e) !important;
-}
+.hero-community .m-tile { background: linear-gradient(135deg, #BF2026, #8DC63F) !important; }
 
 /* Card improvements */
 .col-card, .pair-card, .rhythm-card, .world-card,
@@ -188,16 +171,8 @@ body {
 }
 
 /* Button gradient */
-.btn-primary {
-  background: linear-gradient(135deg, #be123c 0%, #f43f5e 100%);
-  border: none;
-  box-shadow: 0 4px 14px #be123c30;
-}
-.btn-primary:hover {
-  background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%);
-  color: #fff;
-  box-shadow: 0 6px 20px #be123c40;
-}
+.btn-primary { background: linear-gradient(135deg, #BF2026 0%, #8DC63F 100%); border: none; box-shadow: 0 4px 14px #BF202630; }
+.btn-primary:hover { background: linear-gradient(135deg, #8DC63F 0%, #BF2026 100%); color: #fff; box-shadow: 0 6px 20px #BF202640; }
 
 /* Section subtle backgrounds */
 .latest-grid,
@@ -552,10 +527,7 @@ header {
     box-shadow: 0 4px 14px rgba(0,0,0,0.1);
 }
 
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-}
+.btn-primary:hover { background: linear-gradient(135deg, #8DC63F 0%, #BF2026 100%); color: #fff; box-shadow: 0 6px 20px #BF202640; }
 
 /* Category tag enhancements */
 .category-tag,

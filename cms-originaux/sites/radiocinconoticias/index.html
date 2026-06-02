@@ -70,7 +70,7 @@
         const listHtml = list.map(a => `
             <div class="rc-list-item">
                 <a href="articulo/index.html?slug=${enc(a.slug)}">
-                    <img src="${$1||'logo.png'}" alt="${esc(a.title)}" loading="lazy">
+                    <img src="${esc(a.imageUrl)||'logo.png'}" alt="${esc(a.title)}" loading="lazy">
                 </a>
                 <div class="rc-list-content">
                     <span class="category-badge cat-${esc((a.category||'general').toLowerCase())}">${esc(a.category||'General')}</span>
@@ -86,7 +86,7 @@
                 <article class="rc-main-article">
                     <div class="main-img-wrapper">
                         <a href="articulo/index.html?slug=${enc(main.slug)}">
-                            <img src="${$1||'logo.png'}" alt="${esc(main.title)}" loading="lazy">
+                            <img src="${esc(main.imageUrl)||'logo.png'}" alt="${esc(main.title)}" loading="lazy">
                         </a>
                     </div>
                     <div class="main-content-body">
@@ -121,7 +121,7 @@
             <article class="article-card">
                 <div class="card-image-wrapper">
                     <a href="articulo/index.html?slug=${enc(a.slug)}">
-                        <img src="${$1||'logo.png'}" alt="${esc(a.title)}" loading="lazy">
+                        <img src="${esc(a.imageUrl)||'logo.png'}" alt="${esc(a.title)}" loading="lazy">
                     </a>
                 </div>
                 <div class="card-content">

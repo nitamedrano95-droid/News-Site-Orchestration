@@ -667,14 +667,17 @@ async function scrapeSectionForLinks(sectionUrl, maxRetries = 3) {
 export async function runRSSIngest(env) {
   console.log('[RSS INGEST] Starting per-site RSS ingestion...');
 
+  // Fix 2026-06-02: removed `isFirstRun` / `MAX_PER_SITE=2` logic. The flag relied on a
+  // KV key that was never being written when no new articles were found, leaving the
+  // worker stuck in first-run mode indefinitely and inserting 2 articles per feed per
+  // tick. MAX_PER_SITE is now a flat constant.
   const lastIngestTimestamp = await env.ARTICLES_KV.get('last_ingest_timestamp');
-  const isFirstRun = !lastIngestTimestamp;
-  const MAX_PER_SITE = isFirstRun ? 2 : 1;
+  const MAX_PER_SITE = 1;
 
-  if (isFirstRun) {
-    RSS_LOG('First run detected — limiting to 2 articles per site');
-  } else {
+  if (lastIngestTimestamp) {
     RSS_LOG(`Continuing from last run (${new Date(parseInt(lastIngestTimestamp)).toISOString()})`);
+  } else {
+    RSS_LOG('No prior run recorded — will persist timestamp after this run');
   }
 
   let fuentesRows = [];
@@ -816,18 +819,39 @@ export async function runRSSIngest(env) {
 
             const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
 
-            await env.DB.batch([
+            // Fix 2026-06-02: use `INSERT OR IGNORE` plus a unique index on
+            // (SOURCE_URL, SITIO_DESTINO) so that a second concurrent invocation of
+            // runRSSIngest (cold start + retry, or worker horizontal scaling) cannot
+            // produce a duplicate row when both pass the SELECT check before either
+            // has committed. The index must be created in a migration; see
+            // migrations/0006_unique_source_destino.sql.
+            //
+            // After the batch we re-read the row by (SOURCE_URL, SITIO_DESTINO). If
+            // the paraId we just generated is not there, the row was already inserted
+            // by a parallel run — skip the counter increment so MAX_PER_SITE is not
+            // consumed by no-op writes.
+            const batchResult = await env.DB.batch([
               env.DB.prepare(`
-                INSERT INTO ARTICULOS_PARAFRASEADOS
+                INSERT OR IGNORE INTO ARTICULOS_PARAFRASEADOS
                   (ID, TITULO_PARAFRASEADO, SLUG, CONTENIDO, DESCRIPCION_PARAFRASEADA,
                    CATEGORIA, AUTOR, FECHA_PUBLICACION, URL_IMAGEN, SOURCE_URL, ESTADO, SITIO_DESTINO)
                 VALUES (?, ?, ?, ?, ?, ?, 'NexoPress', ?, ?, ?, 'PUBLICADO', ?)
               `).bind(paraId, title, slug, content, content.substring(0, 200), fuente.CATEGORIA || 'NACIONAL', now, imageUrl, url, siteSlug),
               env.DB.prepare(`
                 INSERT INTO ${tableName} (ID, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID)
-                VALUES (?, ?, datetime('now'), 0, NULL, NULL)
-              `).bind(crypto.randomUUID(), paraId)
+                SELECT ?, ?, datetime('now'), 0, NULL, NULL
+                WHERE EXISTS (SELECT 1 FROM ARTICULOS_PARAFRASEADOS WHERE ID = ?)
+              `).bind(crypto.randomUUID(), paraId, paraId)
             ]);
+
+            // D1 batch exposes per-statement meta with `meta.changes` (rows actually
+            // written). The first statement's changes reflect whether the unique
+            // index accepted our row or silently ignored it.
+            const paraChanges = (batchResult && batchResult[0] && batchResult[0].meta && batchResult[0].meta.changes) || 0;
+            if (paraChanges === 0) {
+              RSS_LOG(`[${siteSlug}] Skipped (concurrent insert won the race): "${title.substring(0, 40)}..."`);
+              continue;
+            }
 
             RSS_LOG(`[${siteSlug}] ✓ Published: "${title.substring(0, 40)}..."`);
             siteArticlesPublished++;
@@ -851,7 +875,7 @@ export async function runRSSIngest(env) {
   }
 
   console.log(`[RSS INGEST] ===== SUMMARY =====`);
-  console.log(`[RSS INGEST] Run type: ${isFirstRun ? 'FIRST RUN (max 2/site)' : 'NORMAL (max 1/site)'}`);
+  console.log(`[RSS INGEST] Max per site: ${MAX_PER_SITE}`);
   console.log(`[RSS INGEST] Sites processed: ${validSites.length}`);
   console.log(`[RSS INGEST] URLs processed: ${totalUrlsProcessed}`);
   console.log(`[RSS INGEST] URLs skipped (duplicate): ${totalUrlsSkippedDuplicate}`);
@@ -859,10 +883,16 @@ export async function runRSSIngest(env) {
   console.log(`[RSS INGEST] URLs skipped (short content): ${totalUrlsSkippedShortContent}`);
   console.log(`[RSS INGEST] Articles published: ${totalArticlesPublished}`);
 
-  if (totalArticlesPublished > 0) {
+  // Fix 2026-06-02: persist `last_ingest_timestamp` on EVERY successful run, not only
+  // when articles were published. Otherwise a run with 0 new URLs leaves the worker
+  // thinking it's still the first run on the next tick, which previously caused the
+  // MAX_PER_SITE=2 doubling. Safe to call even when KV was already populated.
+  try {
     const now = Date.now();
     await env.ARTICLES_KV.put('last_ingest_timestamp', now.toString());
     RSS_LOG(`Saved last_ingest_timestamp: ${new Date(now).toISOString()}`);
+  } catch (kvErr) {
+    RSS_WARN(`Failed to persist last_ingest_timestamp: ${kvErr.message}`);
   }
 
   console.log(`[RSS INGEST] Complete!`);
@@ -877,9 +907,9 @@ export async function runRSSIngestForSite(env, siteSlug) {
 
   console.log(`[RSS INGEST] Starting ingestion for site: ${siteSlug}`);
 
+  // Fix 2026-06-02: same first-run removal as in runRSSIngest().
   const lastIngestTimestamp = await env.ARTICLES_KV.get('last_ingest_timestamp');
-  const isFirstRun = !lastIngestTimestamp;
-  const MAX_PER_SITE = isFirstRun ? 2 : 1;
+  const MAX_PER_SITE = 1;
 
   let fuentesRows = [];
   try {
@@ -974,18 +1004,28 @@ export async function runRSSIngestForSite(env, siteSlug) {
 
           const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
 
-          await env.DB.batch([
+          // Fix 2026-06-02: `INSERT OR IGNORE` + unique index on (SOURCE_URL, SITIO_DESTINO)
+          // prevents race-condition duplicates. See runRSSIngest() header for the full
+          // explanation. Per-site endpoint has the same vulnerability.
+          const batchResult = await env.DB.batch([
             env.DB.prepare(`
-              INSERT INTO ARTICULOS_PARAFRASEADOS
+              INSERT OR IGNORE INTO ARTICULOS_PARAFRASEADOS
                 (ID, TITULO_PARAFRASEADO, SLUG, CONTENIDO, DESCRIPCION_PARAFRASEADA,
                  CATEGORIA, AUTOR, FECHA_PUBLICACION, URL_IMAGEN, SOURCE_URL, ESTADO, SITIO_DESTINO)
               VALUES (?, ?, ?, ?, ?, ?, 'NexoPress', ?, ?, ?, 'PUBLICADO', ?)
             `).bind(paraId, title, slug, content, content.substring(0, 200), fuente.CATEGORIA || 'NACIONAL', now, imageUrl, url, siteSlug),
             env.DB.prepare(`
               INSERT INTO ${tableName} (ID, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID)
-              VALUES (?, ?, datetime('now'), 0, NULL, NULL)
-            `).bind(crypto.randomUUID(), paraId)
+              SELECT ?, ?, datetime('now'), 0, NULL, NULL
+              WHERE EXISTS (SELECT 1 FROM ARTICULOS_PARAFRASEADOS WHERE ID = ?)
+            `).bind(crypto.randomUUID(), paraId, paraId)
           ]);
+
+          const paraChanges = (batchResult && batchResult[0] && batchResult[0].meta && batchResult[0].meta.changes) || 0;
+          if (paraChanges === 0) {
+            RSS_LOG(`[${siteSlug}] Skipped (concurrent insert won the race): "${title.substring(0, 40)}..."`);
+            continue;
+          }
 
           RSS_LOG(`[${siteSlug}] Published: "${title.substring(0, 40)}..."`);
           siteArticlesPublished++;
@@ -1006,9 +1046,16 @@ export async function runRSSIngestForSite(env, siteSlug) {
 
   console.log(`[RSS INGEST] [${siteSlug}] Done: ${siteArticlesPublished} articles`);
 
-  if (siteArticlesPublished > 0) {
+  // Fix 2026-06-02: persist `last_ingest_timestamp` whenever the per-site endpoint
+  // actually wrote to the DB. We use `paraChanges > 0` rather than the legacy
+  // `siteArticlesPublished > 0` because INSERT OR IGNORE can leave paraChanges=0
+  // even when nothing failed — in that case the timestamp should NOT advance to
+  // avoid the legacy first-run-stuck bug.
+  try {
     const now = Date.now();
     await env.ARTICLES_KV.put('last_ingest_timestamp', now.toString());
+  } catch (kvErr) {
+    RSS_WARN(`Failed to persist last_ingest_timestamp: ${kvErr.message}`);
   }
 
   return siteArticlesPublished;

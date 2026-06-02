@@ -109,16 +109,23 @@ export function cleanArticleContent(text) {
   const filteredLines = lines.filter(line => {
     const lower = line.toLowerCase().trim();
     const len = line.trim().length;
-    
+
     if (len < 10) return false;
     if (lower.includes('suscribete') || lower.includes('suscríbete')) return false;
     if (lower.includes('publicidad')) return false;
     if (lower.includes('lea también') || lower.includes('lea tamb')) return false;
-    
+
     return true;
   });
 
-  return filteredLines.join('\n').trim();
+  // Fix 2026-06-02: safety net. If any HTML tags survived (La Jornada page
+  // chrome, layout divs, credits spans, Disqus/MGID comments blocks), strip
+  // them now. We do this AFTER the line filter so that lines consisting only
+  // of HTML (e.g. `<!-- DISQUS -->`) are not added back via the tag removal.
+  let joined = filteredLines.join('\n').trim();
+  joined = joined.replace(/<[^>]+>/g, ' ');
+  joined = joined.replace(/\s+/g, ' ').trim();
+  return joined;
 }
 
 function normalizeTitle(title) {
@@ -300,13 +307,44 @@ async function scrapeArticleFromURL(url, env) {
     }
 
     let content = '';
-    const articleMatch = html.match(/<article[^>]*>([\s\S]*?)<\/article>/i)
-      || html.match(/<div[^>]*class=["'][^"']*article[^"']*["'][^>]*>([\s\S]*?)<\/div>/i)
-      || html.match(/<div[^>]*class=["'][^"']*content[^"']*["'][^>]*>([\s\S]*?)<\/div>/i);
+    // Fix 2026-06-02: do NOT match `<div class="...article...">` as the article body.
+    // La Jornada uses `<div id="article-cont" class="main-cont article-cont actuality">`
+    // as a page wrapper, so the non-greedy capture grabs only the header junk
+    // (nav, "Anterior/Siguiente", credits) and the resulting `CONTENIDO` ends up
+    // storing the whole page chrome as the article body.
+    //
+    // El Informador has a different trap: the first three `<article>` tags on the
+    // page are "Lee también" related-news cards (~60 chars of text), and the REAL
+    // article is the LAST `<article>` on the page (~7,500 chars). A naive
+    // `match(/<article...<\/article>/)` captures the first one and stores the
+    // related-news card. The fix below grabs the LAST `<article>` (or
+    // `entry-content` / `post-content`) so we get the actual prose.
+    let articleMatch = null;
+    const allArticles = html.match(/<article[^>]*>[\s\S]*?<\/article>/gi);
+    if (allArticles && allArticles.length > 0) {
+      // Take the longest match: it is almost always the real article body, with
+      // related-news cards being short (~1 KB) and the real body being 5+ KB.
+      const longest = allArticles.reduce((a, b) => (a.length >= b.length ? a : b));
+      const m = longest.match(/<article[^>]*>([\s\S]*?)<\/article>/i);
+      if (m) articleMatch = m;
+    }
+    if (!articleMatch) {
+      const m = html.match(/<div[^>]*id=["']article-text["'][^>]*>([\s\S]*?)<\/div>\s*<div[^>]*class=["']go gui["']/i);
+      if (m) articleMatch = m;
+    }
+    if (!articleMatch) {
+      const m = html.match(/<div[^>]*class=["'][^"']*\bentry-content\b[^"']*["'][^>]*>([\s\S]*?)<\/div>/i);
+      if (m) articleMatch = m;
+    }
+    if (!articleMatch) {
+      const m = html.match(/<div[^>]*class=["'][^"']*\bpost-content\b[^"']*["'][^>]*>([\s\S]*?)<\/div>/i);
+      if (m) articleMatch = m;
+    }
 
     if (articleMatch) {
       content = cleanArticleContent(articleMatch[1]);
     } else {
+      // Last-resort fallback: collect all <p> elements with >50 chars of text.
       const pMatch = html.match(/<p[^>]*>([\s\S]*?)<\/p>/gi);
       if (pMatch) {
         const paragraphs = pMatch

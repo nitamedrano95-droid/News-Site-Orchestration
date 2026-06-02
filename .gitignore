@@ -25,6 +25,12 @@ tokens_*.sh
 FACEBOOK_TOKENS_ANALYSIS.md
 meta.json
 text.txt
+mariela.json
+rss.txt
+clave.txt
+*.pem
+*.key
+n8n-workflows/
 scripts/setup_fb_tokens.py
 scripts/verify_fb_tokens.py
 src/setup_fb_tokens.sh
@@ -36,6 +42,7 @@ backups/archive/
 *.log
 *.csv
 *.json
+*.pdf
 !package.json
 !package-lock.json
 

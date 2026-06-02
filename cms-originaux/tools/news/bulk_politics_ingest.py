@@ -20,9 +20,11 @@ sys.path.insert(0, str(REPO_ROOT))
 from tools.api.newsapi import fetch_newsapi
 from utils.utils import _extract_full_text
 
-# Configure Gemini
-os.environ["PARAPHRASE_PROVIDER"] = "gemini"
-os.environ["PARAPHRASE_MODEL"] = "gemini-2.0-flash"
+# Configure Ollama Cloud (provider LLM unificado, jun 2026)
+# Parafraseo en masa: Kimi K2.6 (256K ctx, mejor redaccion editorial en espanol)
+# Si no hay OLLAMA_API_KEY se respeta el fallback del llm_client.py
+os.environ["PARAPHRASE_PROVIDER"] = os.environ.get("PARAPHRASE_PROVIDER", "ollama")
+os.environ["PARAPHRASE_MODEL"] = os.environ.get("PARAPHRASE_MODEL", "kimi-k2.6:cloud")
 
 from tools.news.paraphrase import NewsParaphraser
 

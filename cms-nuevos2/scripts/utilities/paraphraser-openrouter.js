@@ -1,21 +1,26 @@
 /**
- * Módulo de Parafraseo con OpenRouter
- * Usa el modelo Arcee Trinity Large para parafrasear noticias
+ * Módulo de Parafraseo con Ollama Cloud
+ * Usa Kimi K2.6 para parafrasear noticias (256K ctx, mejor redaccion editorial en espanol)
+ *
+ * NOTA: Este archivo historicamente se llamaba paraphraser-openrouter.js y
+ * usaba Arcee Trinity Large. Migrado a Ollama Cloud en jun 2026. Se conserva
+ * el nombre del archivo para no romper imports; el provider real se selecciona
+ * por env (OLLAMA_API_KEY, OLLAMA_PARAPHRASE_MODEL).
  */
 
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'arcee-ai/arcee-trinity-large';
+const OLLAMA_API_URL = 'https://ollama.com/api/chat';
+const MODEL = process.env.OLLAMA_PARAPHRASE_MODEL || 'kimi-k2.6:cloud';
 
-class OpenRouterParaphraser {
+class OllamaParaphraser {
   constructor(apiKey = null) {
-    this.apiKey = apiKey || process.env.OPENROUTER_API_KEY;
+    this.apiKey = apiKey || process.env.OLLAMA_API_KEY;
     if (!this.apiKey) {
-      console.warn('⚠️ OPENROUTER_API_KEY no configurada. El parafraseo usará modo simulado.');
+      console.warn('⚠️ OLLAMA_API_KEY no configurada. El parafraseo usará modo simulado.');
     }
   }
 
   /**
-   * Parafrasea un artículo completo usando Arcee Trinity Large
+   * Parafrasea un artículo completo usando Ollama Cloud (Kimi K2.6)
    */
   async paraphraseArticle(title, content, category) {
     // Si no hay API key, usar modo simulado
@@ -25,25 +30,23 @@ class OpenRouterParaphraser {
     }
 
     try {
-      console.log('   🤖 Llamando a OpenRouter (Arcee Trinity Large)...');
+      console.log(`   🤖 Llamando a Ollama Cloud (${MODEL})...`);
 
       // Prompt optimizado para parafraseo de noticias
       const prompt = this.buildParaphrasePrompt(title, content, category);
 
-      const response = await fetch(OPENROUTER_API_URL, {
+      const response = await fetch(OLLAMA_API_URL, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
-          'HTTP-Referer': process.env.SITE_URL || 'https://noticias-mexico.com',
-          'X-Title': 'News Paraphraser'
         },
         body: JSON.stringify({
           model: MODEL,
           messages: [
             {
               role: 'system',
-              content: `Eres un periodista profesional mexicano experto en parafrasear noticias. 
+              content: `Eres un periodista profesional mexicano experto en parafrasear noticias.
 Tu tarea es reescribir artículos manteniendo todos los hechos y datos importantes, pero usando:
 - Estructura completamente diferente
 - Sinónimos apropiados
@@ -51,7 +54,7 @@ Tu tarea es reescribir artículos manteniendo todos los hechos y datos important
 - Lenguaje natural y fluido
 - Evitar plagio manteniendo la información factual
 
-IMPORTANTE: 
+IMPORTANTE:
 - Mantén todas las fechas, nombres, cifras y datos exactos
 - No inventes información nueva
 - No cambies el significado de las declaraciones
@@ -62,24 +65,25 @@ IMPORTANTE:
               content: prompt
             }
           ],
-          temperature: 0.7,
-          max_tokens: 4000,
-          top_p: 0.9,
-          frequency_penalty: 0.5,
-          presence_penalty: 0.3
+          stream: false,
+          think: false,
+          options: {
+            temperature: 0.7,
+            num_predict: 4000,
+          }
         })
       });
 
       if (!response.ok) {
         const error = await response.text();
-        throw new Error(`OpenRouter error: ${response.status} - ${error}`);
+        throw new Error(`Ollama error: ${response.status} - ${error}`);
       }
 
       const data = await response.json();
-      const paraphrasedText = data.choices?.[0]?.message?.content;
+      const paraphrasedText = data?.message?.content;
 
       if (!paraphrasedText) {
-        throw new Error('Respuesta vacía de OpenRouter');
+        throw new Error('Respuesta vacía de Ollama');
       }
 
       // Parsear la respuesta
@@ -252,12 +256,12 @@ EXTRACTO:
 }
 
 // Exportar para uso en otros módulos
-module.exports = { OpenRouterParaphraser };
+module.exports = { OllamaParaphraser };
 
 // Ejemplo de uso directo
 if (require.main === module) {
   async function test() {
-    const paraphraser = new OpenRouterParaphraser();
+    const paraphraser = new OllamaParaphraser();
     
     const testArticle = {
       title: "México anuncia nuevo plan de infraestructura",

@@ -43,9 +43,11 @@ SITIOS = [
     "reportecentralmx", "verticenoticias", "noticiasobjetivo"
 ]
 
-# LLM Configuration
-PARAPHRASE_PROVIDER = "openrouter"
-PARAPHRASE_MODEL = "google/gemini-2.0-flash-001"
+# LLM Configuration (Ollama Cloud, jun 2026)
+# Parafraseo / limpieza ligera: GLM-5.1 (rapido, JSON-friendly, ~1s).
+# Se puede sobreescribir por env si se quiere usar otro modelo.
+PARAPHRASE_PROVIDER = os.environ.get("PARAPHRASE_PROVIDER", "ollama")
+PARAPHRASE_MODEL = os.environ.get("PARAPHRASE_MODEL", "glm-5.1:cloud")
 
 # API Configuration
 API_BASE_URL = "https://cms-api.sebastianvernis.space/api"

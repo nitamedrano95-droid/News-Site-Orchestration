@@ -1,10 +1,10 @@
 :root {
-  --primary: #4338ca;
-  --secondary: #818cf8;
-  --light: #c7d2fe;
-  --bg: #eef2ff;
-  --text: #312e81;
-  --header: #4f46e5;
+  --primary: #EE4B47;
+  --secondary: #333333;
+  --light: #FECACA;
+  --bg: #FEF2F2;
+  --text: #450A0A;
+  --header: #DC2626;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -28,7 +28,7 @@ body {
   color: #fff; text-decoration: none; border-radius: 6px;
   font-weight: 700; transition: all 0.3s; border: 2px solid var(--primary); margin-top: 8px;
 }
-.btn-primary:hover { background: transparent; color: var(--primary); }
+.btn-primary:hover { background: linear-gradient(135deg, #333333 0%, #EE4B47 100%); color: #fff; box-shadow: 0 6px 20px #EE4B4740; }
 .section-title {
   font-size: 1.5em; margin-bottom: 24px; color: var(--text);
   font-weight: 800; position: relative; padding-bottom: 10px;
@@ -79,10 +79,7 @@ body {
   background: linear-gradient(135deg, #4338ca25 0%, #818cf835 50%, #c7d2fe20 100%) !important;
 }
 
-.hero-dna .helix-bar {
-  background: linear-gradient(90deg, #4338ca, #818cf8) !important;
-  opacity: 0.6;
-}
+.hero-dna .helix-bar { background: linear-gradient(90deg, #EE4B47, #333333) !important; opacity: 0.6; }
 
 .hero-pulse {
   background: linear-gradient(180deg, #eef2ff 0%, #4338ca08 50%, #eef2ff 100%);
@@ -93,25 +90,17 @@ body {
   background: radial-gradient(circle, #c7d2fe15 0%, transparent 70%);
 }
 
-.hero-aztec .step {
-  background: linear-gradient(90deg, #4338ca, #818cf8) !important;
-}
+.hero-aztec .step { background: linear-gradient(90deg, #EE4B47, #333333) !important; }
 
-.hero-analysis .chart-bars {
-  background: linear-gradient(180deg, #4338ca10 0%, #4338ca05 100%);
-}
+.hero-analysis .chart-bars { background: linear-gradient(180deg, #EE4B4710 0%, #EE4B4705 100%); }
 
 .hero-instant .clock-face {
   background: radial-gradient(circle, #4338ca10 0%, transparent 70%);
 }
 
-.hero-bridge .bridge-connector {
-  background: linear-gradient(90deg, #4338ca, #818cf8);
-}
+.hero-bridge .bridge-connector { background: linear-gradient(90deg, #EE4B47, #333333); }
 
-.hero-bold .bold-content {
-  background: linear-gradient(135deg, #4338ca12 0%, #c7d2fe15 100%);
-}
+.hero-bold .bold-content { background: linear-gradient(135deg, #EE4B4712 0%, #FECACA15 100%); }
 
 .hero-observer .panorama-bar {
   background: linear-gradient(90deg, #4338ca, #818cf8, #c7d2fe, #4338ca);
@@ -121,9 +110,7 @@ body {
   background: linear-gradient(to bottom, #4338ca12, transparent);
 }
 
-.hero-plus .layer {
-  background: linear-gradient(90deg, #4338ca, #818cf8) !important;
-}
+.hero-plus .layer { background: linear-gradient(90deg, #EE4B47, #333333) !important; }
 
 .hero-borderless .borderless-image {
   background: linear-gradient(135deg, #4338ca35 0%, #818cf825 50%, #c7d2fe15 100%) !important;
@@ -153,17 +140,13 @@ body {
   background: radial-gradient(circle at center, #4338ca08 0%, transparent 60%);
 }
 
-.hero-radio .wave-container .wave {
-  background: linear-gradient(to top, #4338ca, #818cf8) !important;
-}
+.hero-radio .wave-container .wave { background: linear-gradient(to top, #EE4B47, #333333) !important; }
 
 .hero-perspective .perspective-vanish {
   background: linear-gradient(180deg, #4338ca08, transparent);
 }
 
-.hero-community .m-tile {
-  background: linear-gradient(135deg, #4338ca, #818cf8) !important;
-}
+.hero-community .m-tile { background: linear-gradient(135deg, #EE4B47, #333333) !important; }
 
 /* Card improvements */
 .col-card, .pair-card, .rhythm-card, .world-card,
@@ -178,16 +161,8 @@ body {
 }
 
 /* Button gradient */
-.btn-primary {
-  background: linear-gradient(135deg, #4338ca 0%, #818cf8 100%);
-  border: none;
-  box-shadow: 0 4px 14px #4338ca30;
-}
-.btn-primary:hover {
-  background: linear-gradient(135deg, #818cf8 0%, #4338ca 100%);
-  color: #fff;
-  box-shadow: 0 6px 20px #4338ca40;
-}
+.btn-primary { background: linear-gradient(135deg, #EE4B47 0%, #333333 100%); border: none; box-shadow: 0 4px 14px #EE4B4730; }
+.btn-primary:hover { background: linear-gradient(135deg, #333333 0%, #EE4B47 100%); color: #fff; box-shadow: 0 6px 20px #EE4B4740; }
 
 /* Section subtle backgrounds */
 .latest-grid,
@@ -542,10 +517,7 @@ header {
     box-shadow: 0 4px 14px rgba(0,0,0,0.1);
 }
 
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-}
+.btn-primary:hover { background: linear-gradient(135deg, #333333 0%, #EE4B47 100%); color: #fff; box-shadow: 0 6px 20px #EE4B4740; }
 
 /* Category tag enhancements */
 .category-tag,
@@ -659,7 +631,6 @@ header {
   align-items: center;
   padding: 0 12px;
   height: 100%;
-  background: #fff;
   flex-shrink: 0;
 }
 .ticker-anam-logo img { height: 30px; width: auto; object-fit: contain; filter: brightness(0) invert(1); }

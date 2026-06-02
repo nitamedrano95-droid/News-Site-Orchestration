@@ -3,7 +3,7 @@
 import { SITIOS_LIST, SITE_DOMAIN_MAP } from '../config.js';
 import { decodeHTMLEntities, articleSlugify, fetchWithTimeout, notifyTelegram } from '../utils/helpers.js';
 
-const FB_INTERVAL_MS = 12 * 60 * 60 * 1000;
+const FB_INTERVAL_MS = 3.5 * 60 * 60 * 1000; // 3.5 horas = 4 publicaciones/día (ventana 8-22 = 14h)
 
 // ============================================================
 // publishToFBIndividual — Publica un artículo a Facebook
@@ -168,6 +168,7 @@ export async function processFBTimer(env) {
       }
 
       // Buscar artículos no publicados primero, si no hay, buscar artículos publicados hace más de 24h
+      // Buscar el artículo más reciente (FB_PUBLICADO=0) — el más reciente primero
       let article = await env.DB.prepare(`
         SELECT
           s.ID as SITIO_ID,
@@ -178,52 +179,19 @@ export async function processFBTimer(env) {
         FROM ${tableName} s
         JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
         WHERE s.FB_PUBLICADO = 0
-          AND s.FECHA_ASIGNACION >= datetime('now', '-30 days')
+          AND s.FECHA_ASIGNACION >= datetime('now', '-48 hours')
           AND p.URL_IMAGEN IS NOT NULL
           AND p.URL_IMAGEN != ''
           AND p.URL_IMAGEN NOT LIKE '%logo.png'
           AND p.URL_IMAGEN NOT LIKE '%fallback%'
           AND p.SLUG IS NOT NULL
           AND p.SLUG != ''
-        ORDER BY s.FECHA_ASIGNACION ASC
+        ORDER BY s.FECHA_ASIGNACION DESC
         LIMIT 1
       `).first();
 
-      // Si no hay artículos nuevos, buscar artículos publicados hace más de 24h para re-publicar
       if (!article) {
-        article = await env.DB.prepare(`
-          SELECT
-            s.ID as SITIO_ID,
-            s.ID_PARAFRASEADO,
-            p.TITULO_PARAFRASEADO as TITULO,
-            p.SLUG,
-            p.URL_IMAGEN
-          FROM ${tableName} s
-          JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
-          WHERE s.FB_PUBLICADO = 1
-            AND s.FECHA_ASIGNACION >= datetime('now', '-30 days')
-            AND s.FB_FECHA IS NOT NULL AND s.FB_FECHA < datetime('now', '-7 days')
-            AND p.URL_IMAGEN IS NOT NULL
-            AND p.URL_IMAGEN != ''
-            AND p.URL_IMAGEN NOT LIKE '%logo.png'
-            AND p.URL_IMAGEN NOT LIKE '%fallback%'
-            AND p.SLUG IS NOT NULL
-            AND p.SLUG != ''
-          ORDER BY s.FB_FECHA ASC
-          LIMIT 1
-        `).first();
-        
-        if (article) {
-          // Resetear FB_PUBLICADO para poder re-publicar
-          await env.DB.prepare(`
-            UPDATE ${tableName} SET FB_PUBLICADO = 0 WHERE ID = ?
-          `).bind(article.SITIO_ID).run();
-          console.log(`[FB TIMER] ${siteSlug}: re-publicando artículo antiguo`);
-        }
-      }
-
-      if (!article) {
-        console.log(`[FB TIMER] ${siteSlug}: skipped (no pending articles)`);
+        console.log(`[FB TIMER] ${siteSlug}: skipped (no articles at all)`);
         stats.skipped++;
         continue;
       }
@@ -445,6 +413,7 @@ export async function processFBTimerForSite(env, siteSlug) {
       return stats;
     }
 
+    // Buscar el artículo más reciente (FB_PUBLICADO=0) — el más reciente primero
     let article = await env.DB.prepare(`
       SELECT
         s.ID as SITIO_ID,
@@ -455,50 +424,19 @@ export async function processFBTimerForSite(env, siteSlug) {
       FROM ${tableName} s
       JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
       WHERE s.FB_PUBLICADO = 0
-        AND s.FECHA_ASIGNACION >= datetime('now', '-30 days')
+        AND s.FECHA_ASIGNACION >= datetime('now', '-48 hours')
         AND p.URL_IMAGEN IS NOT NULL
         AND p.URL_IMAGEN != ''
         AND p.URL_IMAGEN NOT LIKE '%logo.png'
         AND p.URL_IMAGEN NOT LIKE '%fallback%'
         AND p.SLUG IS NOT NULL
         AND p.SLUG != ''
-      ORDER BY s.FECHA_ASIGNACION ASC
+      ORDER BY s.FECHA_ASIGNACION DESC
       LIMIT 1
     `).first();
 
     if (!article) {
-      article = await env.DB.prepare(`
-        SELECT
-          s.ID as SITIO_ID,
-          s.ID_PARAFRASEADO,
-          p.TITULO_PARAFRASEADO as TITULO,
-          p.SLUG,
-          p.URL_IMAGEN
-        FROM ${tableName} s
-        JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
-        WHERE s.FB_PUBLICADO = 1
-          AND s.FECHA_ASIGNACION >= datetime('now', '-30 days')
-          AND s.FB_FECHA IS NOT NULL AND s.FB_FECHA < datetime('now', '-7 days')
-          AND p.URL_IMAGEN IS NOT NULL
-          AND p.URL_IMAGEN != ''
-          AND p.URL_IMAGEN NOT LIKE '%logo.png'
-          AND p.URL_IMAGEN NOT LIKE '%fallback%'
-          AND p.SLUG IS NOT NULL
-          AND p.SLUG != ''
-        ORDER BY s.FB_FECHA ASC
-        LIMIT 1
-      `).first();
-
-      if (article) {
-        await env.DB.prepare(`
-          UPDATE ${tableName} SET FB_PUBLICADO = 0 WHERE ID = ?
-        `).bind(article.SITIO_ID).run();
-        console.log(`[FB TIMER] ${siteSlug}: re-publicando artículo antiguo`);
-      }
-    }
-
-    if (!article) {
-      console.log(`[FB TIMER] ${siteSlug}: skipped (no pending articles)`);
+      console.log(`[FB TIMER] ${siteSlug}: skipped (no articles at all)`);
       stats.skipped++;
       return stats;
     }

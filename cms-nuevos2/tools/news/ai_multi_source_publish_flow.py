@@ -364,18 +364,18 @@ def fetch_newsapi_with_retry(query: str, language: str, page_size: int, retries:
 def run_api_preflight_checks(args: argparse.Namespace) -> List[Tuple[str, bool, str]]:
     checks: List[Tuple[str, bool, str]] = []
 
-    # OpenRouter
+    # Ollama Cloud (provider unificado, jun 2026)
     try:
         _ = chat(
-            provider="openrouter",
-            model=args.openrouter_model,
+            provider="ollama",
+            model=os.environ.get("EDITOR_MODEL", "glm-5.1:cloud"),
             messages=[{"role": "user", "content": "Responde solo: ok"}],
             temperature=0.0,
             max_tokens=6,
         )
-        checks.append(("OpenRouter", True, "auth/model OK"))
+        checks.append(("Ollama", True, "auth/model OK"))
     except Exception as e:
-        checks.append(("OpenRouter", False, str(e)[:120]))
+        checks.append(("Ollama", False, str(e)[:120]))
 
     # NewsAPI
     try:
@@ -481,8 +481,8 @@ def choose_top_headlines(
     )
     try:
         raw = chat(
-            provider="openrouter",
-            model=model,
+            provider="ollama",
+            model=os.environ.get("EDITOR_MODEL", "glm-5.1:cloud"),
             messages=[{"role": "user", "content": prompt}],
             temperature=0.2,
             max_tokens=2200,
@@ -492,7 +492,7 @@ def choose_top_headlines(
         selected = [c for c in candidates if c["id"] in ids][:select_count]
         if len(selected) >= min(3, select_count):
             return selected
-        print("WARN: OpenRouter devolvio pocos IDs. Se aplica fallback.")
+        print("WARN: Ollama devolvio pocos IDs. Se aplica fallback.")
     except Exception as e:
         print(f"WARN: seleccion IA fallo: {e}")
 
@@ -981,8 +981,12 @@ def main() -> int:
     parser.add_argument("--related-pool-per-source", type=int, default=8, help="Pool por fuente para encontrar 3 notas relacionadas")
     parser.add_argument("--min-source-words", type=int, default=120, help="Minimo de palabras para considerar una fuente util")
     parser.add_argument("--min-sources-required", type=int, default=3, help="Minimo de fuentes con full text para aceptar un tema (default: 3)")
-    parser.add_argument("--openrouter-model", default=os.getenv("OPENROUTER_MODEL", "openrouter/free"))
-    parser.add_argument("--gemini-model", default=os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite"))
+    # Default: Ollama Cloud (jun 2026). Kimi K2.6 para sintesis larga, GLM-5.1
+    # para seleccion editorial (latencia baja).
+    parser.add_argument("--openrouter-model", default=os.environ.get("OLLAMA_EDITOR_MODEL", "glm-5.1:cloud"),
+                        help="(legacy alias) Modelo Ollama para seleccion editorial y sintesis. Default: glm-5.1:cloud")
+    parser.add_argument("--gemini-model", default=os.environ.get("OLLAMA_SYNTH_MODEL", "kimi-k2.6:cloud"),
+                        help="(legacy alias) Modelo Ollama para sintesis larga. Default: kimi-k2.6:cloud")
     parser.add_argument("--db-name", default="news_db")
     parser.add_argument("--db-config", default="src/wrangler.toml")
     parser.add_argument("--db-mode", choices=["local", "remote"], default="local")

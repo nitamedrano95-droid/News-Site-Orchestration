@@ -1,9 +1,9 @@
-// src/cron/facebook.js — Publicación automática a Facebook (4 posts/día/sitio, timer 6h)
+// src/cron/facebook.js — Publicación automática a Facebook (4 posts/día/sitio, timer 3.5h, ventana 8-22)
 
 import { SITIOS_LIST, SITE_DOMAIN_MAP } from '../config.js';
 import { decodeHTMLEntities, articleSlugify, fetchWithTimeout, notifyTelegram } from '../utils/helpers.js';
 
-const FB_INTERVAL_MS = 12 * 60 * 60 * 1000;
+const FB_INTERVAL_MS = 3.5 * 60 * 60 * 1000; // 3.5 horas = 4 publicaciones/día (ventana 8-22 = 14h)
 
 // ============================================================
 // publishToFBIndividual — Publica un artículo a Facebook

@@ -19,9 +19,10 @@ sys.path.insert(0, str(REPO_ROOT))
 from tools.api.newsapi import fetch_newsapi
 from utils.utils import _extract_full_text
 
-# Configure Gemini
-os.environ["PARAPHRASE_PROVIDER"] = "gemini"
-os.environ["PARAPHRASE_MODEL"] = "gemini-2.0-flash"
+# Configure Ollama Cloud (provider LLM unificado, jun 2026)
+# Parafraseo completo: Kimi K2.6. Categorizacion (linea 56): GLM-5.1.
+os.environ["PARAPHRASE_PROVIDER"] = os.environ.get("PARAPHRASE_PROVIDER", "ollama")
+os.environ["PARAPHRASE_MODEL"] = os.environ.get("PARAPHRASE_MODEL", "kimi-k2.6:cloud")
 
 from tools.news.paraphrase import NewsParaphraser
 from tools.news.llm_client import chat
@@ -53,7 +54,12 @@ Responde SOLO con el nombre de la categoría en MAYÚSCULAS.
 Título: {title}
 Contenido: {content[:500]}..."""
     try:
-        cat = chat("gemini", "gemini-1.5-flash", [{"role": "user", "content": prompt}], temperature=0.3).strip().upper()
+        cat = chat(
+            os.environ.get("CATEGORY_PROVIDER", "ollama"),
+            os.environ.get("CATEGORY_MODEL", "glm-5.1:cloud"),
+            [{"role": "user", "content": prompt}],
+            temperature=0.3,
+        ).strip().upper()
         if cat in CATEGORIAS_VALIDAS:
             return cat
     except:

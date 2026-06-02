@@ -86,5 +86,49 @@ def chat(provider, model, messages, temperature=0.7, max_tokens=4000):
         else:
             raise Exception(f"Error Gemini: {response.status_code} - {response.text}")
 
+    elif provider == "ollama":
+        # Ollama Cloud (https://ollama.com) - API compatible con el schema nativo
+        # de Ollama (/api/chat) y con OpenAI (/v1/chat/completions). Usamos el
+        # endpoint nativo porque es el mas estable y no requiere libreria extra.
+        api_key = os.getenv("OLLAMA_API_KEY")
+        if not api_key:
+            raise ValueError("Falta OLLAMA_API_KEY en las variables de entorno.")
+
+        url = "https://ollama.com/api/chat"
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
+
+        # Ollama usa "thinking" opcional; para parafraseo/limpieza de noticias
+        # NO queremos razonamiento profundo (introduce latencia y variabilidad),
+        # asi que lo desactivamos explicitamente cuando el modelo lo soporte.
+        payload = {
+            "model": model,
+            "messages": messages,
+            "stream": False,
+            "think": False,
+            "options": {
+                "temperature": temperature,
+                "num_predict": max_tokens,
+            },
+        }
+
+        response = requests.post(url, headers=headers, data=json.dumps(payload), timeout=180)
+        if response.status_code == 200:
+            res_json = response.json()
+            try:
+                return res_json["message"]["content"]
+            except (KeyError, TypeError):
+                raise Exception(
+                    f"Estructura de respuesta inesperada de Ollama: {json.dumps(res_json)[:500]}"
+                )
+        else:
+            # Errores utiles: 401 (api key), 402 (requiere plan de pago),
+            # 404 (modelo no existe), 429 (rate limit).
+            raise Exception(
+                f"Error Ollama: {response.status_code} - {response.text[:500]}"
+            )
+
     # Fallback para otros proveedores si existieran
     raise ValueError(f"Proveedor {provider} no soportado.")

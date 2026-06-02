@@ -1,10 +1,10 @@
 :root {
-  --primary: #854d0e;
-  --secondary: #a16207;
-  --light: #fde68a;
-  --bg: #fefce8;
-  --text: #713f12;
-  --header: #854d0e;
+  --primary: #BF2026;
+  --secondary: #8DC63F;
+  --light: #D9F99D;
+  --bg: #F0FDF4;
+  --text: #14532D;
+  --header: #166534;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -28,7 +28,7 @@ body {
   color: #fff; text-decoration: none; border-radius: 6px;
   font-weight: 700; transition: all 0.3s; border: 2px solid var(--primary); margin-top: 8px;
 }
-.btn-primary:hover { background: transparent; color: var(--primary); }
+.btn-primary:hover { background: linear-gradient(135deg, #8DC63F 0%, #BF2026 100%); color: #fff; box-shadow: 0 6px 20px #BF202640; }
 .section-title {
   font-size: 1.5em; margin-bottom: 24px; color: var(--text);
   font-weight: 800; position: relative; padding-bottom: 10px;
@@ -77,10 +77,7 @@ body {
   background: linear-gradient(135deg, #854d0e25 0%, #a1620735 50%, #fde68a20 100%) !important;
 }
 
-.hero-dna .helix-bar {
-  background: linear-gradient(90deg, #854d0e, #a16207) !important;
-  opacity: 0.6;
-}
+.hero-dna .helix-bar { background: linear-gradient(90deg, #BF2026, #8DC63F) !important; opacity: 0.6; }
 
 .hero-pulse {
   background: linear-gradient(180deg, #fefce8 0%, #854d0e08 50%, #fefce8 100%);
@@ -91,25 +88,17 @@ body {
   background: radial-gradient(circle, #fde68a15 0%, transparent 70%);
 }
 
-.hero-aztec .step {
-  background: linear-gradient(90deg, #854d0e, #a16207) !important;
-}
+.hero-aztec .step { background: linear-gradient(90deg, #BF2026, #8DC63F) !important; }
 
-.hero-analysis .chart-bars {
-  background: linear-gradient(180deg, #854d0e10 0%, #854d0e05 100%);
-}
+.hero-analysis .chart-bars { background: linear-gradient(180deg, #BF202610 0%, #BF202605 100%); }
 
 .hero-instant .clock-face {
   background: radial-gradient(circle, #854d0e10 0%, transparent 70%);
 }
 
-.hero-bridge .bridge-connector {
-  background: linear-gradient(90deg, #854d0e, #a16207);
-}
+.hero-bridge .bridge-connector { background: linear-gradient(90deg, #BF2026, #8DC63F); }
 
-.hero-bold .bold-content {
-  background: linear-gradient(135deg, #854d0e12 0%, #fde68a15 100%);
-}
+.hero-bold .bold-content { background: linear-gradient(135deg, #BF202612 0%, #D9F99D15 100%); }
 
 .hero-observer .panorama-bar {
   background: linear-gradient(90deg, #854d0e, #a16207, #fde68a, #854d0e);
@@ -119,9 +108,7 @@ body {
   background: linear-gradient(to bottom, #854d0e12, transparent);
 }
 
-.hero-plus .layer {
-  background: linear-gradient(90deg, #854d0e, #a16207) !important;
-}
+.hero-plus .layer { background: linear-gradient(90deg, #BF2026, #8DC63F) !important; }
 
 .hero-borderless .borderless-image {
   background: linear-gradient(135deg, #854d0e35 0%, #a1620725 50%, #fde68a15 100%) !important;
@@ -151,17 +138,13 @@ body {
   background: radial-gradient(circle at center, #854d0e08 0%, transparent 60%);
 }
 
-.hero-radio .wave-container .wave {
-  background: linear-gradient(to top, #854d0e, #a16207) !important;
-}
+.hero-radio .wave-container .wave { background: linear-gradient(to top, #BF2026, #8DC63F) !important; }
 
 .hero-perspective .perspective-vanish {
   background: linear-gradient(180deg, #854d0e08, transparent);
 }
 
-.hero-community .m-tile {
-  background: linear-gradient(135deg, #854d0e, #a16207) !important;
-}
+.hero-community .m-tile { background: linear-gradient(135deg, #BF2026, #8DC63F) !important; }
 
 /* Card improvements */
 .col-card, .pair-card, .rhythm-card, .world-card,
@@ -176,16 +159,8 @@ body {
 }
 
 /* Button gradient */
-.btn-primary {
-  background: linear-gradient(135deg, #854d0e 0%, #a16207 100%);
-  border: none;
-  box-shadow: 0 4px 14px #854d0e30;
-}
-.btn-primary:hover {
-  background: linear-gradient(135deg, #a16207 0%, #854d0e 100%);
-  color: #fff;
-  box-shadow: 0 6px 20px #854d0e40;
-}
+.btn-primary { background: linear-gradient(135deg, #BF2026 0%, #8DC63F 100%); border: none; box-shadow: 0 4px 14px #BF202630; }
+.btn-primary:hover { background: linear-gradient(135deg, #8DC63F 0%, #BF2026 100%); color: #fff; box-shadow: 0 6px 20px #BF202640; }
 
 /* Section subtle backgrounds */
 .latest-grid,
@@ -540,10 +515,7 @@ header {
     box-shadow: 0 4px 14px rgba(0,0,0,0.1);
 }
 
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-}
+.btn-primary:hover { background: linear-gradient(135deg, #8DC63F 0%, #BF2026 100%); color: #fff; box-shadow: 0 6px 20px #BF202640; }
 
 /* Category tag enhancements */
 .category-tag,
@@ -704,7 +676,6 @@ header {
   align-items: center;
   padding: 0 12px;
   height: 100%;
-  background: #fff;
   flex-shrink: 0;
 }
 .ticker-dmex-logo img { height: 28px; width: auto; object-fit: contain; }

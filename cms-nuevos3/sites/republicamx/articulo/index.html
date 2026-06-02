@@ -84,24 +84,24 @@
         function renderArticle(a) {
             document.title = (a.title || 'Artículo') + ' - republicamx';
             const desc = document.getElementById('page-desc');
-            if (desc) desc.content = a.excerpt || ''';
-            const cat = a.category || ''';
+            if (desc) desc.content = a.excerpt || '';
+            const cat = a.category || '';
             const catSlug = cat.toLowerCase().replace(/\s+/g, '-');
             const badge = document.getElementById('art-category-badge');
             if (badge) { badge.textContent = cat; badge.className = 'article-category-badge cat-' + catSlug; }
             const breadCat = document.getElementById('art-category-breadcrumb');
             if (breadCat) breadCat.textContent = cat;
             const title = document.getElementById('art-title');
-            if (title) title.textContent = a.title || ''';
+            if (title) title.textContent = a.title || '';
             const author = document.getElementById('art-author');
             if (author) author.textContent = a.author || 'Redacción';
             const date = document.getElementById('art-date');
-            if (date) date.textContent = a.publishedAt ? new Date(a.publishedAt).toLocaleDateString('es-MX', {year:'numeric',month:'long',day:'numeric'}) : ''';
+            if (date) date.textContent = a.publishedAt ? new Date(a.publishedAt).toLocaleDateString('es-MX', {year:'numeric',month:'long',day:'numeric'}) : '';
             const imgWrapper = document.getElementById('art-image-wrapper');
             const img = document.getElementById('art-image');
             if (a.imageUrl && img) {
                 img.src = a.imageUrl;
-                img.alt = a.title || ''';
+                img.alt = a.title || '';
                 img.onerror = function() {
                     this.src = './logo.png';
                     this.alt = 'Imagen no disponible';
@@ -110,9 +110,9 @@
             else if (imgWrapper) imgWrapper.style.display = 'none';
             const body = document.getElementById('art-body');
             if (body) {
-                let content = a.content || ''';
+                let content = a.content || '';
                 if (!content) {
-                    content = '<p>' + (a.excerpt || ''') + '</p>';
+                    content = '<p>' + (a.excerpt || '') + '</p>';
                 } else if (!content.includes('<p>') && !content.includes('<div>') &&
                          !content.includes('<blockquote') && !content.includes('<iframe')) {
                     content = content.split(/\n\n+/).map(p => '<p>' + p.trim() + '</p>').join('');
@@ -120,7 +120,7 @@
                 body.innerHTML = content;
             }
             const url = encodeURIComponent(location.href);
-            const text = encodeURIComponent(a.title || ''');
+            const text = encodeURIComponent(a.title || '');
             const fb = document.getElementById('share-fb');
             const tw = document.getElementById('share-tw');
             const wa = document.getElementById('share-wa');
