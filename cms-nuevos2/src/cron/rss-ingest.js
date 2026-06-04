@@ -547,10 +547,16 @@ export async function runRSSIngest(env) {
     RSS_LOG(`Continuing from last run (${new Date(parseInt(lastIngestTimestamp)).toISOString()})`);
   }
 
+  // Fix 2026-06-02: removed `isFirstRun` / `MAX_PER_SITE=2` logic. The flag relied on a
+  // KV key that was never being written when no new articles were found, leaving the
+  // worker stuck in first-run mode indefinitely and inserting 2 articles per feed per
+  // tick. MAX_PER_SITE is now a flat constant.
+  const MAX_PER_SITE = 1;
+
   let fuentesRows = [];
   try {
     const result = await env.DB.prepare(
-      'SELECT * FROM FUENTES WHERE ACTIVA = 1 ORDER BY SITIO_SLUG, ID'
+      'SELECT * FROM FUENTES WHERE ACTIVA = 1 AND URL NOT LIKE \'%france24%\' AND LOWER(NOMBRE) NOT LIKE \'%france%\' ORDER BY SITIO_SLUG, ID'
     ).all();
     fuentesRows = result.results || [];
   } catch (e) {
@@ -568,7 +574,6 @@ export async function runRSSIngest(env) {
       'https://aristeguinoticias.com/feed/',
       'https://www.infobae.com/arc/outboundfeeds/rss/?outputType=xml&section=mexico',
       'https://rss.dw.com/xml/rss-esp-all',
-      'https://www.france24.com/es/rss',
     ];
     for (const feedUrl of LEGACY_FEEDS) {
       fuentesRows.push({
@@ -589,39 +594,93 @@ export async function runRSSIngest(env) {
   }
 
   const dedicatedFuentes = fuentesRows.filter(f => f.SITIO_SLUG && f.SITIO_SLUG !== 'null');
-  const globalFuentes = fuentesRows.filter(f => !f.SITIO_SLUG || f.SITIO_SLUG === 'null');
 
-  const fuentesBySite = {};
-  for (const site of validSites) {
-    fuentesBySite[site] = dedicatedFuentes.filter(f => f.SITIO_SLUG === site);
+  // ============================================================
+  // NUEVA LÓGICA DE ROTACIÓN (2026-06-02):
+  // Cada fuente RSS se asigna a 3 sitios (vía campo PRIORIDAD 1,2,3).
+  // Cada sitio recibe 2 fuentes distintas.
+  // Por ronda: cada fuente sirve solo a 2 de sus 3 sitios, rotando
+  // [prioridades 1,2], luego [2,3], luego [3,1], etc.
+  // Así cada sitio recibe 2 rondas consecutivas y descansa 1.
+  // ============================================================
+
+  // Agrupar fuentes por (URL + NOMBRE) ignorando SITIO_SLUG
+  const fuenteGroups = new Map(); // key: "url|nombre" → [{site, prioridad}]
+  for (const f of dedicatedFuentes) {
+    const key = `${f.URL}||${f.NOMBRE}`;
+    if (!fuenteGroups.has(key)) fuenteGroups.set(key, []);
+    fuenteGroups.get(key).push({
+      sitio: f.SITIO_SLUG,
+      prioridad: f.PRIORIDAD || 1,
+      fuente: f
+    });
   }
 
-  let globalIdx = 0;
-  for (const site of validSites) {
-    if (fuentesBySite[site].length === 0 && globalFuentes.length > 0) {
-      fuentesBySite[site].push(globalFuentes[globalIdx % globalFuentes.length]);
-      globalIdx++;
+  // Para cada fuente, leer KV para el round actual y seleccionar 2 sitios activos
+  const sitiosActivos = new Set();
+  const fuentesPorSitio = {}; // sitio → [fuentes a procesar este ciclo]
+  for (const site of validSites) fuentesPorSitio[site] = [];
+
+  for (const [grupoKey, asignaciones] of fuenteGroups) {
+    if (asignaciones.length === 0) continue;
+    const fuente = asignaciones[0].fuente;
+
+    // Leer round actual de KV (default 0)
+    let round = 0;
+    try {
+      const kvKey = `fuente_round_${fuente.ID}`;
+      const raw = await env.ARTICLES_KV.get(kvKey);
+      if (raw !== null && raw !== undefined) {
+        round = parseInt(raw, 10) || 0;
+      }
+    } catch (e) { /* OK, default 0 */ }
+
+    // Ordenar asignaciones por prioridad
+    asignaciones.sort((a, b) => a.prioridad - b.prioridad);
+    const totalSitios = asignaciones.length;
+
+    if (totalSitios === 0) continue;
+
+    // Seleccionar 2 sitios: posiciones [round % totalSitios] y [(round+1) % totalSitios]
+    const idx1 = round % totalSitios;
+    const idx2 = (round + 1) % totalSitios;
+
+    const selectedSlugs = new Set();
+    for (const idx of [idx1, idx2]) {
+      const sitio = asignaciones[idx].sitio;
+      if (validSites.includes(sitio)) {
+        selectedSlugs.add(sitio);
+        sitiosActivos.add(sitio);
+        fuentesPorSitio[sitio].push(fuente);
+      }
     }
+
+    // Avanzar round y guardar
+    round = (round + 1) % totalSitios;
+    try {
+      await env.ARTICLES_KV.put(`fuente_round_${fuente.ID}`, round.toString());
+    } catch (e) { RSS_WARN(`Failed to persist fuente_round for ${fuente.NOMBRE}`); }
+
+    RSS_LOG(`Fuente ${fuente.NOMBRE}: round=${round-1}→${round}, activos=[${[...selectedSlugs].join(',')}]`);
   }
 
-  console.log(`[RSS INGEST] Total sites: ${validSites.length}, Fuentes: ${fuentesRows.length}`);
+  console.log(`[RSS INGEST] Total sites: ${validSites.length}, Fuentes: ${fuentesRows.length}, Active this cycle: ${sitiosActivos.size}, Max per site: ${MAX_PER_SITE}`);
 
   let totalArticlesPublished = 0;
 
   for (const siteSlug of validSites) {
     let siteArticlesPublished = 0;
     
-    const siteFuentes = fuentesBySite[siteSlug] || [];
+    const siteFuentes = fuentesPorSitio[siteSlug] || [];
 
     if (siteFuentes.length === 0) {
-      RSS_WARN(`[${siteSlug}] No fuentes configured, skipping`);
+      // Sitio en descanso esta ronda — sin warning, es parte del diseño
       continue;
     }
 
     try {
 
       for (const fuente of siteFuentes) {
-        const MAX_PER_SITE = isFirstRun ? 2 : 1;
         if (siteArticlesPublished >= MAX_PER_SITE) break;
 
         RSS_LOG(`[${siteSlug}] Processing fuente: ${fuente.NOMBRE} (${fuente.TIPO})`);
@@ -702,10 +761,16 @@ export async function runRSSIngest(env) {
     }
   }
 
-  if (totalArticlesPublished > 0) {
+  // Fix 2026-06-02: persist `last_ingest_timestamp` on EVERY successful run, not only
+  // when articles were published. Otherwise a run with 0 new URLs leaves the worker
+  // thinking it's still the first run on the next tick, which previously caused the
+  // MAX_PER_SITE=2 doubling. Safe to call even when KV was already populated.
+  try {
     const now = Date.now();
     await env.ARTICLES_KV.put('last_ingest_timestamp', now.toString());
     RSS_LOG(`Saved last_ingest_timestamp: ${new Date(now).toISOString()}`);
+  } catch (kvErr) {
+    RSS_WARN(`Failed to persist last_ingest_timestamp: ${kvErr.message}`);
   }
 
   console.log(`[RSS INGEST] Complete!`);
@@ -723,12 +788,15 @@ export async function runRSSIngestForSite(env, siteSlug) {
 
   const lastIngestTimestamp = await env.ARTICLES_KV.get('last_ingest_timestamp');
   const isFirstRun = !lastIngestTimestamp;
-  const MAX_PER_SITE = isFirstRun ? 2 : 1;
+
+  // Fix 2026-06-02: same flat-constant refactor as runRSSIngest. The first-run flag
+  // could leave the worker stuck in 2-article mode if the KV key was never written.
+  const MAX_PER_SITE = 1;
 
   let fuentesRows = [];
   try {
     const result = await env.DB.prepare(
-      'SELECT * FROM FUENTES WHERE ACTIVA = 1 ORDER BY SITIO_SLUG, ID'
+      'SELECT * FROM FUENTES WHERE ACTIVA = 1 AND URL NOT LIKE \'%france24%\' AND LOWER(NOMBRE) NOT LIKE \'%france%\' ORDER BY SITIO_SLUG, ID'
     ).all();
     fuentesRows = result.results || [];
   } catch (e) {
@@ -746,7 +814,6 @@ export async function runRSSIngestForSite(env, siteSlug) {
       'https://aristeguinoticias.com/feed/',
       'https://www.infobae.com/arc/outboundfeeds/rss/?outputType=xml&section=mexico',
       'https://rss.dw.com/xml/rss-esp-all',
-      'https://www.france24.com/es/rss',
     ];
     for (const feedUrl of LEGACY_FEEDS) {
       fuentesRows.push({
@@ -760,15 +827,46 @@ export async function runRSSIngestForSite(env, siteSlug) {
   }
 
   const dedicatedFuentes = fuentesRows.filter(f => f.SITIO_SLUG && f.SITIO_SLUG !== 'null');
-  const globalFuentes = fuentesRows.filter(f => !f.SITIO_SLUG || f.SITIO_SLUG === 'null');
 
-  let siteFuentes = dedicatedFuentes.filter(f => f.SITIO_SLUG === siteSlug);
-  if (siteFuentes.length === 0 && globalFuentes.length > 0) {
-    siteFuentes = [globalFuentes[0]];
+  // Rotación: mismo algoritmo que runRSSIngest — seleccionar solo las fuentes
+  // cuyo round actual incluye este sitio (2 de 3 por fuente)
+  const fuenteGroups = new Map();
+  for (const f of dedicatedFuentes) {
+    const key = `${f.URL}||${f.NOMBRE}`;
+    if (!fuenteGroups.has(key)) fuenteGroups.set(key, []);
+    fuenteGroups.get(key).push({ sitio: f.SITIO_SLUG, prioridad: f.PRIORIDAD || 1, fuente: f });
+  }
+
+  const siteFuentes = [];
+  for (const [, asignaciones] of fuenteGroups) {
+    asignaciones.sort((a, b) => a.prioridad - b.prioridad);
+    const totalSitios = asignaciones.length;
+    if (totalSitios === 0) continue;
+
+    let round = 0;
+    try {
+      const raw = await env.ARTICLES_KV.get(`fuente_round_${asignaciones[0].fuente.ID}`);
+      if (raw !== null && raw !== undefined) round = parseInt(raw, 10) || 0;
+    } catch (e) {}
+
+    const idx1 = round % totalSitios;
+    const idx2 = (round + 1) % totalSitios;
+    for (const idx of [idx1, idx2]) {
+      if (asignaciones[idx].sitio === siteSlug) {
+        siteFuentes.push(asignaciones[idx].fuente);
+        break;
+      }
+    }
+
+    if (asignaciones.some(a => a.sitio === siteSlug)) {
+      const newRound = (round + 1) % totalSitios;
+      try {
+        await env.ARTICLES_KV.put(`fuente_round_${asignaciones[0].fuente.ID}`, newRound.toString());
+      } catch (e) {}
+    }
   }
 
   if (siteFuentes.length === 0) {
-    RSS_WARN(`[${siteSlug}] No fuentes configured, skipping`);
     return 0;
   }
 
@@ -851,9 +949,13 @@ export async function runRSSIngestForSite(env, siteSlug) {
 
   console.log(`[RSS INGEST] [${siteSlug}] Done: ${siteArticlesPublished} articles`);
 
-  if (siteArticlesPublished > 0) {
+  // Fix 2026-06-02: persist `last_ingest_timestamp` on every successful run (even with
+  // 0 articles) so the per-site path doesn't re-enter first-run mode next tick.
+  try {
     const now = Date.now();
     await env.ARTICLES_KV.put('last_ingest_timestamp', now.toString());
+  } catch (kvErr) {
+    RSS_WARN(`[${siteSlug}] Failed to persist last_ingest_timestamp: ${kvErr.message}`);
   }
 
   return siteArticlesPublished;
@@ -870,7 +972,7 @@ export async function getFuentesForSite(env, siteSlug) {
   let fuentesRows = [];
   try {
     const result = await env.DB.prepare(
-      'SELECT * FROM FUENTES WHERE ACTIVA = 1 ORDER BY SITIO_SLUG, ID'
+      'SELECT * FROM FUENTES WHERE ACTIVA = 1 AND URL NOT LIKE \'%france24%\' AND LOWER(NOMBRE) NOT LIKE \'%france%\' ORDER BY SITIO_SLUG, ID'
     ).all();
     fuentesRows = result.results || [];
   } catch (e) {

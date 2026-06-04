@@ -481,6 +481,35 @@ facebook.get('/oauth/start-all', async (c) => {
   return c.html(html);
 });
 
+// ── GET /oauth/start — Redirige a Facebook pidiendo los scopes necesarios ──
+// Fix 2026-06-03: el handler que faltaba. El popup de oauth/start-all llamaba
+// a este endpoint (línea 418) pero nunca existía → el flujo batch no podía
+// ejecutarse. Sin esto, los tokens de página se generaron con scopes default
+// (público) y FB rechaza publicaciones con error #200.
+facebook.get('/oauth/start', async (c) => {
+  const siteSlug = c.req.query('siteSlug');
+  if (!siteSlug) {
+    return c.json({ error: 'Missing siteSlug' }, 400);
+  }
+
+  const FB_APP_ID = c.env.FB_APP_ID || '2726604081032124';
+  // Scopes necesarios para que el page token pueda publicar en nombre de la
+  // página. Sin pages_manage_posts, FB rechaza con error #200 al postear.
+  const scope = 'pages_show_list,pages_read_engagement,pages_manage_posts,publish_to_groups';
+
+  const redirectUri = `${new URL(c.req.url).origin}/api/facebook/oauth/callback`;
+  const state = c.req.query('auth') || '';  // preserva el auth para que callback lo re-use
+
+  const fbAuthUrl = new URL('https://www.facebook.com/v19.0/dialog/oauth');
+  fbAuthUrl.searchParams.set('client_id', FB_APP_ID);
+  fbAuthUrl.searchParams.set('redirect_uri', redirectUri);
+  fbAuthUrl.searchParams.set('scope', scope);
+  fbAuthUrl.searchParams.set('state', state);
+  fbAuthUrl.searchParams.set('response_type', 'code');
+
+  return c.redirect(fbAuthUrl.toString(), 302);
+});
+
 // ── GET /oauth/callback — OAuth callback para guardar tokens en todas las DBs ──
 facebook.get('/oauth/callback', async (c) => {
   const code = c.req.query('code');

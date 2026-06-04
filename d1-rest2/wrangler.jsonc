@@ -1,0 +1,47 @@
+{
+  "name": "d1-rest2",
+  "main": "src/index.js",
+  "workers_dev": true,
+  "preview_urls": true,
+  "compatibility_date": "2025-03-03",
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "persist": true,
+      "invocation_logs": true
+    },
+    "traces": {
+      "enabled": false,
+      "persist": true,
+      "head_sampling_rate": 1
+    }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_id": "f9012ebc-7a9d-4b93-81d9-4eac600c40d2"
+    },
+    {
+      "binding": "nuevo2",
+      "database_id": "e3d0d028-fd76-4d7e-ae02-d2a928692bb8"
+    },
+    {
+      "binding": "nuevo3",
+      "database_id": "18583adc-e878-4e0d-929d-62000fa1d81c"
+    },
+    {
+      "binding": "nuevos",
+      "database_id": "f96cb9d4-5627-4d1c-9eff-467a6e0ae757"
+    }
+  ],
+  "secrets_store_secrets": [
+    {
+      "binding": "SECRET",
+      "store_id": "fd0236b6bb2f4ae9b79a46c8c549110d",
+      "secret_name": "secret"
+    }
+  ]
+}

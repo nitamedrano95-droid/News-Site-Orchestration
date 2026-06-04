@@ -231,7 +231,18 @@ function shuffleArray(array) {
 // ============================================================
 export async function scrapeArticleFromURL(url, env) {
   console.log('[SCRAPE ARTICLE] Fetching:', url);
-  
+
+  // Fix 2026-06-02: skip France 24 entirely. Their Vue.js SPA wraps the
+  // <style> CSS bundle inside the first <article> tag, so even the
+  // longest-<article> selector stores 100K+ chars of stylesheet as the
+  // article body. The same source also intermittently 403s, so we can't
+  // rely on a clean fallback. Disabled at the source until a real fix
+  // is built (parse the JSON-LD `articleBody` field instead of HTML).
+  if (url && url.includes('france24.com')) {
+    console.log('[SCRAPE ARTICLE] Skipping France 24 URL (disabled)');
+    return null;
+  }
+
   try {
     const res = await fetch(url, { 
       headers: { 
@@ -498,11 +509,21 @@ export async function scrapeArticleFromURL(url, env) {
       }
     }
     // France 24
+    // Fix 2026-06-02: France24 is a Vue.js SPA whose first <article> tag on the
+    // page wraps the <style> CSS bundle (webpack chunks, @keyframes, etc.). The
+    // previous `match(/<article...<\/article>/i)` grabbed the CSS block and
+    // stored 100K+ chars of stylesheet as the article body. Take the LONGEST
+    // <article> instead (the real prose) and require >50 chars per <p> so
+    // related-news cards (~30-40 chars) and other noise are filtered out.
     else if (urlLower.includes('france24.com')) {
-      const articleMatch = html.match(/<article[^>]*>([\s\S]*?)<\/article>/i);
-      if (articleMatch) {
-        const pMatches = articleMatch[1].match(/<p[^>]*>([\s\S]*?)<\/p>/g) || [];
-        content = pMatches.map(p => p.replace(/<[^>]*>/g, '').trim()).filter(p => p.length > 30).join('\n\n');
+      const allArticles = html.match(/<article[^>]*>[\s\S]*?<\/article>/gi) || [];
+      if (allArticles.length > 0) {
+        const longest = allArticles.reduce((a, b) => (a.length >= b.length ? a : b));
+        const m = longest.match(/<article[^>]*>([\s\S]*?)<\/article>/i);
+        if (m) {
+          const pMatches = m[1].match(/<p[^>]*>([\s\S]*?)<\/p>/g) || [];
+          content = pMatches.map(p => p.replace(/<[^>]*>/g, '').trim()).filter(p => p.length > 50).join('\n\n');
+        }
       }
     }
     
@@ -683,7 +704,7 @@ export async function runRSSIngest(env) {
   let fuentesRows = [];
   try {
     const result = await env.DB.prepare(
-      'SELECT * FROM FUENTES WHERE ACTIVA = 1 ORDER BY SITIO_SLUG, ID'
+      'SELECT * FROM FUENTES WHERE ACTIVA = 1 AND URL NOT LIKE \'%france24%\' AND LOWER(NOMBRE) NOT LIKE \'%france%\' ORDER BY SITIO_SLUG, ID'
     ).all();
     fuentesRows = result.results || [];
   } catch (e) {
@@ -702,7 +723,6 @@ export async function runRSSIngest(env) {
       'https://aristeguinoticias.com/feed/',
       'https://www.infobae.com/arc/outboundfeeds/rss/?outputType=xml&section=mexico',
       'https://rss.dw.com/xml/rss-esp-all',
-      'https://www.france24.com/es/rss',
     ];
     for (const feedUrl of LEGACY_FEEDS) {
       fuentesRows.push({
@@ -716,7 +736,15 @@ export async function runRSSIngest(env) {
   }
 
   const dedicatedFuentes = fuentesRows.filter(f => f.SITIO_SLUG && f.SITIO_SLUG !== 'null');
-  const globalFuentes = fuentesRows.filter(f => !f.SITIO_SLUG || f.SITIO_SLUG === 'null');
+
+  // ============================================================
+  // NUEVA LÓGICA DE ROTACIÓN (2026-06-02):
+  // Cada fuente RSS se asigna a 3 sitios (vía campo PRIORIDAD 1,2,3).
+  // Cada sitio recibe 2 fuentes distintas.
+  // Por ronda: cada fuente sirve solo a 2 de sus 3 sitios, rotando
+  // [prioridades 1,2], luego [2,3], luego [3,1], etc.
+  // Así cada sitio recibe 2 rondas consecutivas y descansa 1.
+  // ============================================================
 
   // Per-site limit pattern: each site gets articles independently
   const MAX_PER_SITE = isFirstRun ? 2 : 1;
@@ -728,7 +756,67 @@ export async function runRSSIngest(env) {
     return 0;
   }
 
-  console.log(`[RSS INGEST] Total sites: ${validSites.length}, Fuentes: ${fuentesRows.length}, Max per site: ${MAX_PER_SITE}`);
+  // Agrupar fuentes por (URL + NOMBRE) ignorando SITIO_SLUG
+  const fuenteGroups = new Map(); // key: "url|nombre" → [{site, prioridad}]
+  for (const f of dedicatedFuentes) {
+    const key = `${f.URL}||${f.NOMBRE}`;
+    if (!fuenteGroups.has(key)) fuenteGroups.set(key, []);
+    fuenteGroups.get(key).push({
+      sitio: f.SITIO_SLUG,
+      prioridad: f.PRIORIDAD || 1,
+      fuente: f
+    });
+  }
+
+  // Para cada fuente, leer KV para el round actual y seleccionar 2 sitios activos
+  const sitiosActivos = new Set();
+  const fuentesPorSitio = {}; // sitio → [fuentes a procesar este ciclo]
+  for (const site of validSites) fuentesPorSitio[site] = [];
+
+  for (const [grupoKey, asignaciones] of fuenteGroups) {
+    if (asignaciones.length === 0) continue;
+    const fuente = asignaciones[0].fuente;
+
+    // Leer round actual de KV (default 0)
+    let round = 0;
+    try {
+      const kvKey = `fuente_round_${fuente.ID}`;
+      const raw = await env.ARTICLES_KV.get(kvKey);
+      if (raw !== null && raw !== undefined) {
+        round = parseInt(raw, 10) || 0;
+      }
+    } catch (e) { /* OK, default 0 */ }
+
+    // Ordenar asignaciones por prioridad
+    asignaciones.sort((a, b) => a.prioridad - b.prioridad);
+    const totalSitios = asignaciones.length;
+
+    if (totalSitios === 0) continue;
+
+    // Seleccionar 2 sitios: posiciones [round % totalSitios] y [(round+1) % totalSitios]
+    const idx1 = round % totalSitios;
+    const idx2 = (round + 1) % totalSitios;
+
+    const selectedSlugs = new Set();
+    for (const idx of [idx1, idx2]) {
+      const sitio = asignaciones[idx].sitio;
+      if (validSites.includes(sitio)) {
+        selectedSlugs.add(sitio);
+        sitiosActivos.add(sitio);
+        fuentesPorSitio[sitio].push(fuente);
+      }
+    }
+
+    // Avanzar round y guardar
+    round = (round + 1) % totalSitios;
+    try {
+      await env.ARTICLES_KV.put(`fuente_round_${fuente.ID}`, round.toString());
+    } catch (e) { RSS_WARN(`Failed to persist fuente_round for ${fuente.NOMBRE}`); }
+
+    RSS_LOG(`Fuente ${fuente.NOMBRE}: round=${round-1}→${round}, activos=[${[...selectedSlugs].join(',')}]`);
+  }
+
+  console.log(`[RSS INGEST] Total sites: ${validSites.length}, Fuentes: ${fuentesRows.length}, Active this cycle: ${sitiosActivos.size}, Max per site: ${MAX_PER_SITE}`);
 
   let articlesPublished = 0;
   let urlsProcessed = 0;
@@ -738,14 +826,10 @@ export async function runRSSIngest(env) {
 
   // Process each site independently with its own counter
   for (const siteSlug of validSites) {
-    // Find fuentes for this site
-    let siteFuentes = dedicatedFuentes.filter(f => f.SITIO_SLUG === siteSlug);
-    if (siteFuentes.length === 0 && globalFuentes.length > 0) {
-      siteFuentes = [globalFuentes[0]];
-    }
+    const siteFuentes = fuentesPorSitio[siteSlug] || [];
 
     if (siteFuentes.length === 0) {
-      RSS_LOG(`[${siteSlug}] No fuentes configured, skipping`);
+      // Sitio en descanso esta ronda — sin warning, es parte del diseño
       continue;
     }
 
@@ -875,7 +959,7 @@ export async function runRSSIngestForSite(env, siteSlug) {
   let fuentesRows = [];
   try {
     const result = await env.DB.prepare(
-      'SELECT * FROM FUENTES WHERE ACTIVA = 1 ORDER BY SITIO_SLUG, ID'
+      'SELECT * FROM FUENTES WHERE ACTIVA = 1 AND URL NOT LIKE \'%france24%\' AND LOWER(NOMBRE) NOT LIKE \'%france%\' ORDER BY SITIO_SLUG, ID'
     ).all();
     fuentesRows = result.results || [];
   } catch (e) {
@@ -893,7 +977,6 @@ export async function runRSSIngestForSite(env, siteSlug) {
       'https://aristeguinoticias.com/feed/',
       'https://www.infobae.com/arc/outboundfeeds/rss/?outputType=xml&section=mexico',
       'https://rss.dw.com/xml/rss-esp-all',
-      'https://www.france24.com/es/rss',
     ];
     for (const feedUrl of LEGACY_FEEDS) {
       fuentesRows.push({
@@ -907,15 +990,46 @@ export async function runRSSIngestForSite(env, siteSlug) {
   }
 
   const dedicatedFuentes = fuentesRows.filter(f => f.SITIO_SLUG && f.SITIO_SLUG !== 'null');
-  const globalFuentes = fuentesRows.filter(f => !f.SITIO_SLUG || f.SITIO_SLUG === 'null');
 
-  let siteFuentes = dedicatedFuentes.filter(f => f.SITIO_SLUG === siteSlug);
-  if (siteFuentes.length === 0 && globalFuentes.length > 0) {
-    siteFuentes = [globalFuentes[0]];
+  // Rotación: mismo algoritmo que runRSSIngest — seleccionar solo las fuentes
+  // cuyo round actual incluye este sitio (2 de 3 por fuente)
+  const fuenteGroups = new Map();
+  for (const f of dedicatedFuentes) {
+    const key = `${f.URL}||${f.NOMBRE}`;
+    if (!fuenteGroups.has(key)) fuenteGroups.set(key, []);
+    fuenteGroups.get(key).push({ sitio: f.SITIO_SLUG, prioridad: f.PRIORIDAD || 1, fuente: f });
+  }
+
+  const siteFuentes = [];
+  for (const [, asignaciones] of fuenteGroups) {
+    asignaciones.sort((a, b) => a.prioridad - b.prioridad);
+    const totalSitios = asignaciones.length;
+    if (totalSitios === 0) continue;
+
+    let round = 0;
+    try {
+      const raw = await env.ARTICLES_KV.get(`fuente_round_${asignaciones[0].fuente.ID}`);
+      if (raw !== null && raw !== undefined) round = parseInt(raw, 10) || 0;
+    } catch (e) {}
+
+    const idx1 = round % totalSitios;
+    const idx2 = (round + 1) % totalSitios;
+    for (const idx of [idx1, idx2]) {
+      if (asignaciones[idx].sitio === siteSlug) {
+        siteFuentes.push(asignaciones[idx].fuente);
+        break;
+      }
+    }
+
+    if (asignaciones.some(a => a.sitio === siteSlug)) {
+      const newRound = (round + 1) % totalSitios;
+      try {
+        await env.ARTICLES_KV.put(`fuente_round_${asignaciones[0].fuente.ID}`, newRound.toString());
+      } catch (e) {}
+    }
   }
 
   if (siteFuentes.length === 0) {
-    RSS_WARN(`[${siteSlug}] No fuentes configured, skipping`);
     return 0;
   }
 
@@ -1016,7 +1130,7 @@ export async function getFuentesForSite(env, siteSlug) {
   let fuentesRows = [];
   try {
     const result = await env.DB.prepare(
-      'SELECT * FROM FUENTES WHERE ACTIVA = 1 ORDER BY SITIO_SLUG, ID'
+      'SELECT * FROM FUENTES WHERE ACTIVA = 1 AND URL NOT LIKE \'%france24%\' AND LOWER(NOMBRE) NOT LIKE \'%france%\' ORDER BY SITIO_SLUG, ID'
     ).all();
     fuentesRows = result.results || [];
   } catch (e) {
