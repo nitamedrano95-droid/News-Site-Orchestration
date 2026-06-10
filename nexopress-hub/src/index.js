@@ -34,6 +34,10 @@ app.route('/auth', authRoutes);
 app.route('/cms',  cmsRoutes);
 app.route('/seo',  seoRoutes);
 
+// Favicon (silence 404)
+app.get('/favicon.ico', (c) => c.body(null, 204));
+app.get('/favicon.png',  (c) => c.body(null, 204));
+
 // Health check (no auth)
 app.get('/health', (c) => c.json({
   status:    'ok',

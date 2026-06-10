@@ -1,4 +1,22 @@
-# NexoPress - Guía Completa para Agentes de IA
+# ⚠️ ARCHIVADO 2026-06-10 — NO USAR COMO REFERENCIA
+
+Este archivo es un **snapshot histórico** del estado del proyecto
+cuando se usaba Gemini como proveedor LLM principal. Fue consolidado
+en `docs/AGENTS.md` (single source of truth). Conservado solo para
+trazabilidad de cambios.
+
+**Lo que está desactualizado en este archivo:**
+- Stack LLM: menciona OpenRouter/Gemini (ya migrado a Ollama Cloud)
+- Cantidad de sitios: dice 10, hoy son ~96
+- 5 CMSs: solo menciona `news-api` (monolítico), ya está distribuido
+- Stack de Facebook: tiene datos de marzo 2026, hoy es jun 2026
+
+**Para directrices vigentes, consultar:**
+→ `docs/AGENTS.md`
+
+---
+
+# NexoPress - Guía Completa para Agentes de IA (HISTÓRICO)
 
 ## 📋 Índice
 

@@ -6,6 +6,12 @@ import Dashboard from './pages/Dashboard'
 import Editor from './pages/Editor'
 import './index.css'
 
+// Centralized API base — in production, the UI is hosted on Pages
+// but the API lives on the Hub Worker. Vite replaces VITE_API_BASE
+// at build time; for local dev it falls back to '/api' (proxied by Vite).
+export const API_BASE =
+  import.meta.env.VITE_API_BASE || 'https://nexopress-hub.sebastianvernis.workers.dev/api'
+
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('hub_token')
   if (!token) return <Navigate to="/login" replace />

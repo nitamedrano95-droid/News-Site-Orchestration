@@ -1,4 +1,23 @@
-# NexoPress - Guía Completa para Agentes de IA
+# ⚠️ ARCHIVADO 2026-06-10 — NO USAR COMO REFERENCIA
+
+Este archivo es un **snapshot histórico** del estado del proyecto
+durante la fase de transición a Qwen. Fue consolidado en
+`docs/AGENTS.md` (single source of truth). Conservado solo para
+trazabilidad.
+
+**Lo que está desactualizado:**
+- Cantidad de sitios: dice 27 (mezclaba estables + nuevos en
+  despliegue), hoy son ~96 en producción
+- Stack LLM: menciona OpenRouter/Gemini (ya migrado a Ollama Cloud)
+- Lista de sitios: parcial y desactualizada
+- Sección de "nuevos sitios en despliegue" ya no aplica
+
+**Para directrices vigentes, consultar:**
+→ `docs/AGENTS.md`
+
+---
+
+# NexoPress - Guía Completa para Agentes de IA (HISTÓRICO)
 
 ## 📋 Índice
 

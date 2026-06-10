@@ -1,1115 +1,519 @@
-<!-- gitnexus:start -->
-# NexoPress - Guía Completa para Agentes de IA
+# NexoPress — Directrices canónicas para agentes de IA
 
-## 📋 Índice
+> **Single source of truth** para toda IA que trabaje en este repo
+> (Claude Code, Cursor, Continue, Aider, Hermes, etc.). Cualquier otro
+> `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` / `QWEN.md` en el repo es un
+> duplicado histórico que se conserva solo en `docs/archive/` para
+> trazabilidad.
 
-1. [Descripción del Proyecto](#descripción-del-proyecto)
-2. [Arquitectura del Sistema](#arquitectura-del-sistema)
-3. [Estructura de Directorios](#estructura-de-directorios)
-4. [Configuración y Despliegue](#configuración-y-despliegue)
-5. [Base de Datos](#base-de-datos)
-6. [API Endpoints](#api-endpoints)
-7. [Flujo de Facebook](#flujo-de-facebook)
-8. [Solución de Problemas Comunes](#solución-de-problemas-comunes)
-9. [Comandos Útiles](#comandos-útiles)
-10. [Variables de Entorno y Secrets](#variables-de-entorno-y-secrets)
+**Última revisión:** 2026-06-10
+**Stack activo:** Cloudflare Workers (Hono) + D1 + KV + R2 + Pages ·
+Ollama Cloud (paraphrasing + supervision) · n8n (orquestación de ingesta)
+**Sitios en producción:** ~96 sitios distribuidos en 5 CMS Workers
+**Sitio en rediseño:** `cms-nuevos4` (pendiente nueva plantilla)
 
 ---
 
-## Descripción del Proyecto
+## 1. Identidad y objetivos del proyecto
 
-**NexoPress** es una plataforma de noticias multi-sitio que gestiona 28 sitios de noticias independientes desde un único panel de administración y un núcleo centralizado en Cloudflare Workers y D1.
+**NexoPress** es una plataforma de noticias multi-sitio sobre Cloudflare.
+Orquesta ~96 sitios de noticias en español (México) desde un único
+panel editorial y un núcleo distribuido.
 
-### Características Principales
-
-- **28 Sitios de Noticias:** 27 sitios individuales + 1 directorio _shared con assets comunes
-- **Arquitectura Modular:** Worker API con 13 módulos de rutas separados
-- **Ingesta Automática:** RSS y Atom feeds (El País, Proceso, Aristegui, etc.)
-- **Parafraseo con IA:** OpenRouter (Gemini 2.0 Flash)
-- **Publicación en Facebook:** Automática cada 3 horas por sitio
-- **Cloudflare Stack:** Workers, D1, R2, KV, Pages
-
-### Sitios de la Red
-
-| # | Sitio | Dominio | Slug |
-|---|-------|---------|------|
-| 1 | Radio Cinco Noticias | https://www.radiocinconoticias.click | `radiocinconoticias` |
-| 2 | Central México | https://www.centralmexico.online | `centralmexico` |
-| 3 | TV México | https://www.tvmexiconews.site | `tvmexico` |
-| 4 | CBN Noticias | https://www.cbnnoticias.click | `cbnnoticias` |
-| 5 | México Informado | https://www.mexicoinformado.lat | `mexicoinformado` |
-| 6 | Nodo Informativo | https://www.nodoinformativo.lat | `nodoinformativo` |
-| 7 | Bitácora Urbana | https://www.bitacoraurbana.lat | `bitacoraurbana` |
-| 8 | Reporte Central MX | https://www.reportecentral.site | `reportecentralmx` |
-| 9 | Vértice Noticias | https://www.verticenoticias.today | `verticenoticias` |
-| 10 | Noticias Objetivo | https://www.noticiasobjetivo.click | `noticiasobjetivo` |
-| 11 | Boominformativo | https://www.boominformativo.lat | `boominformativo` |
-| 12 | Capital Press | https://www.capitalpress.lat | `capitalpress` |
-| 13 | Diario Express | https://www.diarioexpress.lat | `diarioexpress` |
-| 14 | El Pulso Mexicano | https://www.elpulsomexicano.lat | `elpulsomexicano` |
-| 15 | Enfoque Capital | https://www.enfoquecapital.lat | `enfoquecapital` |
-| 16 | Enfoque Directo | https://www.enfoquedirecto.lat | `enfoquedirecto` |
-| 17 | Fórmula CDMX | https://www.formulacdmx.lat | `formulacdmx` |
-| 18 | Mexican Times | https://www.mexicantimes.lat | `mexicantimes` |
-| 19 | México 360 Noticias | https://www.mexico360noticias.lat | `mexico360noticias` |
-| 20 | MRadio | https://www.mradio.lat | `mradio` |
-| 21 | Noticias Horizonte | https://www.noticiashorizonte.lat | `noticiashorizonte` |
-| 22 | Pulso Diario | https://www.pulsodiario.lat | `pulsodiario` |
-| 23 | Punto Clave | https://www.puntoclave.lat | `puntoclave` |
-| 24 | Punto Noticias | https://www.puntonoticias.lat | `puntonoticias` |
-| 25 | Radar Informativo | https://www.radarinformativo.lat | `radarinformativo` |
-| 26 | Reporte Diario | https://www.reportediario.lat | `reportediario` |
-| 27 | Television ABC | https://www.televisionabc.lat | `televisionabc` |
+**Características invariantes (no cambiar sin discusión previa):**
+- Cada artículo vive en **un solo CMS** (no hay broadcast entre Workers).
+- Cada sitio es un **Cloudflare Pages project** con su propio dominio
+  `.pages.dev` o dominio custom.
+- El **Hub** (`nexopress-hub`) es una capa de orquestación, **no** un
+  reemplazo de los CMS individuales.
+- El parafraseo de artículos se hace con **Ollama Cloud** (Kimi K2.6
+  flagship, GLM-5.1 supervisora). Branches legacy de OpenRouter/Gemini
+  se conservan en el código pero no se usan en flujos activos.
+- La publicación a Facebook tiene reglas duras (ver §7).
 
 ---
 
-## Arquitectura del Sistema
+## 2. Arquitectura
+
+### 2.1 Los 5 CMS Workers (datos + API)
+
+| Worker              | Sitios | DB                        | KV              | R2        |
+|---------------------|--------|---------------------------|-----------------|-----------|
+| `cms-originaux`     | 11     | `news_db_cms_originaux`   | `ARTICLES_KV`   | `cms-news`|
+| `cms-nuevos`        | 18     | `news_db_cms_nuevos`      | `ARTICLES_KV`   | `cms-news`|
+| `cms-nuevos2`       | 9      | `news_db_cms_nuevos2`     | `ARTICLES_KV`   | `cms-news`|
+| `cms-nuevos3`       | 33     | `news_db_cms_nuevos3`     | `ARTICLES_KV`   | `cms-news`|
+| `cms-nuevos4`       | 25 (a redefinir) | `news_db_cms_nuevos4` | `ARTICLES_KV` | `cms-news` |
+
+Todos usan el mismo stack: **Hono** + **D1** (SQLite) + **KV** + **R2**.
+
+### 2.2 El Hub (orquestación + SSO)
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Cloudflare Workers                           │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │              news-api (Worker Principal)                 │   │
-│  │  - API REST (Hono framework)                            │   │
-│  │  - Cron Jobs (cada 30 min)                              │   │
-│  │  - Facebook Publishing (cada 3 horas por sitio)         │   │
-│  │  - RSS Ingestion                                        │   │
-│  └─────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-         ┌────────────────────┼────────────────────┐
-         │                    │                    │
-         ▼                    ▼                    ▼
-┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
-│   Cloudflare    │  │   Cloudflare    │  │   Cloudflare    │
-│      D1         │  │      R2         │  │       KV        │
-│  (SQLite DB)    │  │  (Imágenes)     │  │   (Caché)       │
-│                 │  │                 │  │                 │
-│ - ARTICULOS_    │  │ - uploads/      │  │ - cron_status   │
-│ - SITIOS        │  │ - auto/         │  │ - last_fb_post_ │
-│ - REVISION_     │  │                 │  │ - session_      │
-└─────────────────┘  └─────────────────┘  └─────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                 Cloudflare Pages (27 sitios)                    │
-│  Cada sitio tiene:                                              │
-│  - Frontend estático (HTML/CSS/JS)                              │
-│  - Functions para SSR (middleware de artículos)                 │
-│  - Open Graph meta tags dinámicas                               │
-└─────────────────────────────────────────────────────────────────┘
+nexopress-hub (Worker)
+  ├─ D1: nexopress-hub-db
+  │    tablas: hub_users, hub_sessions (en KV), hub_audit_log
+  ├─ KV: HUB_KV (sesiones)
+  └─ KV: HUB_VALIDATION_CACHE (cache 60s de tokens validados)
 ```
+
+Funciones:
+- SSO por sesión UUID en KV (compatible con los 5 CMS).
+- Proxy cross-CMS con validación de `cms_access`.
+- Audit log centralizado.
+- Sitemap XML Google News compatible.
+
+### 2.3 Frontend del Hub (Pages)
+
+```
+nexopress-hub-ui (Cloudflare Pages)
+  ├─ React 18 + Vite + TipTap
+  ├─ Login → Dashboard cross-CMS → Editor con panel SEO
+  └─ URL: https://nexopress-hub-ui.pages.dev
+         (luego https://hub.sebastianvernis.space)
+```
+
+### 2.4 Sitios (Pages)
+
+Cada sitio es un Pages project con:
+- `index.html` (homepage con masonry de artículos)
+- `articulo/index.html` + función SSR (`functions/articulo/[[slug]].js`)
+- `categoria/index.html`
+- `style.css` + `style-custom.css` (colores, logos)
+- `wrangler.toml` con binding a su D1
+- `robots.txt`, `favicon.png`, `sw.js`
+
+El archivo compartido `_shared/article-middleware.js` se reutiliza
+para inyectar OG tags y JSON-LD en todos los sitios.
 
 ---
 
-## Estructura de Directorios
+## 3. Estructura del repo
 
 ```
-/mnt/hdd/Multimedia/Datasets/cloudflare-news-project/
-├── src/                          # Worker API (Cloudflare Workers)
-│   ├── index.js                  # Entry point principal
-│   ├── config.js                 # Configuración global
-│   ├── index_append.js           # Funciones adicionales
-│   ├── schema.sql                # Schema D1
-│   ├── wrangler.toml             # Config del Worker
-│   │
-│   ├── cron/                     # Cron jobs
-│   │   ├── master.js             # Coordinador principal
-│   │   ├── facebook.js           # Publicación Facebook
-│   │   ├── rss-ingest.js         # Ingesta RSS
-│   │   └── ticker.js             # News ticker
-│   │
-│   ├── routes/                   # API Routes (13 módulos)
-│   │   ├── auth.js               # Autenticación
-│   │   ├── articles.js           # Artículos
-│   │   ├── stats.js              # Estadísticas
-│   │   ├── cms.js                # CMS
-│   │   ├── revision.js           # Mesa de revisión
-│   │   ├── sites.js              # Gestión de sitios
-│   │   ├── categories.js         # Categorías
-│   │   ├── ticker.js             # News ticker
-│   │   ├── weather.js            # Clima
-│   │   ├── images.js             # Imágenes
-│   │   ├── rss.js                # RSS
-│   │   ├── facebook.js           # Facebook
-│   │   └── cron.js               # Cron endpoints
-│   │
-│   ├── middleware/               # Middleware
-│   │   └── auth.js               # Autenticación JWT
-│   │
-│   └── utils/                    # Utilidades
-│       ├── helpers.js            # Helpers generales
-│       └── html.js               # Inyección meta tags OG
+News-Site-Orchestration/
+├── cms-originaux/              # CMS Worker 1 (11 sitios)
+├── cms-nuevos/                 # CMS Worker 2 (18 sitios)
+├── cms-nuevos2/                # CMS Worker 3 (9 sitios)
+├── cms-nuevos3/                # CMS Worker 4 (33 sitios)
+├── cms-nuevos4/                # CMS Worker 5 (25 sitios, en rediseño)
+├── cms-selector/               # Indexador de sitios (legacy, conservado)
 │
-├── sites/                        # 28 sitios Cloudflare Pages
-│   ├── _shared/                  # Assets compartidos
-│   ├── radiocinconoticias/
-│   ├── centralmexico/
-│   ├── tvmexico/
-│   ├── cbnnoticias/
-│   ├── mexicoinformado/
-│   ├── nodoinformativo/
-│   ├── bitacoraurbana/
-│   ├── reportecentralmx/
-│   ├── verticenoticias/
-│   ├── noticiasobjetivo/
-│   ├── boominformativo/
-│   ├── capitalpress/
-│   ├── diarioexpress/
-│   ├── elpulsomexicano/
-│   ├── enfoquecapital/
-│   ├── enfoquedirecto/
-│   ├── formulacdmx/
-│   ├── mexicantimes/
-│   ├── mexico360noticias/
-│   ├── mradio/
-│   ├── noticiashorizonte/
-│   ├── pulsodiario/
-│   ├── puntoclave/
-│   ├── puntonoticias/
-│   ├── radarinformativo/
-│   ├── reportediario/
-│   └── televisionabc/
-│       ├── index.html            # Homepage
-│       ├── articulo/
-│       │   └── index.html        # Página de artículo
-│       ├── functions/
-│       │   └── articulo/
-│       │       └── _middleware.js   # SSR para OG tags
-│       ├── components.js         # Componentes JS
-│       ├── script.js             # Lógica principal
-│       ├── style.css             # Estilos base
-│       ├── style-custom.css      # Estilos personalizados
-│       └── wrangler.toml         # Config de Pages
+├── nexopress-hub/              # Worker del Hub (orquestación + SSO)
+├── nexopress-hub-ui/           # Frontend del Hub (React + TipTap)
+├── nexopress-portal/           # Portal unificado legacy
 │
-├── public/
-│   └── admin/                    # Dashboard administrativo (CMS)
-│       ├── index.html            # SPA principal del CMS
-│       ├── generate-password-link.html
-│       ├── setup-password.html
-│       ├── sw.js                 # Service Worker PWA
-│       ├── css/
-│       │   └── admin.css
-│       └── js/
-│           ├── api.js            # Cliente HTTP
-│           ├── auth.js           # Autenticación
-│           ├── editor.js         # Editor artículos
-│           ├── articles.js       # Vista artículos
-│           ├── cms.js            # Vista CMS
-│           ├── revision.js       # Mesa revisión
-│           ├── monitor.js        # Monitor sistema
-│           ├── sites.js          # Gestión sitios
-│           ├── users.js          # Usuarios
-│           ├── router.js         # Router SPA
-│           ├── pwa-manager.js    # PWA manager
-│           └── theme.js          # Temas
+├── docs/                       # Esta normativa + guías operativas
+│   ├── AGENTS.md               # ← este archivo (single source of truth)
+│   ├── CONTRIBUTING.md         # Convenciones de código
+│   ├── ARCHITECTURE.md         # Diagramas
+│   ├── API_REFERENCE.md        # Endpoints del Worker
+│   ├── guides/                 # Guías operativas por tema
+│   ├── plans/                  # Planes de implementación
+│   ├── analysis/               # Reportes de análisis
+│   ├── history/                # Snapshots históricos
+│   └── archive/                # Documentos obsoletos (no tocar)
 │
-├── scripts/                      # Scripts utilidad
-│   ├── setup_fb_tokens.py        # Setup tokens FB
-│   └── verify_fb_tokens.py       # Verificar tokens
+├── scripts/                    # Scripts de mantenimiento
+│   ├── fixes/                  # Correcciones puntuales
+│   ├── data-migration/         # Migraciones masivas
+│   ├── cms-internal/           # Mantenimiento de plataforma
+│   ├── deploy/                 # Deploys alternativos
+│   ├── n8n/                    # Workflows n8n como código
+│   ├── hub/                    # Scripts del Hub (smoke-test, etc.)
+│   └── README.md               # Índice de scripts
 │
-├── docs/                         # Documentación
-├── tools/                        # Herramientas
-├── backups/                      # Backups DB
-├── package.json                  # Dependencias
-└── AGENTS.md                     # ESTE ARCHIVO
+├── tools/                      # Herramientas Python (paraphrase, RSS)
+├── tests/                      # Tests automatizados
+├── designs/                    # Mockups y design tokens
+├── _template/                  # Plantilla para nuevos sitios
+│
+├── AGENTS.md                   # Symlink → docs/AGENTS.md
+├── CLAUDE.md                   # Symlink → docs/AGENTS.md
+├── CONTRIBUTING.md             # Symlink → docs/CONTRIBUTING.md
+├── README.md                   # Punto de entrada principal
+└── ARCHITECTURE.md             # Symlink → docs/ARCHITECTURE.md
 ```
 
 ---
 
-## Configuración y Despliegue
+## 4. Convenciones de código
 
-### Desplegar Worker (API)
+### 4.1 JavaScript (Workers + scripts)
 
-```bash
-cd /mnt/c/Users/soluc/cloudflare-news-project/src
-wrangler deploy --config wrangler.toml
-```
+- **Indentación:** 2 espacios
+- **Nombres:** `camelCase` para variables/funciones, `PascalCase` para
+  clases, `UPPER_SNAKE_CASE` para constantes
+- **Strings:** template literals cuando hay interpolación
+- **Imports:** ES modules (`import { x } from './y.js'`)
+- **Estilo de comillas:** simple quotes por defecto, backticks para
+  template literals
+- **Funciones puras siempre que sea posible**
+- **Nunca** hardcodear secrets — usar `wrangler secret put` o
+  variables de entorno de `[vars]` en `wrangler.toml`
 
-### Desplegar Sitio Pages
+### 4.2 Python (tools/ y scripts/)
 
-```bash
-cd /mnt/c/Users/soluc/cloudflare-news-project/sites/[NOMBRE_SITIO]
-wrangler pages deploy . --project-name=[NOMBRE_SITIO] --branch=master
-```
+- **Indentación:** 4 espacios
+- **Nombres:** `snake_case`
+- **Type hints** en funciones nuevas
+- **Docstrings** en funciones públicas (estilo Google)
+- **Estructura mínima de script:**
+  ```python
+  #!/usr/bin/env python3
+  """Descripción corta del script."""
+  import argparse
+  from pathlib import Path
 
-### Desplegar Todos los Sitios
+  def main():
+      parser = argparse.ArgumentParser()
+      parser.add_argument('--input', required=True)
+      args = parser.parse_args()
+      # lógica
+      print("✓ Hecho")
 
-```bash
-for site in radiocinconoticias centralmexico tvmexico cbnnoticias mexicoinformado nodoinformativo bitacoraurbana reportecentralmx verticenoticias noticiasobjetivo; do
-  cd sites/$site && wrangler pages deploy . --project-name=$site --branch=master && cd ../..
-done
-```
+  if __name__ == '__main__':
+      main()
+  ```
 
----
+### 4.3 SQL (D1 migrations)
 
-## Base de Datos
+- **Nombres de tabla:** `MAYÚSCULAS_CON_GUIONES_BAJOS` (e.g.
+  `ARTICULOS_CMS`, `USUARIOS`, `HUB_USERS`)
+- **Nombres de columna:** `MAYÚSCULAS_CON_GUIONES_BAJOS` (e.g.
+  `META_TITLE`, `FOCUS_KEYWORD`)
+- **Siempre** usar `CREATE TABLE IF NOT EXISTS` y
+  `CREATE INDEX IF NOT EXISTS` para idempotencia
+- **Migraciones aditivas** solo (`ALTER TABLE ADD COLUMN`), nunca
+  destructivas sin backup previo
+- **Comentarios** al inicio con descripción + fecha
 
-### Tablas Principales
+### 4.4 HTML/CSS/JS en sitios
 
-#### ARTICULOS_PARAFRASEADOS
-Artículos procesados y listos para publicación.
+- HTML semántico (`<header>`, `<main>`, `<article>`, `<aside>`)
+- CSS mobile-first, breakpoints en 768px y 1024px
+- JS vanilla, sin frameworks pesados en sitios (reactividad con
+  eventos o Alpine.js si hace falta)
+- **Español de México formal** en todo copy visible (tuteo neutro,
+  sin voseo, sin regionalismos)
 
-```sql
-CREATE TABLE ARTICULOS_PARAFRASEADOS (
-  ID TEXT PRIMARY KEY,
-  TITULO_PARAFRASEADO TEXT NOT NULL,
-  SLUG TEXT,
-  CONTENIDO TEXT,
-  DESCRIPCION_PARAFRASEADA TEXT,
-  CATEGORIA TEXT,
-  AUTOR TEXT,
-  FECHA_PUBLICACION TEXT,
-  URL_IMAGEN TEXT,
-  SITIO_DESTINO TEXT,        -- "sitio1,sitio2,sitio3"
-  DESTACADO INTEGER DEFAULT 0,
-  VISTAS INTEGER DEFAULT 0,
-  ESTADO TEXT DEFAULT 'PUBLICADO',
-  FB_REQUERIDO INTEGER DEFAULT 0,
-  FB_PUBLICADO INTEGER DEFAULT 0,
-  FB_FECHA TEXT,
-  ES_BREVE INTEGER DEFAULT 0,
-  SOURCE_URL TEXT
-);
-```
+### 4.5 Idioma de la UI
 
-#### ARTICULOS_CMS
-Artículos creados manualmente desde el CMS.
-
-```sql
-CREATE TABLE ARTICULOS_CMS (
-  ID TEXT PRIMARY KEY,
-  TITULO TEXT NOT NULL,
-  SLUG TEXT NOT NULL UNIQUE,  -- ⚠️ UNIQUE constraint
-  DESCRIPCION TEXT,
-  CONTENIDO TEXT,
-  CATEGORIA TEXT,
-  URL_IMAGEN TEXT,
-  SITIOS_DESTINO TEXT,
-  ESTADO TEXT DEFAULT 'BORRADOR',
-  DESTACADO INTEGER DEFAULT 0,
-  FECHA_CREACION TEXT,
-  FECHA_PUBLICACION TEXT,
-  FB_PUBLICADO INTEGER DEFAULT 0,
-  FB_FECHA TEXT,
-  FB_REQUERIDO INTEGER DEFAULT 0
-);
-```
-
-#### SITIOS
-Configuración de cada sitio de la red.
-
-```sql
-CREATE TABLE SITIOS (
-  ID TEXT PRIMARY KEY,
-  SLUG TEXT NOT NULL UNIQUE,
-  NOMBRE TEXT NOT NULL,
-  DOMINIO TEXT NOT NULL,
-  TAGLINE TEXT,
-  LOGO_URL TEXT,
-  FAVICON_URL TEXT,
-  FACEBOOK_ACTIVO INTEGER DEFAULT 1,
-  FACEBOOK_PAGE_ID TEXT,
-  FACEBOOK_TOKEN_SECRET TEXT  -- Nombre del secret en Cloudflare
-);
-```
-
-### Consultas Útiles
-
-```bash
-# Ver artículos duplicados por SLUG
-wrangler d1 execute news_db --command "
-  SELECT SLUG, COUNT(*) as count 
-  FROM ARTICULOS_PARAFRASEADOS 
-  WHERE ESTADO = 'PUBLICADO' 
-  GROUP BY SLUG 
-  HAVING count > 1
-" --remote
-
-# Ver artículos pendientes de Facebook
-wrangler d1 execute news_db --command "
-  SELECT ID, TITULO_PARAFRASEADO, SITIO_DESTINO, FB_PUBLICADO 
-  FROM ARTICULOS_PARAFRASEADOS 
-  WHERE FB_PUBLICADO = 0 
-  LIMIT 10
-" --remote
-
-# Resetear FB_PUBLICADO para reintentar
-wrangler d1 execute news_db --command "
-  UPDATE ARTICULOS_PARAFRASEADOS 
-  SET FB_PUBLICADO = 0, FB_FECHA = NULL 
-  WHERE ID = '[ARTICLE_ID]'
-" --remote
-```
+- **Todo copy visible en español de México** (tuteo, sin "vos", sin
+  regionalismos como "che", "güey", "chido", "neta", "ahorita")
+- **Léxico neutro** entendible en todo México
+- **Términos técnicos en inglés** son aceptables en comentarios de
+  código y nombres de variables (convención universal)
+- **Términos como "tuit" (no "tweet"), "correo electrónico" (no
+  "email")** en UI visible
+- **Fechas y números** con `es-MX` locale
 
 ---
 
-## API Endpoints
+## 5. Reglas críticas de datos y auth
 
-### Base URL
-```
-https://news-api.sebastianvernis.workers.dev/api
-```
+### 5.1 Autenticación
 
-### Health & Upload
+- **Patrón de sesión:** UUID aleatorio en KV bajo `session_<token>` o
+  `hub_session_<token>`
+- **Hash de passwords:** SHA-256 con `constantTimeEqual` (NO usar
+  bcrypt ni argon2 — limita runtime del Worker)
+- **Provisioning:** nuevos usuarios se crean con
+  `PASSWORD_SETUP_TOKEN_HASH`, **nunca** con password inicial
+- **Nunca** loguear ni committear passwords, tokens o hashes
+- **Credenciales** de admin/editor: tratar como `[REDACTED]` en
+  cualquier output que vaya a logs o memoria compartida
 
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `GET` | `/health` | Health check del sistema |
-| `POST` | `/upload` | Subir archivo a R2 |
+### 5.2 SSO Hub
 
-### Auth
+- El Hub emite tokens UUID
+- Los 5 CMSs validan tokens con fallback: primero KV local, luego
+  cache HUB_VALIDATION_CACHE (60s), luego request a `HUB_API_URL`
+- El campo `cms_access` en `hub_users` es JSON array con los IDs de
+  CMS permitidos para ese usuario
+- Auditoría obligatoria en `hub_audit_log` para login, logout,
+  create_user, create_article, change_state
 
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `POST` | `/auth/login` | Iniciar sesión |
-| `POST` | `/auth/logout` | Cerrar sesión |
-| `GET` | `/auth/session` | Verificar sesión |
-| `POST` | `/auth/users` | Crear usuario |
-| `GET` | `/auth/setup/:token` | Setup con token |
+### 5.3 Reglas de Facebook (duro, no negociable)
 
-### Artículos
-
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `GET` | `/articles?site=[slug]&limit=20` | Lista de artículos |
-| `GET` | `/articles/:slug` | Artículo individual |
-| `POST` | `/articles/bulk` | Insertar múltiples |
-| `PUT` | `/articles/:id` | Actualizar artículo |
-| `DELETE` | `/articles/:id` | Eliminar artículo |
-| `POST` | `/articles/publish-fb/:id` | Publicar en FB manual |
-
-### CMS
-
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `GET` | `/cms/articles` | Lista artículos CMS |
-| `POST` | `/cms/articles` | Crear/Editar artículo |
-| `POST` | `/cms/publish` | Publicar CMS → PARAFRASEADOS |
-| `POST` | `/cms/generate-variations` | Generar variaciones IA |
-
-### Revisión
-
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `GET` | `/revision/pending` | Artículos pendientes |
-| `POST` | `/revision/:id/approve` | Aprobar artículo |
-| `POST` | `/revision/:id/reject` | Rechazar artículo |
-
-### Sitios
-
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `GET` | `/sites` | Lista todos los sitios |
-| `GET` | `/sites/:slug` | Obtener sitio específico |
-| `PUT` | `/sites/:slug` | Actualizar sitio |
-
-### Categorías
-
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `GET` | `/categories?site=[slug]` | Lista categorías por sitio |
-
-### Estadísticas
-
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `GET` | `/stats/overview` | Estadísticas generales |
-| `GET` | `/stats/site/:slug` | Estadísticas por sitio |
-
-### Ticker
-
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `GET` | `/ticker` | Noticias para ticker |
-
-### Clima
-
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `GET` | `/weather?city=[ciudad]` | Datos del clima |
-
-### Imágenes
-
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `POST` | `/images/upload` | Subir imagen |
-| `GET` | `/images/list` | Listar imágenes |
-
-### RSS
-
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `GET` | `/rss/sources` | Fuentes RSS configuradas |
-| `POST` | `/rss/fetch` | Forzar fetch RSS |
-
-### Facebook
-
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `GET` | `/facebook/monitor` | Monitor de publicaciones |
-| `GET` | `/facebook/debug-tokens` | Debug de tokens |
-| `POST` | `/facebook/publish` | Publicar manualmente |
-
-### Cron
-
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `GET` | `/cron/status` | Estado del último cron |
-| `POST` | `/cron/manual` | Ejecutar cron manual |
-| `POST` | `/cron/ingest?force=true` | Forzar ingesta RSS |
+- Ventana de publicación: **8 a 22 hs** hora local del sitio
+- Frecuencia: cada **3 horas** por sitio
+- Máximo **4 posts/día** por sitio
+- **No re-publicar** el mismo artículo
+- Solo artículos de **últimas 48 horas**
 
 ---
 
-## CMS Dashboard (Rutas y Vistas)
+## 6. Reglas de privacidad y cloud
 
-### URL de Acceso
-
-| Entorno | URL |
-|---------|-----|
-| **Producción** | https://cms.sebastianvernis.space/admin/ |
-| **Local** | http://localhost:8080/admin/ |
-
-### Rutas del Dashboard (SPA Router)
-
-El CMS usa un router SPA interno. Las rutas se manejan via hash (`#/ruta`).
-
-| Ruta | Vista | Descripción | Archivo |
-|------|-------|-------------|---------|
-| `#/dashboard` | Dashboard | Vista principal con métricas | `index.html` |
-| `#/articles` | Artículos | Lista de artículos parafraseados | `articles.js` |
-| `#/cms` | CMS | Artículos creados manualmente | `cms.js` |
-| `#/revision` | Revisión | Mesa de revisión de contenido | `revision.js` |
-| `#/monitor` | Monitor | Estado del sistema en vivo | `monitor.js` |
-| `#/sites` | Sitios | Gestión de los 27 sitios | `sites.js` |
-| `#/users` | Usuarios | Gestión de usuarios y roles | `users.js` |
-| `#/settings` | Configuración | Ajustes generales | `index.html` |
-
-### Estructura del Router (`public/admin/js/router.js`)
-
-```javascript
-// Navegación
-Router.navigate('articles');  // Cambia a #/articles
-Router.navigate('cms');       // Cambia a #/cms
-
-// Vistas disponibles
-const views = {
-  dashboard:  'Dashboard',
-  articles:   'Artículos',
-  cms:        'CMS',
-  revision:   'Revisión',
-  monitor:    'Monitor',
-  sites:      'Sitios',
-  users:      'Usuarios',
-  settings:   'Configuración'
-};
-```
-
-### Vistas Principales
-
-#### 1. Dashboard (`#/dashboard`)
-- Métricas generales
-- Accesos rápidos
-- Estado del sistema
-
-#### 2. Artículos (`#/articles`)
-- Lista de artículos parafraseados
-- Filtros por sitio, categoría, estado
-- Acciones: Editar, Publicar, Eliminar
-- Botón: Publicar en Facebook
-
-#### 3. CMS (`#/cms`)
-- Lista de artículos CMS (manuales)
-- Botón: Nuevo Artículo
-- Acciones: Editar, Publicar, Generar Variaciones IA
-
-#### 4. Revisión (`#/revision`)
-- Artículos pendientes de aprobación
-- Editor de correcciones
-- Botones: Aprobar, Rechazar
-
-#### 5. Monitor (`#/monitor`)
-- Estado de crons en vivo
-- Tokens de Facebook
-- Historial de publicaciones
-- Diagnóstico de errores
-
-#### 6. Sitios (`#/sites`)
-- Lista de los 27 sitios
-- Configurar Facebook por sitio
-- Activar/Desactivar sitio
-
-#### 7. Usuarios (`#/users`)
-- Lista de usuarios
-- Roles: Admin, Editor
-- Generar link de setup
-
-### Editor Universal (`public/admin/js/editor.js`)
-
-El editor se usa en múltiples vistas:
-
-```javascript
-// Abrir editor para nuevo artículo CMS
-openUniversalEditor('cms', {
-  title: '',
-  content: '',
-  excerpt: '',
-  category: 'NACIONAL',
-  imageUrl: '',
-  featured: false
-});
-
-// Abrir editor para revisión
-openUniversalEditor('revision', {
-  id: rev.ID,
-  title: rev.TITULO_PROPUESTO,
-  content: rev.CONTENIDO_PROPUESTO,
-  excerpt: rev.DESCRIPCION_PROPUESTA,
-  imageUrl: rev.URL_IMAGEN
-});
-
-// Abrir editor para artículo publicado
-openUniversalEditor('live', {
-  id: article.ID,
-  title: article.title,
-  content: article.content,
-  ...
-});
-```
-
-### Funciones del Editor
-
-| Función | Descripción |
-|---------|-------------|
-| `insertImage()` | Inserta imagen desde URL |
-| `insertYouTube()` | Inserta video de YouTube |
-| `insertTwitter()` | Inserta tweet embed |
-| `insertInstagram()` | Inserta post de Instagram |
-| `autoParagraph()` | Auto-formatea párrafos |
-| `uploadUniversalImage(input)` | Sube imagen a R2 |
-| `saveUniversal(action)` | Guarda artículo |
-
-### Acciones del Editor
-
-| Acción | Modo | Descripción |
-|--------|------|-------------|
-| `draft` | CMS | Guardar como borrador |
-| `publish` | CMS | Publicar en sitios |
-| `revision_save` | Revisión | Guardar cambios en revisión |
-| `revision_approve` | Revisión | Aprobar y publicar |
-| `live_update` | Live | Actualizar artículo publicado |
-
-### Autenticación del CMS
-
-```javascript
-// Archivo: public/admin/js/auth.js
-
-// Login
-await apiFetch('/auth/login', {
-  method: 'POST',
-  body: JSON.stringify({ username, password })
-});
-
-// Verificar sesión
-const session = await apiFetch('/auth/session');
-
-// Logout
-await apiFetch('/auth/logout', { method: 'POST' });
-```
-
-### PWA del CMS
-
-El CMS es una Progressive Web App:
-
-```javascript
-// Service Worker: public/admin/sw.js
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open('cms-v1').then((cache) => {
-      return cache.addAll([
-        '/admin/',
-        '/admin/index.html',
-        '/admin/css/admin.css',
-        '/admin/js/api.js',
-        // ... más archivos
-      ]);
-    })
-  );
-});
-```
-
-### Endpoints del CMS (Admin API)
-
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `POST` | `/auth/login` | Iniciar sesión |
-| `POST` | `/auth/logout` | Cerrar sesión |
-| `GET` | `/auth/session` | Verificar sesión |
-| `POST` | `/auth/users` | Crear usuario |
-| `GET` | `/auth/setup/:token` | Setup con token |
-| `POST` | `/auth/generate-password-link` | Generar link de setup |
+- **Preferir Ollama local (localhost:11434)** antes que cloud APIs
+- **No enviar datos personales** a APIs externas sin aprobación
+  explícita del usuario
+- **No descargar** `.deb`, binarios, firmwares con `wget`/`curl`
+  sin antes pedir "necesito descargar X, ¿procedo?"
+- **Cloudflare (Workers, D1, KV, R2, Pages)** sí — es la infra propia
+  del usuario, no es "cloud de terceros"
+- **Ollama Cloud** (kimi-k2.6, glm-5.1) aceptable para features que
+  Ollama local no cubre, con aprobación
 
 ---
 
-## Flujo de Facebook
+## 7. Workflow de cambios
 
-### Proceso Automático (Cron cada 30 min)
-
-1. **Verifica timers:** Cada sitio publica cada 3 horas
-2. **Selecciona artículo:** El más reciente con `FB_PUBLICADO = 0`
-3. **Filtra imágenes:** Solo artículos con imagen original (no fallback)
-4. **Publica en Facebook:** Usa Graph API v19.0
-5. **Actualiza DB:** Marca `FB_PUBLICADO = 1`
-
-### Función `publishToFB`
-
-```javascript
-async function publishToFB(env, article, type) {
-  // 1. Obtener datos del artículo
-  const targetSites = article.SITIOS_DESTINO || article.SITIO_DESTINO;
-  const title = decodeHTMLEntities(article.TITULO || article.TITULO_PARAFRASEADO);
-  const slug = article.SLUG || article.slug;
-  const imageUrl = article.URL_IMAGEN || '';
-
-  // 2. Para cada sitio destino
-  for (const siteSlug of slugs) {
-    // a. Obtener config del sitio
-    const site = await env.DB.prepare(
-      "SELECT * FROM SITIOS WHERE SLUG = ? AND FACEBOOK_ACTIVO = 1"
-    ).bind(siteSlug).first();
-
-    // b. Obtener token desde secrets
-    const token = env[site.FACEBOOK_TOKEN_SECRET];
-
-    // c. Construir URL del artículo
-    const domain = site.DOMINIO || `${siteSlug}.pages.dev`;
-    const url = `https://${domain}/articulo/?slug=${slug}`;
-
-    // d. Publicar en Facebook
-    const formData = new URLSearchParams();
-    formData.append('message', title);
-    formData.append('link', url);
-    formData.append('picture', imageUrl);  // ✅ Miniatura
-    formData.append('access_token', token);
-
-    const response = await fetch(
-      `https://graph.facebook.com/v19.0/${site.FACEBOOK_PAGE_ID}/feed`,
-      { method: "POST", body: formData }
-    );
-
-    // e. Marcar como publicado si éxito
-    if (response.ok) {
-      await env.DB.prepare(
-        `UPDATE ${table} SET FB_PUBLICADO = 1, FB_FECHA = datetime('now') 
-         WHERE ID = ?`
-      ).bind(article.ID).run();
-    }
-  }
-}
-```
-
-### Configurar Tokens de Facebook
+### 7.1 Ramas y commits
 
 ```bash
-# Ejecutar script de configuración
-cd /mnt/c/Users/soluc/cloudflare-news-project
-python3 scripts/setup_fb_tokens.py
+# Branch por feature/fix
+git checkout -b feature/nombre-corto
+git checkout -b fix/descripcion-corta
 
-# O manualmente (uno por uno)
-wrangler secret put FB_TOKEN_RADIOCINCONOTICIAS --name news-api
-wrangler secret put FB_TOKEN_CENTRALMEXICO --name news-api
-wrangler secret put FB_TOKEN_TVMEXICO --name news-api
-wrangler secret put FB_TOKEN_CBNNOTICIAS --name news-api
-wrangler secret put FB_TOKEN_MEXICOINFORMADO --name news-api
-wrangler secret put FB_TOKEN_NODOINFORMATIVO --name news-api
-wrangler secret put FB_TOKEN_BITACORAURBANA --name news-api
-wrangler secret put FB_TOKEN_REPORTECENTRALMX --name news-api
-wrangler secret put FB_TOKEN_VERTICENOTICIAS --name news-api
-wrangler secret put FB_TOKEN_NOTICIASOBJETIVO --name news-api
+# Commits descriptivos (conventional commits)
+git commit -m "feat: agregar endpoint de sitemap XML"
+git commit -m "fix: corregir URL de imagen en OG tags"
+git commit -m "docs: actualizar AGENTS.md con stack Ollama"
+git commit -m "refactor: extraer parser de OG tags a utils"
 ```
 
-### Verificar Tokens
+Tipos: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `perf`.
 
-```bash
-# Ver lista de secrets
-wrangler secret list --name news-api
+### 7.2 Antes de commitear
 
-# Test manual de token
-curl -s "https://graph.facebook.com/v19.0/[PAGE_ID]?access_token=[TOKEN]&fields=name"
-```
+- `gitnexus_detect_changes()` para verificar scope
+- Si tocás una función: `gitnexus_impact({target: "nombre", direction: "upstream"})`
+- Correr tests si existen
+- Si es UI: smoke test en navegador
+- Si es SQL: verificar idempotencia
+
+### 7.3 Deploy
+
+- **El usuario es quien hace deploy y da veredicto final.**
+- El agente diagnostica, parchea localmente, commitea.
+- **No auto-deploy** incluso si el cambio es obviamente seguro.
+- Después del deploy: `wrangler tail --name <worker>` para ver logs.
 
 ---
 
-## Solución de Problemas Comunes
+## 8. Reglas específicas para el Hub
 
-### 1. Error: `UNIQUE constraint failed: ARTICULOS_CMS.SLUG`
+### 8.1 Compatibilidad con los 5 CMSs
 
-**Causa:** Dos artículos con el mismo título (mismo SLUG generado).
+- El Hub **nunca** modifica el schema de los CMSs sin migraciones
+  explícitas.
+- Las extensiones (auth middleware, endpoints `/seo`, `/state`)
+  son **aditivas** — no rompen los endpoints existentes.
+- El binding `HUB_VALIDATION_CACHE` debe existir en los 5
+  `wrangler.toml` de los CMSs.
+- La variable `HUB_API_URL` debe apuntar al Worker del Hub en los
+  5 CMSs.
 
-**Solución:** El código ahora detecta duplicados y agrega timestamp:
-```javascript
-// En src/index.js - app.post('/cms/articles')
-if (existingSlug) {
-  slug = `${slugify(titulo)}-${Date.now()}`;
-}
-```
+### 8.2 Editor TipTap (frontend del Hub)
 
-### 2. Error: `D1_ERROR: UNIQUE constraint failed: ARTICULOS_PARAFRASEADOS`
+- **Replicar herramientas del editor actual de los CMSs:**
+  - Subir imagen (R2)
+  - YouTube / X (Twitter) / Instagram embeds
+  - 2 / 3 columnas
+  - Tablas
+  - Blockquote, code, listas
+  - Link
+- **Extras editoriales del Hub:**
+  - Drop cap (letra capital)
+  - Pull quote (cita destacada)
+  - Callouts (info / alerta / dato / consejo)
+  - Modo enfoque
+  - Atajos de teclado (Ctrl+B/I/U/K/S/Z)
+  - Contador de palabras y tiempo de lectura en vivo
+- **Panel SEO (Yoast-like):**
+  - Legibilidad Fernández-Huerta (español)
+  - Análisis de palabra clave objetivo
+  - Vista previa en Google (SERP preview)
+  - Schema JSON-LD NewsArticle inyectado en SSR
 
-**Causa:** Publicar dos veces el mismo artículo CMS.
+### 8.3 Español de México (UI)
 
-**Solución:** El endpoint `/cms/publish` ahora verifica por SLUG:
-```javascript
-const existingPara = await env.DB.prepare(
-  'SELECT ID FROM ARTICULOS_PARAFRASEADOS WHERE SLUG = ? AND ESTADO = "PUBLICADO"'
-).bind(baseSlug).first();
-
-if (existingPara) {
-  // UPDATE en lugar de INSERT
-}
-```
-
-### 3. Facebook no muestra miniaturas
-
-**Causas posibles:**
-- Imagen es `/logo.png` o fallback
-- Imagen no es URL absoluta
-- Falta parámetro `picture` en POST a Facebook
-
-**Solución:**
-```javascript
-// ✅ Verificar imagen válida
-if (imageUrl && imageUrl.trim() !== '' && !imageUrl.includes('logo.png')) {
-  formData.append('picture', imageUrl);
-}
-
-// ✅ Forzar URL absoluta
-if (image.startsWith('/')) {
-  image = `${url.origin}${image}`;
-}
-```
-
-### 4. Entidades HTML escapadas (`&nbsp;`, `&amp;`, etc.)
-
-**Causa:** Contenido scrapeado viene con entidades HTML.
-
-**Solución:** Decodificar en `parseArticleRow()`:
-```javascript
-const decodedContent = decodeHTMLEntities(rawContent);
-
-function decodeHTMLEntities(text) {
-  return text
-    .replace(/&quot;/g, '"')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>');
-}
-```
-
-### 5. Functions de Pages no se ejecutan
-
-**Causa:** Deploy a rama incorrecta o functions no están en el bundle.
-
-**Solución:**
-```bash
-# Verificar que existe functions/
-ls -la sites/[sitio]/functions/articulo/_middleware.js
-
-# Desplegar a rama master
-wrangler pages deploy . --project-name=[sitio] --branch=master
-
-# Verificar deployment
-curl -s "https://www.[sitio].lat/articulo/?slug=[slug]" | grep "og:image"
-```
-
-### 6. Cron no ejecuta
-
-**Causa:** Cron trigger no está configurado o Worker no está activo.
-
-**Solución:**
-```bash
-# Verificar triggers
-wrangler deploy --dry-run --config wrangler.toml
-
-# Verificar crons en dashboard de Cloudflare
-# https://dash.cloudflare.com/[ACCOUNT]/workers/services/view/news-api/triggers
-
-# Ejecutar manual
-curl -X POST https://news-api.sebastianvernis.workers.dev/api/cron/manual
-
-# Ver estado
-curl -s https://news-api.sebastianvernis.workers.dev/api/cron/status
-```
-
-### 7. Artículos no se publican en Facebook
-
-**Causas:**
-- Tokens expirados
-- `FB_REQUERIDO = 0`
-- Timer de 3 horas no ha vencido
-- Imagen es fallback
-
-**Solución:**
-```bash
-# 1. Verificar tokens
-python3 scripts/verify_fb_tokens.py
-
-# 2. Resetear timers en KV
-# (Se hace automático, pero se puede forzar)
-
-# 3. Verificar artículos pendientes
-curl -s https://news-api.sebastianvernis.workers.dev/api/facebook/monitor
-
-# 4. Forzar publicación manual
-curl -X POST https://news-api.sebastianvernis.workers.dev/api/articles/publish-fb/[ARTICLE_ID]
-```
+Todo copy visible del Hub debe ser:
+- **Tuteo neutro** ("Empieza a escribir", "Guarda el artículo")
+- **Sin voseo** (nada de "empezá", "guardá", "insertá")
+- **Sin regionalismos** rioplatenses (nada de "che", "pibe", "boludo")
+- **Sin regionalismos** mexicanos coloquiales en UI formal (nada de
+  "güey", "chido", "neta", "ahorita", "órale")
+- **Léxico neutro** que se entienda en todo México
+- **Tooltips informativos** en cada herramienta del editor
+  (descripción breve + atajo de teclado cuando aplique)
 
 ---
 
-## Comandos Útiles
+## 9. Reglas de migración
 
-### Desarrollo Local
+### 9.1 SQL idempotente
+
+Toda migración nueva DEBE ser idempotente:
+- `CREATE TABLE IF NOT EXISTS`
+- `CREATE INDEX IF NOT EXISTS`
+- `ALTER TABLE ... ADD COLUMN` (D1 no soporta `IF NOT EXISTS`
+  en ALTER, usar patrón con `PRAGMA table_info` para verificar)
+- `INSERT OR IGNORE` para seeds
+
+### 9.2 Antes de mergear migración
+
+1. Backup de la DB (`wrangler d1 export`)
+2. Test local con `--local` primero
+3. Test en `--remote` solo después de que `--local` pase
+4. Documentar el cambio en `docs/migrations/<fecha>-<nombre>.md`
+
+---
+
+## 10. Comandos útiles
+
+### 10.1 Workers
 
 ```bash
-# Ubicación del proyecto
-cd /mnt/hdd/Multimedia/Datasets/cloudflare-news-project
+# Deploy
+wrangler deploy
 
-# Worker local (puerto 8781)
-npm run worker
-# o
-cd src && wrangler dev --config wrangler.toml
+# Logs en vivo
+wrangler tail --name <worker-name>
 
-# Pages local (puerto 8888)
+# D1 — ejecutar SQL
+wrangler d1 execute <db-name> --remote --file migrations/xxx.sql
+wrangler d1 execute <db-name> --remote --command "SELECT * FROM users LIMIT 5"
+
+# D1 — local dev
+wrangler d1 execute <db-name> --local --file migrations/xxx.sql
+
+# KV
+wrangler kv:namespace create <NAME>
+wrangler kv:key put --binding=<BINDING> "key" "value"
+
+# Secrets
+wrangler secret put <SECRET_NAME>
+```
+
+### 10.2 Pages
+
+```bash
+# Deploy frontend
+cd <pages-project>
+npm run build
+wrangler pages deploy dist --project-name=<project>
+```
+
+### 10.3 GitNexus
+
+```bash
+npx gitnexus analyze          # re-indexar
+npx gitnexus status           # freshness check
+npx gitnexus wiki             # generar docs
+```
+
+### 10.4 Local dev
+
+```bash
+# Worker
+cd cms-nuevos4
 npm run dev
-# o
-wrangler pages dev ./public --port 8888 --proxy 8781
 
-# Ambos simultáneamente
-npm start
-```
-
-### Producción
-
-```bash
-# Deploy Worker API
-cd /mnt/hdd/Multimedia/Datasets/cloudflare-news-project/src
-wrangler deploy --config wrangler.toml
-
-# Deploy sitio individual
-cd /mnt/hdd/Multimedia/Datasets/cloudflare-news-project/sites/[sitio]
-wrangler pages deploy . --project-name=[sitio] --branch=master
-
-# Deploy todos los sitios
-cd /mnt/hdd/Multimedia/Datasets/cloudflare-news-project
-for site in radiocinconoticias centralmexico tvmexico cbnnoticias mexicoinformado nodoinformativo bitacoraurbana reportecentralmx verticenoticias noticiasobjetivo boominformativo capitalpress diarioexpress elpulsomexicano enfoquecapital enfoquedirecto formulacdmx mexicantimes mexico360noticias mradio noticiashorizonte pulsodiario puntoclave puntonoticias radarinformativo reportediario televisionabc; do
-  echo "Deploying $site..."
-  cd sites/$site && wrangler pages deploy . --project-name=$site --branch=master && cd ../..
-done
-
-# Ver logs
-wrangler tail --name news-api
-
-# Ver KV
-wrangler kv:key get --binding ARTICLES_KV cron_status
-```
-
-### Base de Datos
-
-```bash
-# Query directa
-wrangler d1 execute news_db --command "SELECT COUNT(*) FROM ARTICULOS_PARAFRASEADOS" --remote
-
-# Backup
-wrangler d1 export news_db --output backup.sql --remote
-
-# Restaurar
-wrangler d1 execute news_db --file backup.sql --remote
-```
-
-### Facebook
-
-```bash
-# Configurar tokens
-python3 scripts/setup_fb_tokens.py
-
-# Verificar tokens
-python3 scripts/verify_fb_tokens.py
-
-# Ver estado
-curl -s https://news-api.sebastianvernis.workers.dev/api/cron/status | python3 -m json.tool
-
-# Monitor
-curl -s https://news-api.sebastianvernis.workers.dev/api/facebook/monitor | python3 -m json.tool
+# Frontend del Hub
+cd nexopress-hub-ui
+npm run dev   # http://localhost:3000 con proxy a localhost:8787
 ```
 
 ---
 
-## Variables de Entorno y Secrets
+## 11. Debugging y troubleshooting
 
-### Worker Secrets (news-api)
-
-| Secret | Descripción | Ejemplo |
-|--------|-------------|---------|
-| `OPENROUTER_API_KEY` | API key para IA | `sk-or-...` |
-| `ADMIN_TOKEN` | Token maestro admin | `admin-12345` |
-| `FB_TOKEN_RADIOCINCONOTICIAS` | Token FB Radio Cinco | `[REDACTED_FB_TOKEN]` |
-| `FB_TOKEN_CENTRALMEXICO` | Token FB Central México | `[REDACTED_FB_TOKEN]` |
-| `FB_TOKEN_TVMEXICO` | Token FB TV México | `[REDACTED_FB_TOKEN]` |
-| `FB_TOKEN_CBNNOTICIAS` | Token FB CBN Noticias | `[REDACTED_FB_TOKEN]` |
-| `FB_TOKEN_MEXICOINFORMADO` | Token FB México Informado | `[REDACTED_FB_TOKEN]` |
-| `FB_TOKEN_NODOINFORMATIVO` | Token FB Nodo Informativo | `[REDACTED_FB_TOKEN]` |
-| `FB_TOKEN_BITACORAURBANA` | Token FB Bitácora Urbana | `[REDACTED_FB_TOKEN]` |
-| `FB_TOKEN_REPORTECENTRALMX` | Token FB Reporte Central | `[REDACTED_FB_TOKEN]` |
-| `FB_TOKEN_VERTICENOTICIAS` | Token FB Vértice Noticias | `[REDACTED_FB_TOKEN]` |
-| `FB_TOKEN_NOTICIASOBJETIVO` | Token FB Noticias Objetivo | `[REDACTED_FB_TOKEN]` |
-
-### Worker Variables (wrangler.toml)
-
-```toml
-[vars]
-ENVIRONMENT = "production"
-NEWSAPI_KEY = "..."  # Opcional, para NewsAPI
-```
-
-### Bindings
-
-```toml
-[[d1_databases]]
-binding = "DB"
-database_name = "news_db"
-database_id = "039ec6ab-8f14-4e79-8f02-021df67a6c18"
-
-[[kv_namespaces]]
-binding = "ARTICLES_KV"
-id = "fbf21fb75f5647a8966858d199b44e0b"
-
-[[r2_buckets]]
-binding = "UPLOADS"
-bucket_name = "cms-news"
-```
-
----
-
-## Checklist de Despliegue
-
-### Antes de Desplegar
-
-- [ ] Verificar que no hay cambios sin commit
-- [ ] Ejecutar tests locales si existen
-- [ ] Verificar variables de entorno
-
-### Deploy Worker
+### 11.1 Endpoints que no responden
 
 ```bash
-cd src
-wrangler deploy --config wrangler.toml
-# ✅ Verificar: https://news-api.sebastianvernis.workers.dev/api/cron/status
+# Health checks
+curl https://cms-nuevos4.sebastianvernis.workers.dev/api/health
+curl https://nexopress-hub.sebastianvernis.workers.dev/api/health
+
+# Logs
+wrangler tail --name cms-nuevos4
+wrangler tail --name nexopress-hub
 ```
 
-### Deploy Pages (cada sitio)
+### 11.2 Login falla en el Hub
 
-```bash
-cd sites/[sitio]
-wrangler pages deploy . --project-name=[sitio] --branch=master
-# ✅ Verificar: https://www.[sitio].lat/
-```
+1. Verificar `localStorage.getItem('hub_token')` en el browser
+2. Verificar que el user existe en D1 del Hub:
+   `wrangler d1 execute nexopress-hub-db --remote --command "SELECT * FROM hub_users"`
+3. Verificar CORS: el origin debe estar en `ALLOWED_ORIGINS`
+4. Ver logs: `wrangler tail --name nexopress-hub`
 
-### Post-Deploy
+### 11.3 Artículo no se ve en el sitio
 
-- [ ] Verificar API responde
-- [ ] Verificar sitios cargan
-- [ ] Verificar OG tags en artículos
-- [ ] Verificar cron status
-- [ ] Verificar Facebook tokens
+1. Verificar que el artículo existe en la D1 del CMS
+2. Verificar que el `slug` está correcto
+3. Verificar que el estado es `published` (no `draft` o `in_review`)
+4. Verificar el JSON-LD en SSR: view-source del artículo
+5. Test con `curl https://cms-X.sebastianvernis.workers.dev/api/articles/<id>`
+
+### 11.4 gpt-oss + think:false
+
+**Quirk conocido:** OpenAI `gpt-oss:20b` y `gpt-oss:120b` en Ollama
+Cloud tienen un bug con `think: false` + `num_predict` bajo: queman
+todo el budget en tokens internos y devuelven `content: ""`.
+
+**Workaround:** usar modelos flagship `:cloud` (Kimi K2.6, GLM-5.1,
+DeepSeek V4 Pro) que respetan `think: false` correctamente.
 
 ---
 
-## Contacto y Soporte
+## 12. Privacidad, secretos y compliance
 
-- **Dashboard Admin:** https://cms.sebastianvernis.space/
-- **API Base:** https://news-api.sebastianvernis.workers.dev/api
-- **Monitor de Sistema:** https://cms.sebastianvernis.space/admin/#/monitor
+### 12.1 Archivos que NO se commitean
+
+- `.dev.vars`
+- `.env`
+- `data/` (datos generados, logs)
+- `node_modules/`
+- `.wrangler/`
+- Cualquier archivo con tokens, API keys, passwords
+
+### 12.2 Manejo de credenciales en código
+
+- **Nunca** hardcodear en código fuente
+- Usar `wrangler secret put` para producción
+- Usar `.dev.vars` para desarrollo local
+- Tratar como `[REDACTED]` en cualquier output que vaya a logs o
+  memoria compartida
+- Si el usuario te dicta credenciales, **ofrecer guardarlas en un
+  gestor de secretos**, no en memoria ni en archivos planos
+
+### 12.3 Auditoría
+
+- El Hub lleva log de toda acción sensible (login, create_user,
+  create_article, change_state, cross-cms access)
+- Consultar: `wrangler d1 execute nexopress-hub-db --remote --command
+  "SELECT * FROM hub_audit_log ORDER BY ts DESC LIMIT 50"`
 
 ---
 
-*Última actualización: 2026-03-03*
+## 13. Antes de pedir aprobación final al usuario
 
-<!-- gitnexus:start -->
-# GitNexus — Code Intelligence
+El usuario tiene un **contrato de deploy-verdict**:
 
-This project is indexed by GitNexus as **cloudflare-news-project** (5151 symbols, 10482 relationships, 298 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+> "Los testeos se realizan con despliegue directo a producción y
+> validación en navegador, yo doy veredicto final."
 
-> If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
+**El agente:**
+1. Diagnostica
+2. Parchea localmente
+3. Commitea
+4. **Para y espera veredicto** — no auto-deploya, incluso si el
+   cambio es obviamente seguro
+5. Si el cambio toca datos, DBs, secretos: pedir confirmación
+   explícita ANTES de commitear
 
-## Always Do
+---
 
-- **MUST run impact analysis before editing any symbol.** Before modifying a function, class, or method, run `gitnexus_impact({target: "symbolName", direction: "upstream"})` and report the blast radius (direct callers, affected processes, risk level) to the user.
-- **MUST run `gitnexus_detect_changes()` before committing** to verify your changes only affect expected symbols and execution flows.
-- **MUST warn the user** if impact analysis returns HIGH or CRITICAL risk before proceeding with edits.
-- When exploring unfamiliar code, use `gitnexus_query({query: "concept"})` to find execution flows instead of grepping. It returns process-grouped results ranked by relevance.
-- When you need full context on a specific symbol — callers, callees, which execution flows it participates in — use `gitnexus_context({name: "symbolName"})`.
+## 14. Referencias
 
-## When Debugging
-
-1. `gitnexus_query({query: "<error or symptom>"})` — find execution flows related to the issue
-2. `gitnexus_context({name: "<suspect function>"})` — see all callers, callees, and process participation
-3. `READ gitnexus://repo/cloudflare-news-project/process/{processName}` — trace the full execution flow step by step
-4. For regressions: `gitnexus_detect_changes({scope: "compare", base_ref: "main"})` — see what your branch changed
-
-## When Refactoring
-
-- **Renaming**: MUST use `gitnexus_rename({symbol_name: "old", new_name: "new", dry_run: true})` first. Review the preview — graph edits are safe, text_search edits need manual review. Then run with `dry_run: false`.
-- **Extracting/Splitting**: MUST run `gitnexus_context({name: "target"})` to see all incoming/outgoing refs, then `gitnexus_impact({target: "target", direction: "upstream"})` to find all external callers before moving code.
-- After any refactor: run `gitnexus_detect_changes({scope: "all"})` to verify only expected files changed.
-
-## Never Do
-
-- NEVER edit a function, class, or method without first running `gitnexus_impact` on it.
-- NEVER ignore HIGH or CRITICAL risk warnings from impact analysis.
-- NEVER rename symbols with find-and-replace — use `gitnexus_rename` which understands the call graph.
-- NEVER commit changes without running `gitnexus_detect_changes()` to check affected scope.
-
-## Tools Quick Reference
-
-| Tool | When to use | Command |
-|------|-------------|---------|
-| `query` | Find code by concept | `gitnexus_query({query: "auth validation"})` |
-| `context` | 360-degree view of one symbol | `gitnexus_context({name: "validateUser"})` |
-| `impact` | Blast radius before editing | `gitnexus_impact({target: "X", direction: "upstream"})` |
-| `detect_changes` | Pre-commit scope check | `gitnexus_detect_changes({scope: "staged"})` |
-| `rename` | Safe multi-file rename | `gitnexus_rename({symbol_name: "old", new_name: "new", dry_run: true})` |
-| `cypher` | Custom graph queries | `gitnexus_cypher({query: "MATCH ..."})` |
-
-## Impact Risk Levels
-
-| Depth | Meaning | Action |
-|-------|---------|--------|
-| d=1 | WILL BREAK — direct callers/importers | MUST update these |
-| d=2 | LIKELY AFFECTED — indirect deps | Should test |
-| d=3 | MAY NEED TESTING — transitive | Test if critical path |
-
-## Resources
-
-| Resource | Use for |
-|----------|---------|
-| `gitnexus://repo/cloudflare-news-project/context` | Codebase overview, check index freshness |
-| `gitnexus://repo/cloudflare-news-project/clusters` | All functional areas |
-| `gitnexus://repo/cloudflare-news-project/processes` | All execution flows |
-| `gitnexus://repo/cloudflare-news-project/process/{name}` | Step-by-step execution trace |
-
-## Self-Check Before Finishing
-
-Before completing any code modification task, verify:
-1. `gitnexus_impact` was run for all modified symbols
-2. No HIGH/CRITICAL risk warnings were ignored
-3. `gitnexus_detect_changes()` confirms changes match expected scope
-4. All d=1 (WILL BREAK) dependents were updated
-
-## CLI
-
-- Re-index: `npx gitnexus analyze`
-- Check freshness: `npx gitnexus status`
-- Generate docs: `npx gitnexus wiki`
-
-<!-- gitnexus:end -->
+- `docs/CONTRIBUTING.md` — convenciones de contribución humana
+- `docs/ARCHITECTURE.md` — diagramas del sistema
+- `docs/API_REFERENCE.md` — endpoints del Worker
+- `docs/guides/` — guías operativas (crear sitio, deploy, etc.)
+- `docs/plans/` — planes de implementación aprobados
+- `docs/migrations/` — registro de migraciones SQL
+- `README.md` (raíz) — punto de entrada principal

@@ -1,80 +1,32 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
+import Image from '@tiptap/extension-image'
+import Link from '@tiptap/extension-link'
+import TextAlign from '@tiptap/extension-text-align'
+import Underline from '@tiptap/extension-underline'
+import Highlight from '@tiptap/extension-highlight'
+import Subscript from '@tiptap/extension-subscript'
+import Superscript from '@tiptap/extension-superscript'
+import Typography from '@tiptap/extension-typography'
+import TaskList from '@tiptap/extension-task-list'
+import TaskItem from '@tiptap/extension-task-item'
+import Table from '@tiptap/extension-table'
+import TableRow from '@tiptap/extension-table-row'
+import TableCell from '@tiptap/extension-table-cell'
+import TableHeader from '@tiptap/extension-table-header'
+import Youtube from '@tiptap/extension-youtube'
+import CharacterCount from '@tiptap/extension-character-count'
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import { common, createLowlight } from 'lowlight'
+
 import SeoPanel from '../components/SeoPanel'
+import EditorToolbar from '../components/EditorToolbar'
+import { API_BASE } from '../main.jsx'
 
-const API_BASE = import.meta.env.VITE_API_BASE || '/api'
-
-const MenuBar = ({ editor }) => {
-  if (!editor) return null
-
-  return (
-    <div className="editor-toolbar">
-      <button
-        onClick={() => editor.chain().focus().toggleBold().run()}
-        className={editor.isActive('bold') ? 'is-active' : ''}
-      >
-        Negrita
-      </button>
-      <button
-        onClick={() => editor.chain().focus().toggleItalic().run()}
-        className={editor.isActive('italic') ? 'is-active' : ''}
-      >
-        Cursiva
-      </button>
-      <button
-        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-        className={editor.isActive('heading', { level: 1 }) ? 'is-active' : ''}
-      >
-        H1
-      </button>
-      <button
-        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-        className={editor.isActive('heading', { level: 2 }) ? 'is-active' : ''}
-      >
-        H2
-      </button>
-      <button
-        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-        className={editor.isActive('heading', { level: 3 }) ? 'is-active' : ''}
-      >
-        H3
-      </button>
-      <button
-        onClick={() => editor.chain().focus().toggleBulletList().run()}
-        className={editor.isActive('bulletList') ? 'is-active' : ''}
-      >
-        • Lista
-      </button>
-      <button
-        onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        className={editor.isActive('orderedList') ? 'is-active' : ''}
-      >
-        1. Lista
-      </button>
-      <button
-        onClick={() => editor.chain().focus().toggleBlockquote().run()}
-        className={editor.isActive('blockquote') ? 'is-active' : ''}
-      >
-        Cita
-      </button>
-      <button
-        onClick={() => editor.chain().focus().undo().run()}
-        disabled={!editor.can().undo()}
-      >
-        ↶ Deshacer
-      </button>
-      <button
-        onClick={() => editor.chain().focus().redo().run()}
-        disabled={!editor.can().redo()}
-      >
-        ↷ Rehacer
-      </button>
-    </div>
-  )
-}
+const lowlight = createLowlight(common)
 
 export default function Editor() {
   const { cms, articleId } = useParams()
@@ -90,35 +42,69 @@ export default function Editor() {
   const [focusKeyword, setFocusKeyword] = useState('')
   const [tags, setTags] = useState([])
   const [tagInput, setTagInput] = useState('')
+  const [lastSaved, setLastSaved] = useState(null)
+  const [focusMode, setFocusMode] = useState(false)
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({ codeBlock: false }),
       Placeholder.configure({
-        placeholder: 'Escribí tu artículo acá... Usá H2 para separar secciones.',
+        placeholder: 'Empieza a escribir tu artículo aquí. Usa los títulos (H2) para separar secciones, ## para convertir a subtítulo, **negritas**, *cursiva*…',
       }),
+      Image.configure({ HTMLAttributes: { class: 'content-image' } }),
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: { rel: 'noopener noreferrer', target: '_blank' },
+      }),
+      TextAlign.configure({ types: ['heading', 'paragraph'] }),
+      Underline,
+      Highlight.configure({ multicolor: true }),
+      Subscript,
+      Superscript,
+      Typography,
+      TaskList,
+      TaskItem.configure({ nested: true }),
+      Table.configure({ resizable: true }),
+      TableRow,
+      TableCell,
+      TableHeader,
+      Youtube.configure({ width: 640, height: 360, HTMLAttributes: { class: 'video-container' } }),
+      CharacterCount,
+      CodeBlockLowlight.configure({ lowlight }),
     ],
     content: '',
     editorProps: {
       attributes: {
         class: 'prose prose-invert max-w-none focus:outline-none',
+        spellcheck: 'true',
+      },
+      handleKeyDown: (view, event) => {
+        if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+          event.preventDefault()
+          handleSave()
+          return true
+        }
+        return false
       },
     },
     onUpdate: ({ editor }) => {
-      // Auto-trigger SEO analysis on content change
       if (article) {
-        analyzeSeo({ ...article, content: editor.getHTML() })
+        const updated = { ...article, content: editor.getHTML() }
+        setArticle(updated)
+        setSeoData((prev) => ({ ...prev, article: updated }))
       }
     },
   })
 
   useEffect(() => {
-    if (articleId === 'new') {
-      setLoading(false)
-      return
-    }
+    const handler = () => handleSave()
+    document.addEventListener('editor-save', handler)
+    return () => document.removeEventListener('editor-save', handler)
+  }, [editor, article, title, slug, metaTitle, metaDescription, focusKeyword, tags])
 
-    fetchArticle()
+  useEffect(() => {
+    if (articleId !== 'new') fetchArticle()
+    else setLoading(false)
   }, [cms, articleId])
 
   const fetchArticle = async () => {
@@ -127,7 +113,7 @@ export default function Editor() {
       const res = await fetch(`${API_BASE}/cms/${cms}/articles/${articleId}`, {
         headers: { 'Authorization': `Bearer ${token}` },
       })
-      if (!res.ok) throw new Error('Article not found')
+      if (!res.ok) throw new Error('No se encontró el artículo solicitado')
       const data = await res.json()
       setArticle(data)
       setTitle(data.title || '')
@@ -137,20 +123,28 @@ export default function Editor() {
       setFocusKeyword(data.focusKeyword || '')
       setTags(data.tags || [])
       editor?.commands.setContent(data.content || '')
-      analyzeSeo(data)
+      setSeoData({ article: data })
+      await fetchSeoAnalysis(articleId)
     } catch (err) {
-      console.error('Failed to fetch article:', err)
+      console.error('Error al cargar el artículo:', err)
     } finally {
       setLoading(false)
     }
   }
 
-  const analyzeSeo = (articleData) => {
-    setSeoData({
-      article: articleData,
-      readability: null, // Will be computed by SeoPanel
-      focusKeywordAnalysis: null,
-    })
+  const fetchSeoAnalysis = async (id) => {
+    const token = localStorage.getItem('hub_token')
+    try {
+      const res = await fetch(`${API_BASE}/cms/${cms}/articles/${id}/seo`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setSeoData(data)
+      }
+    } catch (err) {
+      console.error('Error al obtener el análisis SEO:', err)
+    }
   }
 
   const handleAddTag = (e) => {
@@ -162,11 +156,11 @@ export default function Editor() {
   }
 
   const handleRemoveTag = (tagToRemove) => {
-    setTags(tags.filter(tag => tag !== tagToRemove))
+    setTags(tags.filter((tag) => tag !== tagToRemove))
   }
 
-  const handleSave = async () => {
-    if (!editor) return
+  const handleSave = useCallback(async () => {
+    if (!editor || saving) return
     setSaving(true)
 
     const token = localStorage.getItem('hub_token')
@@ -200,50 +194,38 @@ export default function Editor() {
 
       if (!res.ok) {
         const err = await res.json()
-        throw new Error(err.error || 'Save failed')
+        throw new Error(err.error || 'No se pudo guardar el artículo')
       }
 
       const saved = await res.json()
-      
-      // If new article, redirect to edit URL
+      setLastSaved(new Date())
       if (articleId === 'new' && saved.id) {
         navigate(`/editor/${cms}/${saved.id}`)
+      } else if (saved.id) {
+        await fetchSeoAnalysis(saved.id)
       }
-
-      // Update SEO data
-      await fetchSeoAnalysis(saved.id || articleId)
     } catch (err) {
-      console.error('Failed to save article:', err)
-      alert(`Error al guardar: ${err.message}`)
+      console.error('Error al guardar:', err)
+      alert(`No se pudo guardar el artículo: ${err.message}`)
     } finally {
       setSaving(false)
     }
-  }
-
-  const fetchSeoAnalysis = async (id) => {
-    const token = localStorage.getItem('hub_token')
-    try {
-      const res = await fetch(`${API_BASE}/cms/${cms}/articles/${id}/seo`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-      })
-      if (!res.ok) return
-      const data = await res.json()
-      setSeoData(data)
-    } catch (err) {
-      console.error('Failed to fetch SEO analysis:', err)
-    }
-  }
+  }, [editor, saving, cms, articleId, title, slug, metaTitle, metaDescription, focusKeyword, tags, navigate])
 
   if (loading) {
     return (
       <div className="dashboard-content">
-        <p className="text-muted">Cargando artículo...</p>
+        <p className="text-muted">Cargando artículo, por favor espera…</p>
       </div>
     )
   }
 
+  const charCount = editor?.storage.characterCount?.characters() || 0
+  const wordCount = editor?.storage.characterCount?.words() || 0
+  const readingMin = Math.max(1, Math.ceil(wordCount / 200))
+
   return (
-    <div>
+    <div className={focusMode ? 'editor-focus-mode' : ''}>
       <header className="dashboard-header flex-between">
         <div>
           <button
@@ -251,19 +233,32 @@ export default function Editor() {
             className="btn-secondary text-sm"
             style={{ marginBottom: '8px' }}
           >
-            ← Volver
+            ← Volver al panel
           </button>
           <h1 style={{ fontSize: '20px', fontWeight: '600' }}>
-            {articleId === 'new' ? 'Nuevo Artículo' : 'Editar Artículo'}
+            {articleId === 'new' ? 'Artículo nuevo' : 'Editar artículo'}
+            {lastSaved && (
+              <span className="text-xs text-muted" style={{ marginLeft: '12px' }}>
+                · Guardado a las {lastSaved.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
           </h1>
         </div>
-        <div className="flex">
+        <div className="flex" style={{ gap: '8px' }}>
+          <button
+            onClick={() => setFocusMode(!focusMode)}
+            className="btn-secondary"
+            title="Modo enfoque (oculta las distracciones del panel lateral)"
+          >
+            {focusMode ? '🔍 Salir del modo enfoque' : '🔍 Modo enfoque'}
+          </button>
           <button
             onClick={handleSave}
             className="btn-primary"
             disabled={saving}
+            title="Guardar artículo (atajo: Ctrl+S)"
           >
-            {saving ? 'Guardando...' : 'Guardar'}
+            {saving ? 'Guardando…' : '💾 Guardar'}
           </button>
         </div>
       </header>
@@ -277,10 +272,10 @@ export default function Editor() {
                 className="editor-title-input"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Título del artículo"
+                placeholder="Escribe el título del artículo"
               />
               <div className="slug-input">
-                <label>Slug: </label>
+                <label>URL amigable: </label>
                 <input
                   type="text"
                   value={slug}
@@ -288,11 +283,14 @@ export default function Editor() {
                   placeholder="titulo-del-articulo"
                   style={{ width: '300px', display: 'inline-block' }}
                 />
+                <span className="text-xs text-muted" style={{ marginLeft: '12px' }}>
+                  {wordCount} {wordCount === 1 ? 'palabra' : 'palabras'} · {charCount} {charCount === 1 ? 'carácter' : 'caracteres'} · {readingMin} {readingMin === 1 ? 'minuto' : 'minutos'} de lectura
+                </span>
               </div>
             </div>
 
             <div className="card">
-              <MenuBar editor={editor} />
+              <EditorToolbar editor={editor} cms={cms} />
               <EditorContent editor={editor} />
             </div>
           </div>
@@ -310,9 +308,9 @@ export default function Editor() {
               }}
               seoData={seoData}
               onUpdate={(updates) => {
-                if (updates.metaTitle) setMetaTitle(updates.metaTitle)
-                if (updates.metaDescription) setMetaDescription(updates.metaDescription)
-                if (updates.focusKeyword) setFocusKeyword(updates.focusKeyword)
+                if (updates.metaTitle !== undefined) setMetaTitle(updates.metaTitle)
+                if (updates.metaDescription !== undefined) setMetaDescription(updates.metaDescription)
+                if (updates.focusKeyword !== undefined) setFocusKeyword(updates.focusKeyword)
               }}
             />
 
@@ -323,7 +321,7 @@ export default function Editor() {
                   type="text"
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
-                  placeholder="Agregar etiqueta..."
+                  placeholder="Escribe una etiqueta y presiona Enter…"
                 />
               </form>
               <div className="flex" style={{ flexWrap: 'wrap', gap: '6px' }}>
@@ -337,6 +335,7 @@ export default function Editor() {
                       cursor: 'pointer',
                     }}
                     onClick={() => handleRemoveTag(tag)}
+                    title={`Quitar la etiqueta "${tag}"`}
                   >
                     {tag} ×
                   </span>

@@ -9,18 +9,20 @@ import { audit } from '../utils/audit.js';
 const auth = new Hono();
 
 // POST /auth/login
-// Body: { username, password }
+// Body: { username, password } or { email, password } (Hub accepts both for compat)
 // Returns: { token, user } or 401
 auth.post('/login', async (c) => {
   try {
-    const { username, password } = await c.req.json();
-    if (!username || !password) {
-      return c.json({ error: 'username and password required' }, 400);
+    const body = await c.req.json();
+    const identifier = body.username || body.email;
+    const { password } = body;
+    if (!identifier || !password) {
+      return c.json({ error: 'username (or email) and password required' }, 400);
     }
 
     const user = await c.env.DB.prepare(
       'SELECT * FROM hub_users WHERE (username = ? OR email = ?) AND active = 1'
-    ).bind(username, username).first();
+    ).bind(identifier, identifier).first();
 
     if (!user) {
       return c.json({ error: 'invalid credentials' }, 401);

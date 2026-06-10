@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-
-const API_BASE = import.meta.env.VITE_API_BASE || '/api'
+import { API_BASE } from '../main.jsx'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -23,10 +22,7 @@ export default function Login() {
       })
 
       const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Login failed')
-      }
+      if (!res.ok) throw new Error(data.error || 'No se pudo iniciar sesión')
 
       localStorage.setItem('hub_token', data.token)
       localStorage.setItem('hub_user', JSON.stringify(data.user))
@@ -42,18 +38,19 @@ export default function Login() {
     <div className="login-container">
       <div className="login-card card">
         <h1 className="login-title">NexoPress Hub</h1>
-        <p className="login-subtitle">Panel Editorial Unificado</p>
+        <p className="login-subtitle">Panel editorial unificado para los 5 CMS</p>
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label">Email</label>
+            <label className="form-label">Correo electrónico</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="tu@email.com"
+              placeholder="tu@correo.com"
               required
               disabled={loading}
+              autoComplete="email"
             />
           </div>
 
@@ -66,6 +63,7 @@ export default function Login() {
               placeholder="••••••••"
               required
               disabled={loading}
+              autoComplete="current-password"
             />
           </div>
 
@@ -76,7 +74,7 @@ export default function Login() {
           )}
 
           <button type="submit" className="btn-primary" style={{ width: '100%' }} disabled={loading}>
-            {loading ? 'Ingresando...' : 'Ingresar'}
+            {loading ? 'Ingresando…' : 'Iniciar sesión'}
           </button>
         </form>
       </div>
