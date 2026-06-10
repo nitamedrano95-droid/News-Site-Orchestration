@@ -1,0 +1,33 @@
+{
+  "slug": "frenteinformativo",
+  "nombre": "Frente Informativo",
+  "tagline": "La verdad sin filtros",
+  "dominio": "https://www.frenteinformativo.com",
+  "dominios_alternativos": [],
+
+  "categoria_default": "NACIONAL",
+  "categorias_habilitadas": [
+    "nacional", "politica", "economia", "seguridad", "mundo",
+    "cultura", "tecnologia", "deportes", "entretenimiento"
+  ],
+
+  "idioma": "es-MX",
+  "timezone": "America/Mexico_City",
+  "moneda": "MXN",
+
+  "logo": {
+    "url": null,
+    "path_esperado": "logos/frenteinformativo.png"
+  },
+
+  "tema": {
+    "color_primario": "#b91c1c",
+    "color_secundario": "#fafafa",
+    "template": "default"
+  },
+
+  "facebook": { "activo": false, "page_id": null, "page_token_secret": null },
+  "fuentes_rss_habilitadas": ["infobae", "proceso", "jornada", "reforma", "aristegui", "dw"],
+  "activo": true,
+  "notas": "Sitio piloto del rediseño cms-nuevos4. Estaba armado en Next.js pero se removió en jun 2026 (commit 3a35af2). Próxima iteración: HTML estático parametrizado."
+}

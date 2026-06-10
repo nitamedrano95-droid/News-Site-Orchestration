@@ -1,0 +1,33 @@
+{
+  "slug": "expresodemexico",
+  "nombre": "Expreso de México",
+  "tagline": "Velocidad en la noticia",
+  "dominio": "https://www.expresodemexico.com",
+  "dominios_alternativos": [],
+
+  "categoria_default": "NACIONAL",
+  "categorias_habilitadas": [
+    "nacional", "politica", "economia", "seguridad", "mundo",
+    "cultura", "tecnologia", "deportes", "entretenimiento"
+  ],
+
+  "idioma": "es-MX",
+  "timezone": "America/Mexico_City",
+  "moneda": "MXN",
+
+  "logo": {
+    "url": null,
+    "path_esperado": "logos/expresodemexico.png"
+  },
+
+  "tema": {
+    "color_primario": "#dc2626",
+    "color_secundario": "#1e40af",
+    "template": "default"
+  },
+
+  "facebook": { "activo": false, "page_id": null, "page_token_secret": null },
+  "fuentes_rss_habilitadas": ["infobae", "proceso", "jornada", "reforma", "aristegui", "dw"],
+  "activo": true,
+  "notas": "Sitio seed generado en jun 2026 desde plantilla cms-nuevos4"
+}

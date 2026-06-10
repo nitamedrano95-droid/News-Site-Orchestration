@@ -36,15 +36,18 @@ scripts/verify_fb_tokens.py
 src/setup_fb_tokens.sh
 
 # Project Data & Backups (Local only)
-data/
 backups/archive/
 *.sql
+!cms-nuevos4/migrations/*.sql
 *.log
 *.csv
 *.json
-*.pdf
 !package.json
 !package-lock.json
+# data/ se ignora por completo. Las plantillas de sitios se commitean
+# usando `git add -f` (forzado) y viven en data/sites/cms-nuevos4/
+data/
+
 
 # Local/agent artifacts
 .claude/
