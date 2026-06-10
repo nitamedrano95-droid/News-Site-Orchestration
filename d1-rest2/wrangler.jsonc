@@ -35,6 +35,10 @@
     {
       "binding": "nuevos",
       "database_id": "f96cb9d4-5627-4d1c-9eff-467a6e0ae757"
+    },
+    {
+      "binding": "nuevo4",
+      "database_id": "a3643283-0da0-4503-80d2-069e404f1fef"
     }
   ],
   "secrets_store_secrets": [

@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand-primary: PLACEHOLDER_COLOR;
+  --brand-secondary: PLACEHOLDER_SECONDARY;
+  --brand-light: PLACEHOLDER_LIGHT;
+  --brand-bg: PLACEHOLDER_BG;
+  --brand-dark: PLACEHOLDER_DARK;
+}
+
+@layer base {
+  body {
+    font-family: PLACEHOLDER_FONT_FAMILY;
+    background-color: var(--brand-bg, #f8f9fa);
+    color: #1a1a1a;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: PLACEHOLDER_FONT_FAMILY;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-5 py-2.5 rounded-lg text-sm font-medium text-white transition-all hover:opacity-90 active:scale-[0.98];
+    background-color: var(--brand-primary);
+  }
+  .category-badge {
+    @apply inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold;
+    background-color: var(--brand-light);
+    color: var(--brand-primary);
+  }
+}
+
+@layer utilities {
+  .animate-marquee {
+    animation: marquee 30s linear infinite;
+  }
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  .animate-scroll-x {
+    animation: scroll-x 20s linear infinite;
+  }
+  @keyframes scroll-x {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}

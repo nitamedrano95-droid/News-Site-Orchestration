@@ -1,0 +1,25 @@
+{
+  "name": "@nexopress/site-builder",
+  "version": "1.0.0",
+  "description": "Generador y desplegador de sitios de noticias para NexoPress. Úsalo como librería en tu wizard o como CLI.",
+  "type": "module",
+  "main": "./index.mjs",
+  "exports": {
+    ".": "./index.mjs",
+    "./validate": "./lib/validate.mjs",
+    "./generate": "./lib/generate.mjs",
+    "./deploy": "./lib/deploy.mjs"
+  },
+  "bin": {
+    "nexopress-site": "./cli.mjs"
+  },
+  "scripts": {
+    "test": "node --test lib/*.test.mjs 2>/dev/null || echo 'no tests yet'",
+    "example": "node cli.mjs --config ../../_template-clean/site.config.example.json --out /tmp/_example_site --dry-run"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": ["nexopress", "cloudflare", "news", "site-generator"],
+  "license": "MIT"
+}

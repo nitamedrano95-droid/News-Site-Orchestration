@@ -24,6 +24,12 @@ export function getCmsWorkers(env) {
       binding: 'CMS_ORIGINAUX',
       siteCount: 10,
     },
+    {
+      name: 'cms-nuevos4',
+      slug: 'nuevos4',
+      binding: 'CMS_NUEVOS4',
+      siteCount: 25,
+    },
   ];
 }
 

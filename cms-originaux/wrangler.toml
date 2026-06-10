@@ -30,6 +30,7 @@ routes = [
 
 [vars]
 ENVIRONMENT = "production"
+ARTICLE_PUBLISH_WEBHOOK = "https://TUN8N.tun8n.workers.dev/webhook/article-published"
 
 [[d1_databases]]
 binding = "DB"
@@ -45,7 +46,7 @@ binding = "UPLOADS"
 bucket_name = "cms-news"
 
 [triggers]
-crons = ["*/30 * * * *"]
+# crons = ["*/30 * * * *"]  # disabled jun 2026 - n8n controls ingest now
 
 [observability]
 enabled = false

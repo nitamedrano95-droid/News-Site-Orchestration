@@ -1,8 +1,11 @@
 {
-  "name": "news-website-cloudflare",
+  "name": "nexopress",
   "version": "1.0.0",
-  "description": "News website deployed on Cloudflare Pages with Workers backend",
-  "main": "index.js",
+  "description": "NexoPress — sistema multi-sitio de publicación de noticias sobre Cloudflare Workers/Pages.",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "clean": "pkill -f wrangler || true",
     "dev": "wrangler pages dev ./public --port 8888 --proxy 8781",
@@ -11,7 +14,10 @@
     "deploy": "wrangler pages deploy ./public",
     "build": "echo 'Building static assets...'",
     "preview": "wrangler pages dev ./public --live-reload",
-    "test": "node --test"
+    "test": "node --test",
+    "site:create": "node packages/site-builder/cli.mjs create",
+    "site:validate": "node packages/site-builder/cli.mjs validate",
+    "wizard": "cd deploy-wizard/wizard && node server.js"
   },
   "keywords": [
     "news",

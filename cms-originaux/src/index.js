@@ -1,5 +1,6 @@
 // src/index.js — Entry point del Worker (NexoPress API)
 // Archivo mínimo: solo setup de app, CORS, montaje de rutas y export.
+// NOTA: Ingesta desactivada jun 2026 — n8n controla toda la ingesta ahora.
 
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
@@ -9,10 +10,6 @@ import { ALLOWED_ORIGINS } from './config.js';
 
 // ── Utils ─────────────────────────────────────────────────────
 import { injectMetaTags } from './utils/html.js';
-
-// ── Cron ──────────────────────────────────────────────────────
-import { runMasterCron } from './cron/master.js';
-import { processFBTimer } from './cron/facebook.js';
 
 // ── Rutas ─────────────────────────────────────────────────────
 import authRoutes       from './routes/auth.js';
@@ -25,9 +22,6 @@ import categoryRoutes   from './routes/categories.js';
 import tickerRoutes     from './routes/ticker.js';
 import weatherRoutes    from './routes/weather.js';
 import imageRoutes      from './routes/images.js';
-import rssRoutes        from './routes/rss.js';
-import facebookRoutes   from './routes/facebook.js';
-import cronRoutes       from './routes/cron.js';
 import jobsRoutes       from './routes/jobs.js';
 
 // ── App ───────────────────────────────────────────────────────
@@ -61,9 +55,6 @@ app.route('/categories', categoryRoutes);
 app.route('/ticker',     tickerRoutes);
 app.route('/weather',    weatherRoutes);
 app.route('/images',     imageRoutes);
-app.route('/rss',        rssRoutes);
-app.route('/facebook',   facebookRoutes);
-app.route('/cron',       cronRoutes);
 app.route('/jobs',       jobsRoutes);
 
 // ── Rutas standalone ──────────────────────────────────────────
@@ -112,12 +103,5 @@ export default {
     // Resto: inyectar meta tags OG para SEO en páginas de sitios
     const originalRes = await fetch(request);
     return injectMetaTags(request, env, originalRes);
-  },
-
-  // Cron job programado - ejecuta RSS Ingest + Facebook Timer + Ticker
-  async scheduled(event, env, ctx) {
-    const cronTime = event.cron;
-    console.log('[SCHEDULED] Triggered by cron:', cronTime);
-    ctx.waitUntil(runMasterCron(env));
   },
 };

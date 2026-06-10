@@ -677,6 +677,225 @@ app.post('/api/n8n/webhook', async (req, res) => {
   }
 });
 
+// ── AI Generation API ─────────────────────────────────────────────────────────
+
+/**
+ * POST /api/ai/generate
+ * Body: { description: string, model?: string }
+ * Returns: { palette, tagline, description, categories }
+ *
+ * Usa OpenRouter (OPENROUTER_API_KEY) con Gemini 2.0 Flash.
+ * Si no hay API key, devuelve sugerencias de ejemplo para desarrollo.
+ */
+app.post('/api/ai/generate', async (req, res) => {
+  const { description } = req.body;
+  if (!description?.trim()) {
+    return res.status(400).json({ error: 'Falta el campo "description".' });
+  }
+
+  const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+  if (!OPENROUTER_API_KEY) {
+    // Dev fallback: paleta de ejemplo para no bloquear el wizard sin API key
+    console.warn('[/api/ai/generate] OPENROUTER_API_KEY no configurada. Usando respuesta de ejemplo.');
+    return res.json({
+      palette:     { primary: '#1a3a5c', secondary: '#2d5a87', light: '#e8f4fd', text: '#1a1a1a' },
+      tagline:     'Tu fuente de noticias de confianza',
+      description: 'Cobertura periodística independiente con rigor y profundidad.',
+      categories:  [
+        { id: 'nacional',  label: 'Nacional'  },
+        { id: 'economia',  label: 'Economía'  },
+        { id: 'politica',  label: 'Política'  },
+        { id: 'tecnologia',label: 'Tecnología'},
+        { id: 'mundo',     label: 'Mundo'     },
+      ],
+      _fallback: true,
+    });
+  }
+
+  const model = req.body.model || 'google/gemini-2.0-flash-001';
+  const systemPrompt = `Eres un asistente de diseño para NexoPress, una plataforma de medios digitales.
+Tu tarea es generar tokens de diseño y metadatos editoriales para un sitio de noticias.
+Responde SOLO con JSON válido, sin markdown, sin explicaciones.`;
+
+  const userPrompt = `Descripción del sitio: "${description}"
+
+Genera la siguiente estructura JSON:
+{
+  "palette": {
+    "primary":   "#RRGGBB",
+    "secondary": "#RRGGBB",
+    "light":     "#RRGGBB",
+    "text":      "#RRGGBB"
+  },
+  "tagline": "Eslogan corto (max 8 palabras)",
+  "description": "Meta description SEO (max 160 caracteres)",
+  "categories": [
+    { "id": "slug-sin-tildes", "label": "Etiqueta con tilde si aplica" }
+  ]
+}
+
+Reglas:
+- palette.primary: color principal de marca (header, accents). Acorde al tono editorial.
+- palette.secondary: variante más oscura o más clara de primary.
+- palette.light: tono muy claro para fondos (alta luminosidad, baja saturación).
+- palette.text: casi negro para buena legibilidad (#111–#333).
+- Genera exactamente 5 categorías relevantes al foco editorial descrito.
+- IDs: minúsculas, sin tildes, sin espacios, max 20 chars.`;
+
+  try {
+    const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'Content-Type':  'application/json',
+        'HTTP-Referer':  'https://nexopress.sebastianvernis.space',
+        'X-Title':       'NexoPress Visual Builder',
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user',   content: userPrompt   },
+        ],
+        temperature: 0.7,
+        max_tokens:  600,
+      }),
+    });
+
+    if (!orRes.ok) {
+      const errBody = await orRes.text();
+      console.error('[/api/ai/generate] OpenRouter error:', orRes.status, errBody);
+      return res.status(502).json({ error: `OpenRouter error ${orRes.status}: ${errBody.slice(0, 200)}` });
+    }
+
+    const orData = await orRes.json();
+    const raw = orData.choices?.[0]?.message?.content ?? '';
+
+    // Extraer JSON — OpenRouter a veces incluye ``` aunque se le diga que no
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return res.status(502).json({ error: 'La IA no devolvió JSON válido.', raw: raw.slice(0, 300) });
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]);
+
+    // Validación mínima
+    if (!parsed.palette?.primary || !Array.isArray(parsed.categories)) {
+      return res.status(502).json({ error: 'Respuesta incompleta de la IA.', parsed });
+    }
+
+    return res.json(parsed);
+  } catch (err) {
+    console.error('[/api/ai/generate]', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Site Builder API ─────────────────────────────────────────────────────────
+// Carga el paquete @nexopress/site-builder (ESM) de forma dinámica desde CJS.
+// Los endpoints delegan validación, generación y deploy al paquete.
+
+/**
+ * POST /api/sites/validate
+ * Body: site.config JSON
+ * Returns: { valid: boolean, errors: [{field, message}] }
+ */
+app.post('/api/sites/validate', async (req, res) => {
+  try {
+    const { validateConfig } = await import('../../packages/site-builder/index.mjs');
+    const result = validateConfig(req.body);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ valid: false, errors: [{ field: 'server', message: err.message }] });
+  }
+});
+
+/**
+ * POST /api/sites/create
+ * Body: { config: SiteConfig, outDir?: string, skipDeploy?: boolean, dryRun?: boolean }
+ *
+ * Responde con Server-Sent Events (text/event-stream).
+ * Eventos:
+ *   data: { type: 'progress', step, percent, message }
+ *   data: { type: 'log', line }
+ *   data: { type: 'result', success, phase, url?, errors? }
+ */
+app.post('/api/sites/create', async (req, res) => {
+  const { config, skipDeploy = false, dryRun = false } = req.body;
+
+  if (!config || typeof config !== 'object') {
+    return res.status(400).json({ error: 'Falta el campo "config" en el body.' });
+  }
+
+  // SSE setup
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no'); // nginx: desactivar buffering
+  res.flushHeaders();
+
+  function send(obj) {
+    res.write(`data: ${JSON.stringify(obj)}\n\n`);
+  }
+
+  try {
+    const { SiteBuilder } = await import('../../packages/site-builder/index.mjs');
+
+    // Directorio de salida: temporal por defecto, o el especificado en el body
+    const outDir = req.body.outDir
+      ? path.resolve(req.body.outDir)
+      : path.join(os.tmpdir(), `nexopress-${config.name ?? 'site'}-${Date.now()}`);
+
+    const builder = new SiteBuilder();
+
+    builder.on('progress', (data) => send({ type: 'progress', ...data }));
+    builder.on('log',      (line) => send({ type: 'log', line }));
+
+    const result = await builder.run({
+      config,
+      outDir,
+      skipDeploy,
+      dryRun,
+      apiToken:  process.env.CLOUDFLARE_API_TOKEN,
+      accountId: process.env.CLOUDFLARE_ACCOUNT_ID,
+    });
+
+    send({
+      type:         'result',
+      success:      result.success,
+      phase:        result.phase,
+      url:          result.deployResult?.url ?? null,
+      outDir:       dryRun ? null : outDir,
+      filesChanged: result.createResult?.filesChanged ?? 0,
+      errors:       [
+        ...(result.validationErrors?.map(e => `${e.field}: ${e.message}`) ?? []),
+        ...(result.createResult?.errors ?? []),
+        ...(result.deployResult?.errors ?? []),
+      ],
+    });
+
+  } catch (err) {
+    console.error('[/api/sites/create]', err);
+    send({ type: 'result', success: false, phase: 'server', errors: [err.message] });
+  }
+
+  res.end();
+});
+
+/**
+ * GET /api/sites/check-wrangler
+ * Returns: { available: boolean, version?: string }
+ */
+app.get('/api/sites/check-wrangler', async (_req, res) => {
+  try {
+    const { checkWrangler } = await import('../../packages/site-builder/index.mjs');
+    const result = await checkWrangler();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ available: false, error: err.message });
+  }
+});
+
 // Catch-all → SPA
 app.get('*', (_req, res) => {
   const index = path.join(__dirname, 'public', 'index.html');

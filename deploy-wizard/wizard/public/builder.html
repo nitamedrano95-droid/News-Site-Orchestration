@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Constructor Visual — NexoPress</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ─── Variables & Reset ─────────────────────────────────────── */
+:root {
+  --bg:        #0a0e1a;
+  --surface:   #111827;
+  --surface2:  #1a2235;
+  --border:    #1f2d40;
+  --accent:    #3b82f6;
+  --success:   #10b981;
+  --warn:      #f59e0b;
+  --danger:    #ef4444;
+  --text:      #e2e8f0;
+  --dim:       #9ca3af;
+  --muted:     #6b7280;
+  --input-bg:  #0d1526;
+  --panel-ai:  260px;
+  --panel-cfg: 300px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; font-size: 13px; }
+
+/* ─── Topbar ────────────────────────────────────────────────── */
+.topbar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 20px; background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0; z-index: 50;
+}
+.topbar-logo { font-weight: 700; font-size: 1rem; color: var(--accent); }
+.topbar-logo span { color: var(--text); }
+.topbar-sep { color: var(--border); }
+.topbar-sitename { color: var(--dim); font-size: 0.85rem; font-weight: 500; flex: 1; }
+.topbar-sitename b { color: var(--text); }
+.btn { padding: 6px 14px; border-radius: 6px; border: none; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all .15s; }
+.btn-ghost { background: transparent; color: var(--dim); border: 1px solid var(--border); }
+.btn-ghost:hover { color: var(--text); border-color: var(--dim); }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #2563eb; }
+.btn-success { background: var(--success); color: #fff; }
+.btn-success:hover { background: #059669; }
+.btn-sm { padding: 4px 10px; font-size: 0.75rem; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ─── Workspace: 3-panel grid ───────────────────────────────── */
+.workspace {
+  display: grid;
+  grid-template-columns: var(--panel-ai) 1fr var(--panel-cfg);
+  flex: 1; overflow: hidden;
+}
+.panel { display: flex; flex-direction: column; overflow: hidden; }
+.panel-ai  { border-right: 1px solid var(--border); background: var(--surface); }
+.panel-cfg { border-left:  1px solid var(--border); background: var(--surface); }
+.panel-preview { background: #0d1526; }
+
+/* ─── Panel headers ─────────────────────────────────────────── */
+.panel-head {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.8px; color: var(--muted);
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+}
+.panel-head .dot { width: 6px; height: 6px; border-radius: 50%; }
+.dot-ai { background: #8b5cf6; }
+.dot-preview { background: var(--accent); }
+.dot-cfg { background: var(--success); }
+.panel-scroll { flex: 1; overflow-y: auto; padding: 16px; }
+.panel-scroll::-webkit-scrollbar { width: 4px; }
+.panel-scroll::-webkit-scrollbar-track { background: transparent; }
+.panel-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ─── AI Panel ──────────────────────────────────────────────── */
+.ai-desc { margin-bottom: 12px; }
+.ai-desc label { display: block; font-size: 0.75rem; color: var(--dim); margin-bottom: 6px; font-weight: 500; }
+.ai-textarea {
+  width: 100%; min-height: 90px; resize: vertical;
+  background: var(--input-bg); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-size: 0.8rem;
+  font-family: inherit; padding: 10px; line-height: 1.5;
+  transition: border-color .15s;
+}
+.ai-textarea:focus { outline: none; border-color: var(--accent); }
+.ai-textarea::placeholder { color: var(--muted); }
+.ai-hint { font-size: 0.7rem; color: var(--muted); margin-bottom: 10px; line-height: 1.5; }
+.ai-generate-btn {
+  width: 100%; padding: 9px; border-radius: 8px; border: none;
+  background: linear-gradient(135deg, #6d28d9, #3b82f6);
+  color: #fff; font-weight: 600; font-size: 0.82rem; cursor: pointer;
+  transition: opacity .15s; margin-bottom: 16px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.ai-generate-btn:hover { opacity: 0.9; }
+.ai-generate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.ai-divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+.ai-section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); font-weight: 600; margin-bottom: 8px; }
+
+.palette-preview { display: flex; gap: 6px; margin-bottom: 12px; }
+.palette-swatch {
+  flex: 1; height: 32px; border-radius: 6px; cursor: pointer;
+  border: 2px solid transparent; transition: all .15s; position: relative;
+}
+.palette-swatch:hover { transform: scale(1.08); }
+.palette-swatch.active { border-color: white; }
+.palette-swatch::after { content: attr(title); position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-size: 0.65rem; color: var(--dim); white-space: nowrap; }
+
+.ai-suggestion { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 10px; }
+.ai-suggestion .label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+.ai-suggestion .value { font-size: 0.8rem; color: var(--text); line-height: 1.45; }
+.ai-apply-btn {
+  width: 100%; padding: 8px; border-radius: 6px;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); font-size: 0.8rem; font-weight: 600; cursor: pointer;
+  transition: all .15s; margin-top: 4px;
+}
+.ai-apply-btn:hover { border-color: var(--success); color: var(--success); }
+
+.cat-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; font-size: 0.72rem; color: var(--dim); margin: 2px; }
+.cat-chip button { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.75rem; padding: 0; line-height: 1; }
+
+.ai-loading { display: flex; align-items: center; gap: 8px; color: var(--dim); font-size: 0.8rem; }
+.spin { animation: spin 1s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── Preview Panel ─────────────────────────────────────────── */
+.preview-outer {
+  flex: 1; overflow: auto; display: flex; align-items: flex-start;
+  justify-content: center; padding: 24px 16px;
+}
+.preview-outer::-webkit-scrollbar { width: 6px; height: 6px; }
+.preview-outer::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.preview-browser {
+  background: #fff; border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  overflow: hidden; width: 900px; flex-shrink: 0;
+  transform-origin: top center;
+}
+.browser-chrome {
+  background: #1e2633; padding: 10px 16px;
+  display: flex; align-items: center; gap: 10px;
+}
+.browser-dots { display: flex; gap: 6px; }
+.browser-dot { width: 10px; height: 10px; border-radius: 50%; }
+.browser-dot:nth-child(1) { background: #ef4444; }
+.browser-dot:nth-child(2) { background: #f59e0b; }
+.browser-dot:nth-child(3) { background: #10b981; }
+.browser-url {
+  flex: 1; background: #0d1526; border-radius: 6px;
+  padding: 5px 12px; font-size: 0.72rem; color: var(--dim);
+  font-family: monospace;
+}
+
+/* ─── Site Simulation ───────────────────────────────────────── */
+.sim-site { font-family: 'Inter', sans-serif; font-size: 13px; }
+
+/* Ticker */
+.sim-ticker {
+  background: var(--p, #1a3a5c); color: #fff;
+  display: flex; align-items: center; height: 38px; overflow: hidden;
+  position: relative;
+}
+.sim-ticker-left {
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 12px; border-right: 1px solid rgba(255,255,255,0.2);
+  flex-shrink: 0;
+}
+.sim-ticker-logo { width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
+.sim-ticker-edition { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; opacity: 0.7; }
+.sim-ticker-content { flex: 1; overflow: hidden; padding: 0 12px; position: relative; }
+.sim-ticker-protected {
+  display: flex; align-items: center; gap: 8px;
+  background: repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0, rgba(255,255,255,0.03) 4px, transparent 4px, transparent 8px);
+}
+.sim-ticker-shimmer {
+  height: 8px; border-radius: 4px; background: rgba(255,255,255,0.15);
+  animation: shimmer 1.5s ease infinite;
+}
+.sim-ticker-shimmer:nth-child(1) { width: 120px; }
+.sim-ticker-shimmer:nth-child(2) { width: 80px; }
+.sim-ticker-shimmer:nth-child(3) { width: 100px; }
+.protected-badge {
+  font-size: 8px; padding: 2px 6px; background: rgba(0,0,0,0.3); border-radius: 3px;
+  display: flex; align-items: center; gap: 4px; flex-shrink: 0; opacity: 0.8;
+}
+.sim-ticker-right { padding: 0 12px; font-size: 9px; opacity: 0.6; flex-shrink: 0; border-left: 1px solid rgba(255,255,255,0.2); }
+
+/* Header */
+.sim-header {
+  background: var(--p, #1a3a5c); border-bottom: 3px solid var(--s, #2d5a87);
+}
+.sim-header-top {
+  padding: 6px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  font-size: 9px; color: rgba(255,255,255,0.6);
+}
+.sim-header-nav {
+  padding: 0 20px;
+  display: flex; align-items: center; gap: 4px;
+}
+.sim-nav-link {
+  padding: 10px 12px; font-size: 11px; font-weight: 600;
+  color: rgba(255,255,255,0.75); white-space: nowrap;
+  transition: all .15s; border-bottom: 2px solid transparent;
+}
+.sim-nav-link.active { color: #fff; border-bottom-color: rgba(255,255,255,0.6); }
+.sim-nav-link:hover { color: #fff; }
+
+/* Main content — PROTECTED */
+.sim-main { background: #f4f7f6; padding: 20px; position: relative; }
+.sim-protected-overlay {
+  position: absolute; inset: 0; z-index: 10;
+  background: repeating-linear-gradient(45deg, rgba(59,130,246,0.03) 0, rgba(59,130,246,0.03) 6px, transparent 6px, transparent 12px);
+  display: flex; align-items: flex-start; justify-content: flex-end;
+  padding: 8px;
+  pointer-events: none;
+}
+.sim-protected-label {
+  background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3);
+  color: #93c5fd; font-size: 9px; padding: 3px 8px; border-radius: 4px;
+  display: flex; align-items: center; gap: 4px; backdrop-filter: blur(4px);
+}
+.sim-masonry { columns: 3; gap: 12px; }
+.sim-brick {
+  display: inline-block; width: 100%; margin-bottom: 12px; break-inside: avoid;
+  background: #fff; border-radius: 4px; overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.sim-brick-img { background: linear-gradient(135deg, #e5e7eb, #d1d5db); overflow: hidden; }
+.sim-brick-img.tall  { height: 80px; }
+.sim-brick-img.wide  { height: 45px; }
+.sim-brick-img.short { height: 60px; }
+.sim-brick-img .shimmer-img { width: 100%; height: 100%; animation: shimmer 1.5s ease infinite; background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%); background-size: 200% 100%; }
+.sim-brick-body { padding: 10px; }
+.sim-brick-cat { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--p, #1a3a5c); margin-bottom: 4px; display: block; }
+.sim-brick-title { height: 8px; background: #d1d5db; border-radius: 3px; margin-bottom: 4px; animation: shimmer 1.5s ease infinite; background: linear-gradient(90deg, #d1d5db 25%, #e5e7eb 50%, #d1d5db 75%); background-size: 200% 100%; }
+.sim-brick-title.w80 { width: 80%; }
+.sim-brick-title.w60 { width: 60%; }
+.sim-brick-excerpt { height: 6px; width: 90%; background: #e5e7eb; border-radius: 2px; margin-bottom: 3px; animation: shimmer 1.5s ease infinite; background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%); background-size: 200% 100%; }
+
+/* Footer */
+.sim-footer {
+  background: var(--p, #1a3a5c); color: rgba(255,255,255,0.7); padding: 16px 20px;
+  font-size: 9px;
+}
+.sim-footer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.sim-footer-col-title { font-weight: 700; color: #fff; margin-bottom: 6px; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; }
+.sim-footer-link { display: block; padding: 2px 0; opacity: 0.6; }
+.sim-footer-bottom { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; text-align: center; opacity: 0.5; font-size: 8px; }
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+/* ─── Config Panel ──────────────────────────────────────────── */
+.cfg-tabs {
+  display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0;
+  padding: 0 16px;
+}
+.cfg-tab {
+  padding: 10px 12px; font-size: 0.75rem; font-weight: 600; cursor: pointer;
+  color: var(--muted); border-bottom: 2px solid transparent;
+  transition: all .15s; white-space: nowrap;
+}
+.cfg-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.cfg-tab:hover:not(.active) { color: var(--dim); }
+
+.form-group { margin-bottom: 14px; }
+.form-label { display: block; font-size: 0.72rem; font-weight: 600; color: var(--dim); margin-bottom: 5px; }
+.form-hint { font-size: 0.68rem; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+.form-input, .form-select {
+  width: 100%; padding: 7px 10px; background: var(--input-bg);
+  border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text); font-size: 0.8rem; font-family: inherit;
+  transition: border-color .15s;
+}
+.form-input:focus, .form-select:focus { outline: none; border-color: var(--accent); }
+.form-input::placeholder { color: var(--muted); }
+.form-input.error { border-color: var(--danger); }
+.form-error { font-size: 0.68rem; color: var(--danger); margin-top: 3px; }
+.form-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; cursor: pointer; }
+
+.color-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.color-field { display: flex; flex-direction: column; gap: 4px; }
+.color-field label { font-size: 0.7rem; font-weight: 600; color: var(--dim); }
+.color-field-inner { display: flex; align-items: center; gap: 8px; }
+.color-input { width: 36px; height: 32px; border: 2px solid var(--border); border-radius: 6px; cursor: pointer; padding: 2px; background: var(--input-bg); }
+.color-input::-webkit-color-swatch-wrapper { padding: 0; }
+.color-input::-webkit-color-swatch { border-radius: 4px; border: none; }
+.color-hex { flex: 1; padding: 6px 8px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 6px; font-size: 0.75rem; color: var(--text); font-family: monospace; }
+.color-hex:focus { outline: none; border-color: var(--accent); }
+
+.cats-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; min-height: 32px; }
+.cat-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 12px; font-size: 0.75rem;
+}
+.cat-tag .rm { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.85rem; padding: 0; line-height: 1; }
+.cat-tag .rm:hover { color: var(--danger); }
+.cat-add { display: flex; gap: 6px; }
+.cat-add input { flex: 1; padding: 6px 10px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 0.8rem; }
+.cat-add input:focus { outline: none; border-color: var(--accent); }
+.cat-add button { padding: 6px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); cursor: pointer; font-size: 0.8rem; }
+.cat-add button:hover { border-color: var(--accent); color: var(--accent); }
+
+.cms-card {
+  border: 1.5px solid var(--border); border-radius: 8px; padding: 10px;
+  cursor: pointer; transition: all .15s; margin-bottom: 8px; display: flex; align-items: center; gap: 10px;
+}
+.cms-card:hover { border-color: var(--accent); background: rgba(59,130,246,0.05); }
+.cms-card.selected { border-color: var(--accent); background: rgba(59,130,246,0.08); }
+.cms-card input[type=radio] { accent-color: var(--accent); }
+.cms-card-info { flex: 1; }
+.cms-card-name { font-weight: 600; font-size: 0.8rem; }
+.cms-card-host { font-size: 0.68rem; color: var(--muted); font-family: monospace; }
+.cms-card-badge { font-size: 0.65rem; padding: 2px 7px; border-radius: 10px; background: var(--surface2); color: var(--dim); border: 1px solid var(--border); }
+
+/* ─── Deploy Bar ────────────────────────────────────────────── */
+.deploy-bar {
+  flex-shrink: 0; background: var(--surface); border-top: 1px solid var(--border);
+  padding: 10px 20px; display: flex; align-items: center; gap: 12px;
+}
+.deploy-status { font-size: 0.75rem; display: flex; align-items: center; gap: 6px; flex: 1; }
+.status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.status-ok   { background: var(--success); }
+.status-warn { background: var(--warn); }
+.status-err  { background: var(--danger); }
+.deploy-progress { flex: 1; max-width: 300px; }
+.progress-bar { height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; margin-bottom: 4px; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--success)); border-radius: 3px; transition: width .4s ease; }
+.progress-label { font-size: 0.68rem; color: var(--dim); }
+.deploy-btns { display: flex; gap: 8px; }
+.deploy-result {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.deploy-result-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+  padding: 32px; max-width: 440px; width: 90%; text-align: center;
+}
+.deploy-result-icon { font-size: 3rem; margin-bottom: 16px; }
+.deploy-result-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; }
+.deploy-result-url {
+  background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 14px; font-family: monospace; font-size: 0.85rem; color: var(--accent);
+  margin: 16px 0; word-break: break-all;
+}
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- ─── Topbar ──────────────────────────────────────────────── -->
+<header class="topbar">
+  <span class="topbar-logo">Nexo<span>Press</span></span>
+  <span class="topbar-sep">/</span>
+  <span class="topbar-sitename">Constructor Visual &mdash; <b id="tb-name">Nuevo sitio</b></span>
+  <button class="btn btn-ghost btn-sm" onclick="exportConfig()">⬇ Exportar JSON</button>
+  <button class="btn btn-ghost btn-sm" onclick="document.getElementById('import-file').click()">⬆ Importar</button>
+  <input type="file" id="import-file" accept=".json" class="hidden" onchange="importConfig(this)">
+  <button class="btn btn-primary btn-sm" onclick="saveConfig()">Guardar</button>
+</header>
+
+<!-- ─── Workspace ──────────────────────────────────────────── -->
+<div class="workspace">
+
+  <!-- ── AI Panel ─────────────────────────────────────────── -->
+  <aside class="panel panel-ai">
+    <div class="panel-head"><span class="dot dot-ai"></span> Asistente IA</div>
+    <div class="panel-scroll">
+      <div class="ai-desc">
+        <label>Describe tu sitio en una frase:</label>
+        <textarea class="ai-textarea" id="ai-desc" placeholder="Ej: Un diario financiero para inversores colombianos, tono serio y profesional, cobertura de mercados y macroeconomía."></textarea>
+      </div>
+      <p class="ai-hint">La IA generará colores, eslogan y categorías adaptados a tu medio.</p>
+      <button class="ai-generate-btn" id="ai-btn" onclick="generateAI()">
+        <span id="ai-btn-icon">✦</span> <span id="ai-btn-text">Generar con IA</span>
+      </button>
+
+      <div id="ai-results" class="hidden">
+        <hr class="ai-divider">
+        <div class="ai-section-title">Paleta sugerida</div>
+        <div class="palette-preview" id="ai-palette"></div>
+        <br>
+
+        <div class="ai-section-title">Eslogan</div>
+        <div class="ai-suggestion" id="ai-tagline-box">
+          <div class="label">Tagline</div>
+          <div class="value" id="ai-tagline-val"></div>
+        </div>
+
+        <div class="ai-section-title">Descripción</div>
+        <div class="ai-suggestion" id="ai-desc-box">
+          <div class="label">Meta description</div>
+          <div class="value" id="ai-desc-val"></div>
+        </div>
+
+        <div class="ai-section-title">Categorías sugeridas</div>
+        <div id="ai-cats-chips" style="margin-bottom:12px;"></div>
+
+        <button class="ai-apply-btn" onclick="applyAISuggestions()">✓ Aplicar sugerencias</button>
+      </div>
+
+      <div id="ai-error" class="hidden" style="color:var(--danger);font-size:0.75rem;padding:8px;background:rgba(239,68,68,0.1);border-radius:6px;border:1px solid rgba(239,68,68,0.3);margin-top:8px;"></div>
+    </div>
+  </aside>
+
+  <!-- ── Preview Panel ─────────────────────────────────────── -->
+  <main class="panel panel-preview">
+    <div class="panel-head">
+      <span class="dot dot-preview"></span> Vista previa en vivo
+      <span style="margin-left:auto;font-size:0.65rem;color:var(--muted);">
+        🔒 Zonas dinámicas protegidas
+      </span>
+    </div>
+    <div class="preview-outer" id="preview-outer">
+      <div class="preview-browser" id="preview-browser">
+        <div class="browser-chrome">
+          <div class="browser-dots">
+            <div class="browser-dot"></div><div class="browser-dot"></div><div class="browser-dot"></div>
+          </div>
+          <div class="browser-url" id="browser-url">https://nuevo-sitio.pages.dev</div>
+        </div>
+        <div class="sim-site" id="sim-site">
+          <!-- Ticker: PROTECTED -->
+          <div class="sim-ticker" id="sim-ticker">
+            <div class="sim-ticker-left">
+              <div class="sim-ticker-logo" id="sim-ticker-logo">N</div>
+              <div class="sim-ticker-edition">EDICIÓN DIGITAL</div>
+            </div>
+            <div class="sim-ticker-content">
+              <div class="sim-ticker-protected">
+                <span class="protected-badge">🔒 Noticias en vivo</span>
+                <div class="sim-ticker-shimmer"></div>
+                <div class="sim-ticker-shimmer"></div>
+                <div class="sim-ticker-shimmer"></div>
+              </div>
+            </div>
+            <div class="sim-ticker-right" id="sim-date"></div>
+          </div>
+
+          <!-- Header: EDITABLE -->
+          <div class="sim-header" id="sim-header">
+            <div class="sim-header-top" id="sim-tagline">Tu fuente de noticias</div>
+            <nav class="sim-header-nav" id="sim-nav">
+              <span class="sim-nav-link active">Inicio</span>
+            </nav>
+          </div>
+
+          <!-- Main: PROTECTED -->
+          <div class="sim-main" style="min-height:260px;">
+            <div class="sim-protected-overlay">
+              <div class="sim-protected-label">🔒 Zona dinámica — artículos del CMS</div>
+            </div>
+            <div class="sim-masonry" id="sim-masonry"></div>
+          </div>
+
+          <!-- Footer: EDITABLE -->
+          <div class="sim-footer" id="sim-footer">
+            <div class="sim-footer-grid">
+              <div>
+                <div class="sim-footer-col-title">Secciones</div>
+                <div id="sim-footer-cats"></div>
+              </div>
+              <div>
+                <div class="sim-footer-col-title">Legal</div>
+                <a class="sim-footer-link">Acerca de</a>
+                <a class="sim-footer-link">Contacto</a>
+                <a class="sim-footer-link">Privacidad</a>
+              </div>
+            </div>
+            <div class="sim-footer-bottom">
+              © <span id="sim-year"></span> <span id="sim-footer-title"></span>. Todos los derechos reservados.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ── Config Panel ──────────────────────────────────────── -->
+  <aside class="panel panel-cfg">
+    <div class="panel-head"><span class="dot dot-cfg"></span> Configuración</div>
+    <div class="cfg-tabs">
+      <div class="cfg-tab active" onclick="switchTab('identity',this)">Identidad</div>
+      <div class="cfg-tab" onclick="switchTab('design',this)">Diseño</div>
+      <div class="cfg-tab" onclick="switchTab('publish',this)">Publicación</div>
+    </div>
+    <div class="panel-scroll">
+
+      <!-- Tab: Identidad -->
+      <div id="tab-identity">
+        <div class="form-group">
+          <label class="form-label">Nombre del sitio (slug) *</label>
+          <input class="form-input" id="f-name" type="text" placeholder="mi-diario" oninput="onField('name',this)">
+          <p class="form-hint">Solo minúsculas y guiones. Será el subdominio en Cloudflare.</p>
+          <p class="form-error hidden" id="err-name"></p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Título del sitio *</label>
+          <input class="form-input" id="f-title" type="text" placeholder="Mi Diario Digital" oninput="onField('title',this)">
+          <p class="form-error hidden" id="err-title"></p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Eslogan</label>
+          <input class="form-input" id="f-tagline" type="text" placeholder="Tu fuente de noticias" oninput="onField('tagline',this)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Descripción (SEO)</label>
+          <input class="form-input" id="f-description" type="text" placeholder="Diario digital de noticias..." oninput="onField('description',this)">
+          <p class="form-hint">Hasta 160 caracteres para meta description.</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prefijo CSS *</label>
+          <input class="form-input" id="f-prefix" type="text" placeholder="midr" maxlength="6" oninput="onField('prefix',this)">
+          <p class="form-hint">3-6 letras minúsculas. Identifica los estilos del sitio internamente.</p>
+          <p class="form-error hidden" id="err-prefix"></p>
+        </div>
+      </div>
+
+      <!-- Tab: Diseño -->
+      <div id="tab-design" class="hidden">
+        <div class="form-group">
+          <label class="form-label">Colores de marca</label>
+          <div class="color-row">
+            <div class="color-field">
+              <label>Principal</label>
+              <div class="color-field-inner">
+                <input type="color" class="color-input" id="c-primary" value="#1a3a5c" oninput="onColor('primary',this)">
+                <input type="text" class="color-hex" id="h-primary" value="#1a3a5c" oninput="onColorHex('primary',this)" maxlength="7">
+              </div>
+            </div>
+            <div class="color-field">
+              <label>Secundario</label>
+              <div class="color-field-inner">
+                <input type="color" class="color-input" id="c-secondary" value="#2d5a87" oninput="onColor('secondary',this)">
+                <input type="text" class="color-hex" id="h-secondary" value="#2d5a87" oninput="onColorHex('secondary',this)" maxlength="7">
+              </div>
+            </div>
+            <div class="color-field">
+              <label>Fondo claro</label>
+              <div class="color-field-inner">
+                <input type="color" class="color-input" id="c-light" value="#e8f4fd" oninput="onColor('light',this)">
+                <input type="text" class="color-hex" id="h-light" value="#e8f4fd" oninput="onColorHex('light',this)" maxlength="7">
+              </div>
+            </div>
+            <div class="color-field">
+              <label>Texto</label>
+              <div class="color-field-inner">
+                <input type="color" class="color-input" id="c-text" value="#1a1a1a" oninput="onColor('text',this)">
+                <input type="text" class="color-hex" id="h-text" value="#1a1a1a" oninput="onColorHex('text',this)" maxlength="7">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Categorías de navegación</label>
+          <p class="form-hint" style="margin-bottom:8px;">Aparecen en el header y footer. El ID se usa como slug en URLs.</p>
+          <div class="cats-list" id="cats-list"></div>
+          <div class="cat-add">
+            <input type="text" id="cat-input" placeholder="ej: economía" onkeydown="if(event.key==='Enter')addCat()">
+            <button onclick="addCat()">+ Agregar</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Redes sociales</label>
+          <input class="form-input" id="f-twitter" type="text" placeholder="https://twitter.com/tu-sitio" oninput="onField('social.twitter',this)" style="margin-bottom:6px;">
+          <input class="form-input" id="f-facebook" type="text" placeholder="https://facebook.com/tu-sitio" oninput="onField('social.facebook',this)">
+        </div>
+      </div>
+
+      <!-- Tab: Publicación -->
+      <div id="tab-publish" class="hidden">
+        <div class="form-group">
+          <label class="form-label">Backend CMS *</label>
+          <p class="form-hint" style="margin-bottom:10px;">Selecciona el worker que gestionará los artículos de este sitio.</p>
+          <div id="cms-list"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nombre del proyecto Cloudflare Pages *</label>
+          <input class="form-input" id="f-project" type="text" placeholder="mi-diario" oninput="onField('deploy.projectName',this)">
+          <p class="form-hint">Se autocompleta desde el nombre del sitio.</p>
+          <p class="form-error hidden" id="err-project"></p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Branch de deploy</label>
+          <input class="form-input" id="f-branch" type="text" value="master" oninput="onField('deploy.branch',this)">
+        </div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- ─── Deploy Bar ──────────────────────────────────────────── -->
+<div class="deploy-bar">
+  <div class="deploy-status" id="deploy-status">
+    <span class="status-dot status-warn"></span>
+    <span>Completa los campos requeridos para poder desplegar.</span>
+  </div>
+  <div class="deploy-progress hidden" id="deploy-progress">
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <div class="progress-label" id="progress-label">Iniciando...</div>
+  </div>
+  <div class="deploy-btns">
+    <button class="btn btn-ghost" id="btn-generate" onclick="doGenerate()" disabled>Generar archivos</button>
+    <button class="btn btn-success" id="btn-deploy" onclick="doDeploy()" disabled>🚀 Desplegar</button>
+  </div>
+</div>
+
+<!-- ─── Deploy result modal ─────────────────────────────────── -->
+<div class="deploy-result hidden" id="deploy-result">
+  <div class="deploy-result-card">
+    <div class="deploy-result-icon" id="result-icon">🎉</div>
+    <div class="deploy-result-title" id="result-title">¡Sitio desplegado!</div>
+    <p id="result-msg" style="font-size:0.85rem;color:var(--dim);margin-bottom:8px;"></p>
+    <div class="deploy-result-url hidden" id="result-url"></div>
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:20px;">
+      <button class="btn btn-ghost" onclick="closeResult()">Cerrar</button>
+      <button class="btn btn-primary hidden" id="result-open" onclick="openSite()">Abrir sitio ↗</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── State ──────────────────────────────────────────────────────────────────
+const CMS_BACKENDS = [
+  { id: 'cms-originaux', host: 'cms-originaux.sebastianvernis.workers.dev', label: 'CMS Originaux', sites: 10 },
+  { id: 'cms-nuevos',    host: 'cms-nuevos.sebastianvernis.workers.dev',    label: 'CMS Nuevos',    sites: 17 },
+  { id: 'cms-nuevos2',   host: 'cms-nuevos2.sebastianvernis.workers.dev',   label: 'CMS Nuevos 2',  sites: 8  },
+  { id: 'cms-nuevos3',   host: 'cms-nuevos3.sebastianvernis.workers.dev',   label: 'CMS Nuevos 3',  sites: 12 },
+];
+
+let state = {
+  config: {
+    name: '', title: '', tagline: '', description: '', prefix: '',
+    theme:  { primary: '#1a3a5c', secondary: '#2d5a87', light: '#e8f4fd', text: '#1a1a1a' },
+    cms:    { host: CMS_BACKENDS[0].host },
+    categories: [
+      { id: 'nacional', label: 'Nacional' },
+      { id: 'politica', label: 'Política' },
+      { id: 'economia', label: 'Economía' }
+    ],
+    social: { twitter: '', facebook: '' },
+    deploy: { projectName: '', branch: 'master' }
+  },
+  aiSuggestions: null,
+  deploying: false,
+  lastDeployUrl: null,
+};
+
+// ─── Validation ──────────────────────────────────────────────────────────────
+const SLUG_RE   = /^[a-z0-9-]{3,40}$/;
+const PREFIX_RE = /^[a-z]{3,6}$/;
+const HEX_RE    = /^#[0-9a-fA-F]{6}$/;
+
+function validate() {
+  const c = state.config;
+  const errors = {};
+  if (!SLUG_RE.test(c.name))          errors.name    = 'Solo minúsculas, guiones, 3-40 chars';
+  if (!c.title?.trim())               errors.title   = 'Requerido';
+  if (!PREFIX_RE.test(c.prefix))      errors.prefix  = '3-6 letras minúsculas';
+  if (!SLUG_RE.test(c.deploy?.projectName)) errors.project = 'Solo minúsculas, guiones, 3-40 chars';
+  for (const k of ['primary','secondary','light','text']) {
+    if (!HEX_RE.test(c.theme[k] ?? '')) errors[`theme.${k}`] = 'Color hex inválido';
+  }
+  return errors;
+}
+
+function updateStatus() {
+  const errors = validate();
+  const valid = Object.keys(errors).length === 0;
+  const dot = document.querySelector('#deploy-status .status-dot');
+  const msg = document.getElementById('deploy-status').querySelector('span:last-child');
+
+  // Show inline errors
+  ['name','title','prefix','project'].forEach(f => {
+    const el = document.getElementById(`err-${f}`);
+    if (!el) return;
+    el.textContent = errors[f] ?? '';
+    el.classList.toggle('hidden', !errors[f]);
+    const inp = document.getElementById(`f-${f}`);
+    if (inp) inp.classList.toggle('error', !!errors[f]);
+  });
+
+  if (valid) {
+    dot.className = 'status-dot status-ok';
+    msg.textContent = `Config válida — ${state.config.name} listo para deploy.`;
+  } else {
+    dot.className = 'status-dot status-warn';
+    msg.textContent = `${Object.keys(errors).length} campo(s) requerido(s) incompletos.`;
+  }
+
+  document.getElementById('btn-generate').disabled = !valid || state.deploying;
+  document.getElementById('btn-deploy').disabled    = !valid || state.deploying;
+}
+
+// ─── Field bindings ──────────────────────────────────────────────────────────
+function onField(path, el) {
+  const val = el.value;
+  const parts = path.split('.');
+  let obj = state.config;
+  for (let i = 0; i < parts.length - 1; i++) obj = obj[parts[i]];
+  obj[parts[parts.length - 1]] = val;
+
+  // Auto-fill projectName from name
+  if (path === 'name') {
+    state.config.deploy.projectName = val;
+    const pEl = document.getElementById('f-project');
+    if (pEl && !pEl._edited) pEl.value = val;
+    document.getElementById('tb-name').textContent = val || 'Nuevo sitio';
+    document.getElementById('browser-url').textContent = `https://${val || 'nuevo-sitio'}.pages.dev`;
+    updatePreview();
+  }
+  if (path === 'deploy.projectName') el._edited = true;
+  if (path === 'title' || path === 'tagline') updatePreview();
+  updateStatus();
+}
+
+function onColor(key, el) {
+  state.config.theme[key] = el.value;
+  document.getElementById(`h-${key}`).value = el.value;
+  updatePreviewColors();
+  updateStatus();
+}
+
+function onColorHex(key, el) {
+  const v = el.value.trim();
+  if (HEX_RE.test(v)) {
+    state.config.theme[key] = v;
+    document.getElementById(`c-${key}`).value = v;
+    updatePreviewColors();
+  }
+  updateStatus();
+}
+
+// ─── Categories ──────────────────────────────────────────────────────────────
+function addCat() {
+  const inp = document.getElementById('cat-input');
+  const label = inp.value.trim();
+  if (!label) return;
+  const id = label.toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'').slice(0,20);
+  if (!id || state.config.categories.find(c => c.id === id)) { inp.value=''; return; }
+  state.config.categories.push({ id, label });
+  inp.value = '';
+  renderCats();
+  updatePreview();
+}
+
+function removeCat(id) {
+  state.config.categories = state.config.categories.filter(c => c.id !== id);
+  renderCats();
+  updatePreview();
+}
+
+function renderCats() {
+  const list = document.getElementById('cats-list');
+  list.innerHTML = state.config.categories.map(c => `
+    <span class="cat-tag">
+      ${c.label} <span style="color:var(--muted);font-size:0.65rem;">#${c.id}</span>
+      <button class="rm" onclick="removeCat('${c.id}')">×</button>
+    </span>`).join('');
+}
+
+// ─── CMS Selector ────────────────────────────────────────────────────────────
+function renderCMSList() {
+  const list = document.getElementById('cms-list');
+  list.innerHTML = CMS_BACKENDS.map(cms => `
+    <label class="cms-card ${cms.host === state.config.cms.host ? 'selected' : ''}">
+      <input type="radio" name="cms" value="${cms.host}" ${cms.host === state.config.cms.host ? 'checked' : ''} onchange="selectCMS('${cms.host}')">
+      <div class="cms-card-info">
+        <div class="cms-card-name">${cms.label}</div>
+        <div class="cms-card-host">${cms.host}</div>
+      </div>
+      <span class="cms-card-badge">${cms.sites} sitios</span>
+    </label>`).join('');
+}
+
+function selectCMS(host) {
+  state.config.cms.host = host;
+  document.querySelectorAll('.cms-card').forEach(c => c.classList.remove('selected'));
+  event.currentTarget.closest('.cms-card').classList.add('selected');
+}
+
+// ─── Preview ─────────────────────────────────────────────────────────────────
+function updatePreviewColors() {
+  const { primary, secondary, light, text } = state.config.theme;
+  const site = document.getElementById('sim-site');
+  site.style.setProperty('--p', primary);
+  site.style.setProperty('--s', secondary);
+  site.style.setProperty('--l', light);
+  site.style.setProperty('--t', text);
+
+  // Update brick category color
+  document.querySelectorAll('.sim-brick-cat').forEach(el => { el.style.color = primary; });
+}
+
+function updatePreview() {
+  const c = state.config;
+  const name = c.name || 'nuevo-sitio';
+  const title = c.title || 'Nuevo Sitio';
+  const tagline = c.tagline || 'Tu fuente de noticias';
+
+  document.getElementById('tb-name').textContent = name;
+  document.getElementById('browser-url').textContent = `https://${name}.pages.dev`;
+  document.getElementById('sim-tagline').textContent = tagline;
+  document.getElementById('sim-ticker-logo').textContent = (title[0] || 'N').toUpperCase();
+  document.getElementById('sim-footer-title').textContent = title;
+
+  // Nav
+  const nav = document.getElementById('sim-nav');
+  nav.innerHTML = `<span class="sim-nav-link active">Inicio</span>` +
+    c.categories.map(cat => `<span class="sim-nav-link">${cat.label}</span>`).join('');
+
+  // Footer cats
+  const footerCats = document.getElementById('sim-footer-cats');
+  footerCats.innerHTML = c.categories.map(cat =>
+    `<a class="sim-footer-link">${cat.label}</a>`).join('');
+}
+
+function buildMasonry() {
+  const masonry = document.getElementById('sim-masonry');
+  const sizes = [
+    ['tall','w80','brick-cat'],
+    ['wide','w60','brick-cat'],
+    ['short','w80','brick-cat'],
+    ['short','w60','brick-cat'],
+    ['wide','w80','brick-cat'],
+    ['tall','w60','brick-cat'],
+  ];
+  masonry.innerHTML = sizes.map(([sz, tw]) => `
+    <div class="sim-brick">
+      <div class="sim-brick-img ${sz}"><div class="shimmer-img"></div></div>
+      <div class="sim-brick-body">
+        <span class="sim-brick-cat">Categoría</span>
+        <div class="sim-brick-title ${tw}"></div>
+        <div class="sim-brick-title w60"></div>
+        <div class="sim-brick-excerpt"></div>
+        <div class="sim-brick-excerpt" style="width:70%"></div>
+      </div>
+    </div>`).join('');
+}
+
+function setDate() {
+  const now = new Date();
+  const months = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  document.getElementById('sim-date').textContent = `${now.getDate()} ${months[now.getMonth()]}`;
+  document.getElementById('sim-year').textContent = now.getFullYear();
+}
+
+function scalePreview() {
+  const outer = document.getElementById('preview-outer');
+  const browser = document.getElementById('preview-browser');
+  const avail = outer.clientWidth - 48;
+  const scale = Math.min(1, avail / 900);
+  browser.style.transform = `scale(${scale})`;
+  browser.style.transformOrigin = 'top center';
+  browser.style.marginBottom = `-${(900 * (1 - scale) * 0.5)}px`;
+}
+
+// ─── Tab switching ────────────────────────────────────────────────────────────
+function switchTab(name, el) {
+  ['identity','design','publish'].forEach(t => document.getElementById(`tab-${t}`).classList.add('hidden'));
+  document.querySelectorAll('.cfg-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(`tab-${name}`).classList.remove('hidden');
+  el.classList.add('active');
+}
+
+// ─── AI Generation ────────────────────────────────────────────────────────────
+let aiSugg = null;
+
+async function generateAI() {
+  const desc = document.getElementById('ai-desc').value.trim();
+  if (!desc) { showAIError('Escribe una descripción primero.'); return; }
+
+  const btn = document.getElementById('ai-btn');
+  const icon = document.getElementById('ai-btn-icon');
+  const txt  = document.getElementById('ai-btn-text');
+  btn.disabled = true;
+  icon.textContent = '⟳'; icon.classList.add('spin');
+  txt.textContent = 'Generando...';
+  document.getElementById('ai-results').classList.add('hidden');
+  document.getElementById('ai-error').classList.add('hidden');
+
+  try {
+    const res = await fetch('/api/ai/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ description: desc }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Error ${res.status}`);
+    }
+    const data = await res.json();
+    aiSugg = data;
+    renderAISuggestions(data);
+    document.getElementById('ai-results').classList.remove('hidden');
+  } catch (e) {
+    showAIError(`Error al generar: ${e.message}`);
+  } finally {
+    btn.disabled = false;
+    icon.textContent = '✦'; icon.classList.remove('spin');
+    txt.textContent = 'Generar con IA';
+  }
+}
+
+function renderAISuggestions(data) {
+  const { palette, tagline, description, categories } = data;
+
+  // Palette swatches
+  const pp = document.getElementById('ai-palette');
+  pp.innerHTML = ['primary','secondary','light','text'].map(k => `
+    <div class="palette-swatch" style="background:${palette[k]}" title="${k}: ${palette[k]}" data-key="${k}" data-val="${palette[k]}" onclick="previewPaletteSwatch(this)"></div>
+  `).join('');
+  // Delay the ::after label rendering fix
+  setTimeout(() => pp.style.paddingBottom = '22px', 50);
+
+  document.getElementById('ai-tagline-val').textContent = tagline;
+  document.getElementById('ai-desc-val').textContent = description;
+
+  const chips = document.getElementById('ai-cats-chips');
+  chips.innerHTML = categories.map(c => `
+    <span class="cat-chip">${c.label} <span style="color:var(--muted)">#${c.id}</span></span>
+  `).join('');
+}
+
+function previewPaletteSwatch(el) {
+  document.querySelectorAll('.palette-swatch').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function applyAISuggestions() {
+  if (!aiSugg) return;
+  const { palette, tagline, description, categories } = aiSugg;
+
+  // Apply palette
+  Object.entries(palette).forEach(([k, v]) => {
+    state.config.theme[k] = v;
+    const ci = document.getElementById(`c-${k}`);
+    const hi = document.getElementById(`h-${k}`);
+    if (ci) ci.value = v;
+    if (hi) hi.value = v;
+  });
+
+  // Apply text fields
+  if (tagline) {
+    state.config.tagline = tagline;
+    const el = document.getElementById('f-tagline');
+    if (el) el.value = tagline;
+  }
+  if (description) {
+    state.config.description = description;
+    const el = document.getElementById('f-description');
+    if (el) el.value = description;
+  }
+
+  // Append new categories (avoid duplicates)
+  categories.forEach(c => {
+    if (!state.config.categories.find(x => x.id === c.id)) {
+      state.config.categories.push(c);
+    }
+  });
+
+  renderCats();
+  updatePreviewColors();
+  updatePreview();
+  updateStatus();
+  switchTab('design', document.querySelector('.cfg-tab:nth-child(2)'));
+}
+
+function showAIError(msg) {
+  const el = document.getElementById('ai-error');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+
+// ─── Deploy ──────────────────────────────────────────────────────────────────
+async function doGenerate() { await doAction(true); }
+async function doDeploy()   { await doAction(false); }
+
+async function doAction(skipDeploy) {
+  if (state.deploying) return;
+  state.deploying = true;
+
+  document.getElementById('deploy-status').classList.add('hidden');
+  document.getElementById('deploy-progress').classList.remove('hidden');
+  document.getElementById('btn-deploy').disabled = true;
+  document.getElementById('btn-generate').disabled = true;
+
+  const fill  = document.getElementById('progress-fill');
+  const label = document.getElementById('progress-label');
+
+  try {
+    const res = await fetch('/api/sites/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ config: state.config, skipDeploy }),
+    });
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop();
+
+      for (const line of lines) {
+        if (!line.startsWith('data:')) continue;
+        const data = JSON.parse(line.slice(5).trim());
+
+        if (data.type === 'progress') {
+          fill.style.width = `${data.percent}%`;
+          label.textContent = data.message;
+        } else if (data.type === 'result') {
+          if (data.success) {
+            state.lastDeployUrl = data.url;
+            showResult(true, skipDeploy, data.url, data.filesChanged);
+          } else {
+            showResult(false, skipDeploy, null, 0, data.errors?.join('\n'));
+          }
+        }
+      }
+    }
+  } catch (e) {
+    showResult(false, skipDeploy, null, 0, e.message);
+  } finally {
+    state.deploying = false;
+    document.getElementById('deploy-progress').classList.add('hidden');
+    document.getElementById('deploy-status').classList.remove('hidden');
+    updateStatus();
+  }
+}
+
+function showResult(success, skipDeploy, url, filesChanged, errorMsg) {
+  const modal = document.getElementById('deploy-result');
+  modal.classList.remove('hidden');
+  document.getElementById('result-icon').textContent  = success ? (skipDeploy ? '📁' : '🎉') : '❌';
+  document.getElementById('result-title').textContent = success
+    ? (skipDeploy ? '¡Archivos generados!' : '¡Sitio desplegado!')
+    : 'Error al desplegar';
+  document.getElementById('result-msg').textContent = success
+    ? (skipDeploy
+        ? `${filesChanged} archivos generados correctamente.`
+        : `El sitio fue desplegado exitosamente en Cloudflare Pages.`)
+    : (errorMsg || 'Ocurrió un error inesperado.');
+
+  const urlEl = document.getElementById('result-url');
+  const openEl = document.getElementById('result-open');
+  if (success && url && !skipDeploy) {
+    urlEl.textContent = url;
+    urlEl.classList.remove('hidden');
+    openEl.classList.remove('hidden');
+  } else {
+    urlEl.classList.add('hidden');
+    openEl.classList.add('hidden');
+  }
+}
+
+function closeResult() { document.getElementById('deploy-result').classList.add('hidden'); }
+function openSite()    { if (state.lastDeployUrl) window.open(state.lastDeployUrl, '_blank'); }
+
+// ─── Import / Export ─────────────────────────────────────────────────────────
+function exportConfig() {
+  const json = JSON.stringify(state.config, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${state.config.name || 'site'}.config.json`;
+  a.click();
+}
+
+function importConfig(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const cfg = JSON.parse(e.target.result);
+      state.config = { ...state.config, ...cfg };
+      loadConfigIntoForm();
+      updatePreviewColors();
+      updatePreview();
+      updateStatus();
+    } catch { alert('JSON inválido.'); }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+function saveConfig() {
+  try {
+    localStorage.setItem(`nexopress-builder-${state.config.name || 'draft'}`, JSON.stringify(state.config));
+    const btn = document.querySelector('.btn-primary');
+    btn.textContent = '✓ Guardado';
+    setTimeout(() => btn.textContent = 'Guardar', 1500);
+  } catch {}
+}
+
+function loadConfigIntoForm() {
+  const c = state.config;
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val ?? ''; };
+  set('f-name', c.name); set('f-title', c.title); set('f-tagline', c.tagline);
+  set('f-description', c.description); set('f-prefix', c.prefix);
+  set('f-twitter', c.social?.twitter); set('f-facebook', c.social?.facebook);
+  set('f-project', c.deploy?.projectName); set('f-branch', c.deploy?.branch || 'master');
+  ['primary','secondary','light','text'].forEach(k => {
+    set(`c-${k}`, c.theme[k]); set(`h-${k}`, c.theme[k]);
+  });
+  renderCats();
+  renderCMSList();
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+function init() {
+  buildMasonry();
+  setDate();
+  renderCats();
+  renderCMSList();
+  updatePreviewColors();
+  updatePreview();
+  updateStatus();
+  scalePreview();
+
+  window.addEventListener('resize', scalePreview);
+
+  // Restore draft if exists
+  try {
+    const draft = localStorage.getItem('nexopress-builder-draft');
+    if (draft) {
+      state.config = JSON.parse(draft);
+      loadConfigIntoForm();
+      updatePreviewColors();
+      updatePreview();
+      updateStatus();
+    }
+  } catch {}
+}
+
+init();
+</script>
+</body>
+</html>

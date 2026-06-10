@@ -1,0 +1,1 @@
+/articulo/* /articulo/?slug=:splat 301

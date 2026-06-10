@@ -21,6 +21,8 @@ export const ALLOWED_ORIGINS = [
   'https://tmznews.pages.dev',
   'https://radioabc.pages.dev',
   'https://noticiasintegra.pages.dev',
+  // n8n
+  'https://n8n.sebastianvernis.space',
   // Admin
   'https://cms.sebastianvernis.space',
   'https://cms-admin-nuevos2.pages.dev',

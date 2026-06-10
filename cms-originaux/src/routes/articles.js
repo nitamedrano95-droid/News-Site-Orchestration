@@ -279,6 +279,27 @@ articles.post('/', async (c) => {
 
     await c.env.DB.batch(statements);
 
+    // Fire-and-forget: notificar a n8n sobre nuevo artículo
+    try {
+      const wh = c.env.ARTICLE_PUBLISH_WEBHOOK;
+      if (wh) {
+        fetch(wh, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            event: 'article.published',
+            id: articleId,
+            slug,
+            title: article.title,
+            sites: targetSites,
+            category: (article.category || 'NACIONAL').toUpperCase(),
+            author: article.author || 'Editorial',
+            wordCount,
+          }),
+        }).catch(() => {});
+      }
+    } catch (_) { /* fire-and-forget */ }
+
     return c.json({ success: true, article: { id: articleId, slug, title: article.title, wordCount } });
   } catch (e) {
     return c.json({ error: e.message }, 500);
@@ -356,6 +377,28 @@ articles.post('/bulk', async (c) => {
         }
 
         await c.env.DB.batch(statements);
+
+        // Fire-and-forget: notificar a n8n
+        try {
+          const wh = c.env.ARTICLE_PUBLISH_WEBHOOK;
+          if (wh) {
+            const wc = article.content?.trim().split(/\s+/).length || 0;
+            fetch(wh, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                event: 'article.published',
+                id: articleId,
+                slug,
+                title: article.title,
+                sites: targetSites,
+                category: article.category?.toUpperCase() || 'NACIONAL',
+                author: article.author || 'Redacción',
+                wordCount: wc,
+              }),
+            }).catch(() => {});
+          }
+        } catch (_) { /* fire-and-forget */ }
 
         results.push({ title: article.title, slug, status: 'inserted' });
       } catch (e) {

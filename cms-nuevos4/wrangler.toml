@@ -1,0 +1,52 @@
+name = "cms-nuevos4"
+main = "src/index.js"
+compatibility_date = "2023-12-01"
+workers_dev = true
+
+# Rutas para los 25 sitios Pages (subdominios .pages.dev)
+# NOTA: Agregar cuando los sitios Pages esten deployados y las zonas existan.
+#       Comando para agregar luego: wrangler route ...
+# routes = [
+#   { pattern = "cronicanacionalmx.pages.dev", zone_name = "cronicanacionalmx.pages.dev" },
+#   ... (ver slugs en themes.json)
+# ]
+
+[vars]
+ENVIRONMENT = "production"
+
+# SECRETS / VARIABLES DE ENTORNO PENDIENTES (configurar con wrangler secret put):
+#   ADMIN_TOKEN          -> wrangler secret put ADMIN_TOKEN
+#   USER_PASSWORD_HASH   -> wrangler secret put USER_PASSWORD_HASH
+#   OPENWEATHER_API_KEY  -> wrangler secret put OPENWEATHER_API_KEY
+#   FB_APP_ID            -> wrangler secret put FB_APP_ID
+#   FB_APP_SECRET        -> wrangler secret put FB_APP_SECRET
+#   SITE_URL             -> wrangler secret put SITE_URL
+
+[[d1_databases]]
+binding = "DB"
+database_name = "news_db_cms_nuevos4"
+database_id = "3230c0c3-c1ac-4a90-b827-675222b1b878"
+
+[[kv_namespaces]]
+binding = "ARTICLES_KV"
+id = "88a7e6ac68aa4baea053dac4a4227fd1"
+
+[[r2_buckets]]
+binding = "UPLOADS"
+bucket_name = "cms-news"
+
+[triggers]
+# crons = ["*/30 * * * *"]  # disabled jun 2026 - n8n controls ingest now
+
+[observability]
+enabled = false
+
+[observability.logs]
+enabled = true
+persist = true
+invocation_logs = true
+
+[ai]
+binding = "AI"
+
+migrations_dir = "./migrations"

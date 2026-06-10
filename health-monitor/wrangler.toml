@@ -42,6 +42,10 @@ service = "cms-nuevos3"
 binding = "CMS_ORIGINAUX"
 service = "cms-originaux"
 
+[[services]]
+binding = "CMS_NUEVOS4"
+service = "cms-nuevos4"
+
 # Telegram notifications
 [vars]
 TELEGRAM_BOT_TOKEN = "8050461185:AAF91pG2ugi5ij2235Y2fl6cKQ6nd9LehTM"
