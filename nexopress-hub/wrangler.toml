@@ -1,0 +1,36 @@
+name = "nexopress-hub"
+main = "src/index.js"
+compatibility_date = "2026-06-10"
+workers_dev = true
+
+# HUB serves its own public assets + API at /api/*
+# The HUB UI is deployed separately to hub.sebastianvernis.space (Pages)
+
+[vars]
+ENVIRONMENT = "production"
+# URLs of the 5 CMSs the Hub will orchestrate
+CMS_ORIGINAUX_URL = "https://cms-originaux.sebastianvernis.workers.dev"
+CMS_NUEVOS_URL    = "https://cms-nuevos.sebastianvernis.workers.dev"
+CMS_NUEVOS2_URL   = "https://cms-nuevos2.sebastianvernis.workers.dev"
+CMS_NUEVOS3_URL   = "https://cms-nuevos3.sebastianvernis.workers.dev"
+CMS_NUEVOS4_URL   = "https://cms-nuevos4.sebastianvernis.workers.dev"
+# CORS — Hub frontend at hub.sebastianvernis.space, plus the 5 CMS admin UIs
+ALLOWED_ORIGINS = "https://hub.sebastianvernis.space,https://nexopress-hub.sebastianvernis.workers.dev,https://cms-originaux.sebastianvernis.workers.dev,https://cms-nuevos.sebastianvernis.workers.dev,https://cms-nuevos2.sebastianvernis.workers.dev,https://cms-nuevos3.sebastianvernis.workers.dev,https://cms-nuevos4.sebastianvernis.workers.dev"
+
+# D1 database (user must create via `wrangler d1 create news_db_nexopress_hub`
+# then paste the id here)
+[[d1_databases]]
+binding = "DB"
+database_name = "news_db_nexopress_hub"
+database_id = "REPLACE_WITH_D1_ID_AFTER_CREATION"
+
+# KV namespace (user must create via `wrangler kv:namespace create hub_sessions`
+# then paste the id here)
+[[kv_namespaces]]
+binding = "HUB_KV"
+id = "REPLACE_WITH_KV_ID_AFTER_CREATION"
+
+[observability]
+enabled = true
+persist = true
+invocation_logs = true

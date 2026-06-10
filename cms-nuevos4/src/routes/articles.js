@@ -510,4 +510,142 @@ articles.delete('/:id', async (c) => {
   }
 });
 
+// SEO + workflow endpoints (appended by NexoPress Hub integration)
+import { analyzeReadability, analyzeFocusKeyword, generateNewsArticleSchema } from '../utils/seo.js';
+
+articles.get('/:id/seo', async (c) => {
+  const id = c.req.param('id');
+  try {
+    const row = await c.env.DB.prepare(
+      "SELECT ID, TITULO, SLUG, CONTENIDO, DESCRIPCION, META_TITLE, META_DESCRIPTION, FOCUS_KEYWORD, TAGS, READING_SCORE, READING_ANALYSIS, FECHA_PUBLICACION, URL_IMAGEN, AUTOR, CATEGORIA FROM ARTICULOS_CMS WHERE ID = ?"
+    ).bind(id).first();
+    if (!row) return c.json({ error: 'article not found' }, 404);
+
+    const article = {
+      id: row.ID, title: row.TITULO, slug: row.SLUG,
+      content: row.CONTENIDO, excerpt: row.DESCRIPCION,
+      metaTitle: row.META_TITLE, metaDescription: row.META_DESCRIPTION,
+      focusKeyword: row.FOCUS_KEYWORD, tags: row.TAGS ? JSON.parse(row.TAGS) : [],
+      publishedAt: row.FECHA_PUBLICACION, imageUrl: row.URL_IMAGEN,
+      author: row.AUTOR, category: row.CATEGORIA,
+    };
+
+    const readability = analyzeReadability(article.content);
+    const focusKeywordAnalysis = article.focusKeyword
+      ? analyzeFocusKeyword(article, article.focusKeyword)
+      : null;
+    const schema = generateNewsArticleSchema(article);
+
+    return c.json({
+      article, readability, focusKeywordAnalysis, schema,
+      meta: {
+        titleLength: (article.metaTitle || article.title || '').length,
+        descriptionLength: (article.metaDescription || article.excerpt || '').length,
+        slugLength: (article.slug || '').length,
+      },
+    });
+  } catch (e) {
+    return c.json({ error: e.message }, 500);
+  }
+});
+
+articles.post('/:id/seo', async (c) => {
+  if (!await checkAuth(c)) return c.json({ error: 'Unauthorized' }, 401);
+  const id = c.req.param('id');
+  try {
+    const body = await c.req.json();
+    const { metaTitle, metaDescription, focusKeyword, tags } = body;
+
+    const articleRow = await c.env.DB.prepare(
+      'SELECT CONTENIDO FROM ARTICULOS_CMS WHERE ID = ?'
+    ).bind(id).first();
+    if (!articleRow) return c.json({ error: 'article not found' }, 404);
+
+    const readability = analyzeReadability(articleRow.CONTENIDO);
+
+    await c.env.DB.prepare(
+      `UPDATE ARTICULOS_CMS SET
+         META_TITLE = COALESCE(?, META_TITLE),
+         META_DESCRIPTION = COALESCE(?, META_DESCRIPTION),
+         FOCUS_KEYWORD = COALESCE(?, FOCUS_KEYWORD),
+         TAGS = COALESCE(?, TAGS),
+         READING_SCORE = ?,
+         READING_ANALYSIS = ?
+       WHERE ID = ?`
+    ).bind(
+      metaTitle ?? null, metaDescription ?? null,
+      focusKeyword ?? null,
+      tags ? JSON.stringify(tags) : null,
+      readability.score, JSON.stringify(readability), id
+    ).run();
+
+    return c.json({ success: true, readability });
+  } catch (e) {
+    return c.json({ error: e.message }, 500);
+  }
+});
+
+const VALID_TRANSITIONS = {
+  BORRADOR:    ['EN_REVISION', 'ARCHIVADO'],
+  EN_REVISION: ['APROBADO', 'BORRADOR', 'RECHAZADO'],
+  APROBADO:    ['PUBLICADO', 'PROGRAMADO', 'BORRADOR'],
+  PROGRAMADO:  ['PUBLICADO', 'BORRADOR'],
+  PUBLICADO:   ['ARCHIVADO'],
+  RECHAZADO:   ['BORRADOR', 'ARCHIVADO'],
+  ARCHIVADO:   ['BORRADOR'],
+};
+
+articles.post('/:id/state', async (c) => {
+  if (!await checkAuth(c)) return c.json({ error: 'Unauthorized' }, 401);
+  const id = c.req.param('id');
+  try {
+    const { state, comment } = await c.req.json();
+    if (!state) return c.json({ error: 'state required' }, 400);
+
+    const row = await c.env.DB.prepare(
+      'SELECT ID, ESTADO, STATE_HISTORY FROM ARTICULOS_CMS WHERE ID = ?'
+    ).bind(id).first();
+    if (!row) return c.json({ error: 'article not found' }, 404);
+
+    const currentState = row.ESTADO || 'BORRADOR';
+    const allowed = VALID_TRANSITIONS[currentState] || [];
+    if (!allowed.includes(state)) {
+      return c.json({ error: `invalid transition: ${currentState} -> ${state}`, allowed }, 400);
+    }
+
+    const user = c.get('user') || { username: 'unknown' };
+    const history = row.STATE_HISTORY ? JSON.parse(row.STATE_HISTORY) : [];
+    history.push({
+      from: currentState, to: state,
+      by: user.username || user.email || 'unknown',
+      at: new Date().toISOString(),
+      comment: comment || null,
+    });
+
+    await c.env.DB.prepare(
+      'UPDATE ARTICULOS_CMS SET ESTADO = ?, STATE_HISTORY = ? WHERE ID = ?'
+    ).bind(state, JSON.stringify(history), id).run();
+
+    return c.json({ success: true, state, history });
+  } catch (e) {
+    return c.json({ error: e.message }, 500);
+  }
+});
+
+articles.get('/:id/history', async (c) => {
+  const id = c.req.param('id');
+  try {
+    const row = await c.env.DB.prepare(
+      'SELECT ESTADO, STATE_HISTORY FROM ARTICULOS_CMS WHERE ID = ?'
+    ).bind(id).first();
+    if (!row) return c.json({ error: 'article not found' }, 404);
+    return c.json({
+      currentState: row.ESTADO || 'BORRADOR',
+      history: row.STATE_HISTORY ? JSON.parse(row.STATE_HISTORY) : [],
+    });
+  } catch (e) {
+    return c.json({ error: e.message }, 500);
+  }
+});
+
 export default articles;

@@ -1,4 +1,5 @@
 import { fetchWithTimeout, fetchWithRetry } from './helpers.js';
+import { generateNewsArticleSchema } from './seo.js';
 
 // src/utils/html.js — Utilidades HTML: meta tags, OG scraping, R2 upload
 

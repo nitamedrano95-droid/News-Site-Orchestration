@@ -1,4 +1,5 @@
 import { fetchWithTimeout, fetchWithRetry } from './helpers.js';
+import { generateNewsArticleSchema } from './seo.js';
 
 // src/utils/html.js — Utilidades HTML: meta tags, OG scraping, R2 upload
 
@@ -195,6 +196,20 @@ export const injectMetaTags = async (request, env, response) => {
         .on('#art-body', { element(el) { el.setInnerContent(bodyHtml, { html: true }); } })
         .on('head', {
           element(el) {
+            const schemaData = {
+              title: article.t || '',
+              description: article.d || '',
+              imageUrl: ogImg,
+              publishedAt: null,
+              author: 'Redacción',
+              category: 'Nacional',
+              tags: [],
+              siteName: siteSlug,
+              siteLogo: `${url.origin}/logo.png`,
+            };
+            const schema = generateNewsArticleSchema(schemaData);
+            const schemaJson = JSON.stringify(schema);
+
             el.prepend(
               `<meta property="og:title" content="${safeTitle}" />` +
               `<meta property="og:description" content="${safeDesc}" />` +
@@ -205,7 +220,8 @@ export const injectMetaTags = async (request, env, response) => {
               `<meta name="twitter:card" content="summary_large_image" />` +
               `<meta name="twitter:title" content="${safeTitle}" />` +
               `<meta name="twitter:description" content="${safeDesc}" />` +
-              `<meta name="twitter:image" content="${safeImg}" />`,
+              `<meta name="twitter:image" content="${safeImg}" />` +
+              `<script type="application/ld+json">${schemaJson}</script>`,
               { html: true }
             );
           }
