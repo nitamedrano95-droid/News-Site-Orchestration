@@ -45,45 +45,6 @@ sites.post('/', async (c) => {
   }
 });
 
-// ── GET /sites/legals/:id — Textos legales del sitio ─────────
-sites.get('/legals/:id', async (c) => {
-  const id = c.req.param('id');
-  try {
-    const res = await c.env.DB.prepare(
-      'SELECT * FROM LEGALES WHERE ID_SITIO = ?'
-    ).bind(id).first();
-    return c.json(res || {});
-  } catch (e) {
-    return c.json({ error: e.message }, 500);
-  }
-});
-
-// ── GET /sites/channels/:id — Canales externos del sitio ─────
-sites.get('/channels/:id', async (c) => {
-  const id = c.req.param('id');
-  try {
-    const res = await c.env.DB.prepare(
-      'SELECT * FROM CANALES_EXTERNOS WHERE ID_SITIO = ? AND ACTIVO = 1 ORDER BY ORDEN'
-    ).bind(id).all();
-    return c.json(res.results || []);
-  } catch (e) {
-    return c.json({ error: e.message }, 500);
-  }
-});
-
-// ── GET /sites/menus/:id — Menús de navegación del sitio ─────
-sites.get('/menus/:id', async (c) => {
-  const id = c.req.param('id');
-  try {
-    const res = await c.env.DB.prepare(
-      'SELECT * FROM MENUS_NAVEGACION WHERE ID_SITIO = ? AND ACTIVO = 1 ORDER BY ORDEN'
-    ).bind(id).all();
-    return c.json(res.results || []);
-  } catch (e) {
-    return c.json({ error: e.message }, 500);
-  }
-});
-
 // ── GET /sites/stats — Estadísticas por sitio del CMS (filtrado) ──
 sites.get('/stats', async (c) => {
   try {

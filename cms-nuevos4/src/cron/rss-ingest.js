@@ -685,6 +685,11 @@ async function scrapeSectionForLinks(sectionUrl, maxRetries = 3) {
 
 // ============================================================
 // runRSSIngest — Ingesta artículos por fuentes configurables
+//
+// DEPRECATED (2026-06-10): Tabla FUENTES no existe en producción.
+// Este flujo intenta leerla y cae al fallback hardcoded LEGACY_FEEDS
+// cuando falla. Mantenido para compatibilidad temporal; eliminar
+// cuando se cree la tabla FUENTES en una migración futura.
 // ============================================================
 export async function runRSSIngest(env) {
   console.log('[RSS INGEST] Starting per-site RSS ingestion...');
