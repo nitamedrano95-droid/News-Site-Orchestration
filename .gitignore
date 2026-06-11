@@ -39,6 +39,7 @@ src/setup_fb_tokens.sh
 backups/archive/
 *.sql
 !cms-nuevos4/migrations/*.sql
+!scripts/sites/sample-data/*.sql
 *.log
 *.csv
 *.json
