@@ -86,33 +86,33 @@ cron.get('/diagnostic', async (c) => {
     const diagnostics = [];
     
     for (const siteSlug of SITIOS_LIST) {
-      const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
-      
+      const tableName = 'ARTICULOS_SITIO';
+
       // Obtener timer de DB
       const lastPostRow = await c.env.DB.prepare(
         'SELECT LAST_POST_MS FROM FB_TIMERS WHERE SITE_SLUG = ?'
       ).bind(siteSlug).first();
-      
+
       const lastPostTime = lastPostRow?.LAST_POST_MS ? Number(lastPostRow.LAST_POST_MS) : 0;
       const elapsed = now - lastPostTime;
       const elapsedMin = Math.floor(elapsed / 60000);
       const shouldPublish = elapsed >= SIX_HOURS_MS || lastPostTime === 0;
-      
+
       // Contar artículos pendientes
       const pendingCount = await c.env.DB.prepare(`
-        SELECT COUNT(*) as c FROM ${tableName} WHERE FB_PUBLICADO = 0
-      `).first();
-      
+        SELECT COUNT(*) as c FROM ${tableName} WHERE SITIO_SLUG = ? AND FB_PUBLICADO = 0
+      `).bind(siteSlug).first();
+
       // Contar artículos con imagen válida
       const validImageCount = await c.env.DB.prepare(`
         SELECT COUNT(*) as c FROM ${tableName} s
         JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
-        WHERE s.FB_PUBLICADO = 0
+        WHERE s.SITIO_SLUG = ? AND s.FB_PUBLICADO = 0
           AND p.URL_IMAGEN IS NOT NULL
           AND p.URL_IMAGEN != ''
           AND p.URL_IMAGEN NOT LIKE '%logo.png'
           AND p.URL_IMAGEN NOT LIKE '%fallback%'
-      `).first();
+      `).bind(siteSlug).first();
       
       diagnostics.push({
         site: siteSlug,
@@ -152,14 +152,14 @@ cron.get('/test-fb/:siteSlug', async (c) => {
   
   try {
     const { publishToFBIndividual } = await import('../cron/facebook.js');
-    const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
-    
+    const tableName = 'ARTICULOS_SITIO';
+
     // Step 1: Check site config
     results.steps.push({ step: '1_check_site', status: 'pending' });
     const site = await c.env.DB.prepare(
       'SELECT * FROM SITIOS WHERE SLUG = ? AND FACEBOOK_ACTIVO = 1'
     ).bind(siteSlug).first();
-    
+
     if (!site) {
       results.steps[0].status = 'failed';
       results.steps[0].error = 'Site not found or inactive';
@@ -167,7 +167,7 @@ cron.get('/test-fb/:siteSlug', async (c) => {
     }
     results.steps[0].status = 'ok';
     results.steps[0].data = { page_id: site.FACEBOOK_PAGE_ID, has_token_secret: !!site.FACEBOOK_TOKEN_SECRET };
-    
+
     // Step 2: Check token
     results.steps.push({ step: '2_check_token', status: 'pending' });
     const token = c.env[site.FACEBOOK_TOKEN_SECRET];
@@ -178,7 +178,7 @@ cron.get('/test-fb/:siteSlug', async (c) => {
     }
     results.steps[1].status = 'ok';
     results.steps[1].data = { token_length: token.length };
-    
+
     // Step 3: Get pending article
     results.steps.push({ step: '3_get_article', status: 'pending' });
     const article = await c.env.DB.prepare(`
@@ -186,13 +186,13 @@ cron.get('/test-fb/:siteSlug', async (c) => {
              p.TITULO_PARAFRASEADO as TITULO, p.SLUG, p.URL_IMAGEN
       FROM ${tableName} s
       JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
-      WHERE s.FB_PUBLICADO = 0
+      WHERE s.SITIO_SLUG = ? AND s.FB_PUBLICADO = 0
         AND p.URL_IMAGEN IS NOT NULL
         AND p.URL_IMAGEN != ''
         AND p.URL_IMAGEN NOT LIKE '%logo.png'
       ORDER BY s.FECHA_ASIGNACION ASC
       LIMIT 1
-    `).first();
+    `).bind(siteSlug).first();
     
     if (!article) {
       results.steps[2].status = 'failed';
@@ -241,43 +241,43 @@ cron.get('/debug-fb-timer/:siteSlug', async (c) => {
   if (!await checkAuth(c)) return c.json({ error: '401' }, 401);
   
   const siteSlug = c.req.param('siteSlug');
-  const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+  const tableName = 'ARTICULOS_SITIO';
   const kvKey = `last_fb_post_${siteSlug}`;
   const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
   const now = Date.now();
-  
+
   // Get timer
   const lastPostRaw = await c.env.ARTICLES_KV.get(kvKey);
   const lastPostTime = lastPostRaw ? parseInt(lastPostRaw, 10) : 0;
   const elapsed = now - lastPostTime;
   const elapsedMin = Math.floor(elapsed / 60000);
   const shouldPublish = elapsed >= SIX_HOURS_MS || lastPostTime === 0;
-  
+
   // Get pending count
   const pendingCount = await c.env.DB.prepare(`
-    SELECT COUNT(*) as c FROM ${tableName} WHERE FB_PUBLICADO = 0
-  `).first();
-  
+    SELECT COUNT(*) as c FROM ${tableName} WHERE SITIO_SLUG = ? AND FB_PUBLICADO = 0
+  `).bind(siteSlug).first();
+
   // Get valid image count
   const validImageCount = await c.env.DB.prepare(`
     SELECT COUNT(*) as c FROM ${tableName} s
     JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
-    WHERE s.FB_PUBLICADO = 0
+    WHERE s.SITIO_SLUG = ? AND s.FB_PUBLICADO = 0
       AND p.URL_IMAGEN IS NOT NULL
       AND p.URL_IMAGEN != ''
       AND p.URL_IMAGEN NOT LIKE '%logo.png'
-  `).first();
-  
+  `).bind(siteSlug).first();
+
   // Get one sample article
   const sampleArticle = await c.env.DB.prepare(`
     SELECT s.ID as SITIO_ID, p.TITULO_PARAFRASEADO as TITULO, p.URL_IMAGEN
     FROM ${tableName} s
     JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
-    WHERE s.FB_PUBLICADO = 0
+    WHERE s.SITIO_SLUG = ? AND s.FB_PUBLICADO = 0
       AND p.URL_IMAGEN IS NOT NULL
       AND p.URL_IMAGEN != ''
     LIMIT 1
-  `).first();
+  `).bind(siteSlug).first();
   
   return c.json({
     site: siteSlug,
@@ -486,12 +486,12 @@ cron.post('/scrape', async (c) => {
         // Asignar a todos los sitios
         for (const siteSlug of validSites) {
           const siteId = crypto.randomUUID();
-          const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+          const tableName = 'ARTICULOS_SITIO';
           statements.push(
             c.env.DB.prepare(`
-              INSERT INTO ${tableName} (ID, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID)
-              VALUES (?, ?, datetime('now'), 0, NULL, NULL)
-            `).bind(siteId, paraId)
+              INSERT INTO ${tableName} (ID, SITIO_SLUG, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID)
+              VALUES (?, ?, ?, datetime('now'), 0, NULL, NULL)
+            `).bind(siteId, siteSlug.toLowerCase(), paraId)
           );
         }
 

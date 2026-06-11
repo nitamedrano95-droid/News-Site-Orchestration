@@ -212,18 +212,18 @@ cms.post('/publish', async (c) => {
       article.URL_IMAGEN || '', sitiosStr, isFeatured ? 1 : 0, shouldPublishToFB ? 1 : 0
     ).run();
 
-    // DISTRIBUCIÓN: Insertar en cada tabla ARTICULOS_SITIO_{SLUG}
+    // DISTRIBUCIÓN: Insertar en la tabla consolidada
     for (const siteSlug of sitios) {
       const siteId     = crypto.randomUUID();
-      const tableName  = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+      const tableName  = 'ARTICULOS_SITIO';
 
       try {
         await c.env.DB.prepare(`
           INSERT INTO ${tableName} (
-            ID, ID_PARAFRASEADO, FECHA_ASIGNACION,
+            ID, SITIO_SLUG, ID_PARAFRASEADO, FECHA_ASIGNACION,
             FB_PUBLICADO, FB_FECHA, FB_POST_ID
-          ) VALUES (?, ?, datetime('now'), 0, NULL, NULL)
-        `).bind(siteId, paraId).run();
+          ) VALUES (?, ?, ?, datetime('now'), 0, NULL, NULL)
+        `).bind(siteId, siteSlug.toLowerCase(), paraId).run();
 
         if (shouldPublishToFB) {
           console.log(`[FB] Publishing CMS article ${paraId} to ${siteSlug} immediately...`);

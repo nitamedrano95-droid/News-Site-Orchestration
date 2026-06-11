@@ -95,13 +95,14 @@ sites.get('/stats', async (c) => {
     const statsArr = [];
     for (const site of (sitesRes.results || [])) {
       try {
-        const tableName = `ARTICULOS_SITIO_${site.SLUG.toUpperCase()}`;
+        const tableName = 'ARTICULOS_SITIO';
         const counts    = await c.env.DB.prepare(`
           SELECT
             COUNT(*) as total,
             SUM(CASE WHEN FB_PUBLICADO  = 1 THEN 1 ELSE 0 END) as fb
           FROM ${tableName}
-        `).first();
+          WHERE SITIO_SLUG = ?
+        `).bind(site.SLUG).first();
 
         statsArr.push({
           slug:  site.SLUG,

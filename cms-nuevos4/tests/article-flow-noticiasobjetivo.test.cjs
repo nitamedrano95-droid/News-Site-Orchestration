@@ -128,10 +128,10 @@ describe('Flujo completo de artículo - Noticias Objetivo', () => {
   });
 
   test('debe construir query SQL válido para selección de artículos Facebook', () => {
-    const siteSlug = 'NOTICIASOBJETIVO';
-    const tableName = `ARTICULOS_SITIO_${siteSlug}`;
-    
-    // Simular el query como en facebook.js
+    const siteSlug = 'noticiasobjetivo';
+    const tableName = 'ARTICULOS_SITIO';
+
+    // Simular el query como en facebook.js (tabla consolidada + filtro por SITIO_SLUG)
     const query = `
       SELECT
         s.ID as SITIO_ID,
@@ -141,7 +141,7 @@ describe('Flujo completo de artículo - Noticias Objetivo', () => {
         p.URL_IMAGEN
       FROM ${tableName} s
       JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
-      WHERE s.FB_PUBLICADO = 0
+      WHERE s.SITIO_SLUG = ? AND s.FB_PUBLICADO = 0
         AND p.URL_IMAGEN IS NOT NULL
         AND p.URL_IMAGEN != ''
         AND p.URL_IMAGEN NOT LIKE '%logo.png'
@@ -151,11 +151,12 @@ describe('Flujo completo de artículo - Noticias Objetivo', () => {
       ORDER BY s.FECHA_ASIGNACION ASC
       LIMIT 1
     `;
-    
+
+    assert.ok(query.includes('SITIO_SLUG'), 'Query debe filtrar por SITIO_SLUG');
     assert.ok(query.includes('SLUG IS NOT NULL'), 'Query debe filtrar SLUG NULL');
     assert.ok(query.includes("SLUG != ''"), 'Query debe filtrar SLUG vacío');
     assert.ok(query.includes('URL_IMAGEN NOT LIKE'), 'Query debe filtrar imágenes logo');
-    
+
     console.log('✅ Query SQL válido con filtros correctos');
   });
 });

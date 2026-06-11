@@ -2,7 +2,7 @@
 
 import { Hono } from 'hono';
 import { checkAuth } from '../middleware/auth.js';
-import { articleSlugify, parseArticleRow, seededShuffle } from '../utils/helpers.js';
+import { articleSlugify, parseArticleRow, sanitizePublishedAt, seededShuffle } from '../utils/helpers.js';
 
 const articles = new Hono();
 
@@ -36,14 +36,15 @@ articles.get('/', async (c) => {
   try {
     const fetchArticles = async (siteFilter, applyOffset = true) => {
       if (siteFilter) {
-        const tableName = `ARTICULOS_SITIO_${siteFilter.toUpperCase()}`;
+        const tableName = 'ARTICULOS_SITIO';
+        const siteSlugNorm = siteFilter.toLowerCase();
         let query = `
           SELECT p.*, s.FB_PUBLICADO, s.FB_FECHA, s.FB_POST_ID
           FROM ${tableName} s
           JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
-          WHERE p.ESTADO = 'PUBLICADO'
+          WHERE s.SITIO_SLUG = ? AND p.ESTADO = 'PUBLICADO'
         `;
-        const params = [];
+        const params = [siteSlugNorm];
 
         if (category) {
           query += ' AND LOWER(p.CATEGORIA) = LOWER(?)';
@@ -268,7 +269,7 @@ articles.post('/', async (c) => {
         article.excerpt || article.content.substring(0, 200) + '...',
         (article.category || 'NACIONAL').toUpperCase(),
         article.author || 'Editorial',
-        article.publishedAt || now,
+        sanitizePublishedAt(article.publishedAt, now),
         article.imageUrl || '',
         sitiosDestino,
         article.featured ? 1 : 0,
@@ -279,12 +280,12 @@ articles.post('/', async (c) => {
 
     for (const siteSlug of targetSites) {
       const siteId = crypto.randomUUID();
-      const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+      const tableName = 'ARTICULOS_SITIO';
       statements.push(
         c.env.DB.prepare(`
-          INSERT INTO ${tableName} (ID, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID)
-          VALUES (?, ?, datetime('now'), 0, NULL, NULL)
-        `).bind(siteId, articleId)
+          INSERT INTO ${tableName} (ID, SITIO_SLUG, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID)
+          VALUES (?, ?, ?, datetime('now'), 0, NULL, NULL)
+        `).bind(siteId, siteSlug.toLowerCase(), articleId)
       );
     }
 
@@ -346,7 +347,7 @@ articles.post('/bulk', async (c) => {
             article.excerpt || article.description || article.content.substring(0, 200) + '...',
             article.category.toUpperCase(),
             article.author || 'Redacción',
-            article.publishedAt || now,
+            sanitizePublishedAt(article.publishedAt, now),
             article.imageUrl || '',
             sitiosDestino,
             article.featured ? 1 : 0,
@@ -357,12 +358,12 @@ articles.post('/bulk', async (c) => {
 
         for (const siteSlug of targetSites) {
           const siteId = crypto.randomUUID();
-          const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+          const tableName = 'ARTICULOS_SITIO';
           statements.push(
             c.env.DB.prepare(`
-              INSERT INTO ${tableName} (ID, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID)
-              VALUES (?, ?, datetime('now'), 0, NULL, NULL)
-            `).bind(siteId, articleId)
+              INSERT INTO ${tableName} (ID, SITIO_SLUG, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID)
+              VALUES (?, ?, ?, datetime('now'), 0, NULL, NULL)
+            `).bind(siteId, siteSlug.toLowerCase(), articleId)
           );
         }
 
@@ -438,15 +439,15 @@ articles.put('/:id', async (c) => {
       if (targetSites) {
         for (const siteSlug of targetSites) {
           const siteId = crypto.randomUUID();
-          const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+          const tableName = 'ARTICULOS_SITIO';
           statements.push(
             c.env.DB.prepare(`
-              INSERT INTO ${tableName} (ID, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID)
-              SELECT ?, ?, datetime('now'), 0, NULL, NULL
+              INSERT INTO ${tableName} (ID, SITIO_SLUG, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID)
+              SELECT ?, ?, ?, datetime('now'), 0, NULL, NULL
               WHERE NOT EXISTS (
-                SELECT 1 FROM ${tableName} WHERE ID_PARAFRASEADO = ?
+                SELECT 1 FROM ${tableName} WHERE ID_PARAFRASEADO = ? AND SITIO_SLUG = ?
               )
-            `).bind(siteId, id, id)
+            `).bind(siteId, siteSlug.toLowerCase(), id, id, siteSlug.toLowerCase())
           );
         }
       }

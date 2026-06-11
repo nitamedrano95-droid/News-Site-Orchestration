@@ -151,7 +151,7 @@ export async function processFBTimer(env) {
   }
 
   const kvKey = `last_fb_post_${siteSlug}`;
-    const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+    const tableName = 'ARTICULOS_SITIO';
 
     try {
       // Check timer from KV
@@ -178,7 +178,7 @@ export async function processFBTimer(env) {
           p.URL_IMAGEN
         FROM ${tableName} s
         JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
-        WHERE s.FB_PUBLICADO = 0
+        WHERE s.SITIO_SLUG = ? AND s.FB_PUBLICADO = 0
           AND s.FECHA_ASIGNACION >= datetime('now', '-48 hours')
           AND p.URL_IMAGEN IS NOT NULL
           AND p.URL_IMAGEN != ''
@@ -188,7 +188,7 @@ export async function processFBTimer(env) {
           AND p.SLUG != ''
         ORDER BY s.FECHA_ASIGNACION DESC
         LIMIT 1
-      `).first();
+      `).bind(siteSlug).first();
 
       if (!article) {
         console.log(`[FB TIMER] ${siteSlug}: skipped (no articles at all)`);
@@ -314,7 +314,7 @@ export async function processFBRetries(env) {
       continue;
     }
     const kvKey = `fb_retries_${siteSlug}`;
-    const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+    const tableName = 'ARTICULOS_SITIO';
 
     try {
       const raw = await env.ARTICLES_KV.get(kvKey);
@@ -396,7 +396,7 @@ export async function processFBTimerForSite(env, siteSlug) {
   }
 
   const kvKey = `last_fb_post_${siteSlug}`;
-  const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+  const tableName = 'ARTICULOS_SITIO';
 
   const stats = { processed: 0, success: 0, failed: 0, skipped: 0 };
 
@@ -423,7 +423,7 @@ export async function processFBTimerForSite(env, siteSlug) {
         p.URL_IMAGEN
       FROM ${tableName} s
       JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
-      WHERE s.FB_PUBLICADO = 0
+      WHERE s.SITIO_SLUG = ? AND s.FB_PUBLICADO = 0
         AND s.FECHA_ASIGNACION >= datetime('now', '-48 hours')
         AND p.URL_IMAGEN IS NOT NULL
         AND p.URL_IMAGEN != ''
@@ -433,7 +433,7 @@ export async function processFBTimerForSite(env, siteSlug) {
         AND p.SLUG != ''
       ORDER BY s.FECHA_ASIGNACION DESC
       LIMIT 1
-    `).first();
+    `).bind(siteSlug).first();
 
     if (!article) {
       console.log(`[FB TIMER] ${siteSlug}: skipped (no articles at all)`);
@@ -481,7 +481,7 @@ export async function processFBTimerForSite(env, siteSlug) {
 
 export async function processFBRetriesForSite(env, siteSlug) {
   const kvKey = `fb_retries_${siteSlug}`;
-  const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+  const tableName = 'ARTICULOS_SITIO';
 
   let totalRetried = 0;
   let totalSuccess = 0;

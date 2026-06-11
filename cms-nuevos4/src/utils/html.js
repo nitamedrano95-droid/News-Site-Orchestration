@@ -69,7 +69,7 @@ function extractSiteSlug(hostname) {
 }
 
 async function fetchArticlesForHomepage(db, siteSlug, limit = 12) {
-  const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+  const tableName = 'ARTICULOS_SITIO';
   try {
     const result = await db.prepare(`
       SELECT
@@ -80,13 +80,13 @@ async function fetchArticlesForHomepage(db, siteSlug, limit = 12) {
         p.CATEGORIA as category
       FROM ${tableName} s
       JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
-      WHERE p.ESTADO = 'PUBLICADO'
+      WHERE s.SITIO_SLUG = ? AND p.ESTADO = 'PUBLICADO'
         AND p.URL_IMAGEN IS NOT NULL
         AND p.URL_IMAGEN != ''
         AND p.URL_IMAGEN NOT LIKE '%logo.png%'
       ORDER BY p.FECHA_PUBLICACION DESC
       LIMIT ?
-    `).bind(limit).all();
+    `).bind(siteSlug, limit).all();
     return result.results || [];
   } catch (e) {
     console.error(`[SSR HOMEPAGE] DB error for ${siteSlug}:`, e.message);

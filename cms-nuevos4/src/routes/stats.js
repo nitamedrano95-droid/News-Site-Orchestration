@@ -25,13 +25,13 @@ stats.get('/dashboard', async (c) => {
       "SELECT COUNT(*) as count FROM REVISION_CONTENIDO WHERE ESTADO = 'PENDIENTE'"
     ).first();
 
-    // Facebook: Contar publicados en todas las tablas de sitio
+    // Facebook: Contar publicados en la tabla consolidada
     let fbPublished = 0;
     for (const siteSlug of SITIOS_LIST) {
-      const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+      const tableName = 'ARTICULOS_SITIO';
       const result = await c.env.DB.prepare(`
-        SELECT COUNT(*) as count FROM ${tableName} WHERE FB_PUBLICADO = 1
-      `).first();
+        SELECT COUNT(*) as count FROM ${tableName} WHERE SITIO_SLUG = ? AND FB_PUBLICADO = 1
+      `).bind(siteSlug).first();
       fbPublished += result?.count || 0;
     }
 
@@ -40,23 +40,24 @@ stats.get('/dashboard', async (c) => {
       'SELECT COUNT(*) as count FROM SITIOS WHERE ACTIVO = 1'
     ).first();
 
-    // Facebook pendiente: artículos sin publicar en todas las tablas
+    // Facebook pendiente: artículos sin publicar en la tabla consolidada
     let fbPending = 0;
     for (const siteSlug of SITIOS_LIST) {
-      const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+      const tableName = 'ARTICULOS_SITIO';
       const result = await c.env.DB.prepare(`
-        SELECT COUNT(*) as count FROM ${tableName} WHERE FB_PUBLICADO = 0
-      `).first();
+        SELECT COUNT(*) as count FROM ${tableName} WHERE SITIO_SLUG = ? AND FB_PUBLICADO = 0
+      `).bind(siteSlug).first();
       fbPending += result?.count || 0;
     }
 
     // Artículos web publicados hoy (usando FECHA_PUBLICACION de ARTICULOS_PARAFRASEADOS)
-    const firstSiteTable = `ARTICULOS_SITIO_${SITIOS_LIST[0].toUpperCase()}`;
+    const firstSiteTable = 'ARTICULOS_SITIO';
+    const firstSiteSlug  = SITIOS_LIST[0];
     const webToday = await c.env.DB.prepare(`
       SELECT COUNT(*) as count FROM ARTICULOS_PARAFRASEADOS ap
       JOIN ${firstSiteTable} s ON s.ID_PARAFRASEADO = ap.ID
-      WHERE ap.ESTADO = 'PUBLICADO' AND DATE(ap.FECHA_PUBLICACION) = DATE('now')
-    `).first();
+      WHERE s.SITIO_SLUG = ? AND ap.ESTADO = 'PUBLICADO' AND DATE(ap.FECHA_PUBLICACION) = DATE('now')
+    `).bind(firstSiteSlug).first();
 
     return c.json({
       articles: totalPub ? totalPub.count : 0,

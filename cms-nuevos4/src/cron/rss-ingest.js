@@ -894,7 +894,7 @@ export async function runRSSIngest(env) {
               RSS_LOG(`[${siteSlug}] Generated fallback slug: ${slug}`);
             }
 
-            const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+            const tableName = 'ARTICULOS_SITIO';
 
             await env.DB.batch([
               env.DB.prepare(`
@@ -904,9 +904,9 @@ export async function runRSSIngest(env) {
                 VALUES (?, ?, ?, ?, ?, ?, 'NexoPress', ?, ?, ?, 'PUBLICADO', ?)
               `).bind(paraId, title, slug, content, content.substring(0, 200), fuente.CATEGORIA || 'NACIONAL', now, imageUrl, url, siteSlug),
               env.DB.prepare(`
-                INSERT INTO ${tableName} (ID, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID)
-                VALUES (?, ?, datetime('now'), 0, NULL, NULL)
-              `).bind(crypto.randomUUID(), paraId)
+                INSERT INTO ${tableName} (ID, SITIO_SLUG, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID)
+                VALUES (?, ?, ?, datetime('now'), 0, NULL, NULL)
+              `).bind(crypto.randomUUID(), siteSlug.toLowerCase(), paraId)
             ]);
 
             RSS_LOG(`[${siteSlug}] ✓ Published: "${title.substring(0, 40)}..."`);
@@ -1081,7 +1081,7 @@ export async function runRSSIngestForSite(env, siteSlug) {
             RSS_LOG(`[${siteSlug}] Generated fallback slug: ${slug}`);
           }
 
-          const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+          const tableName = 'ARTICULOS_SITIO';
 
           await env.DB.batch([
             env.DB.prepare(`
@@ -1091,9 +1091,9 @@ export async function runRSSIngestForSite(env, siteSlug) {
               VALUES (?, ?, ?, ?, ?, ?, 'NexoPress', ?, ?, ?, 'PUBLICADO', ?)
             `).bind(paraId, title, slug, content, content.substring(0, 200), fuente.CATEGORIA || 'NACIONAL', now, imageUrl, url, siteSlug),
             env.DB.prepare(`
-              INSERT INTO ${tableName} (ID, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID)
-              VALUES (?, ?, datetime('now'), 0, NULL, NULL)
-            `).bind(crypto.randomUUID(), paraId)
+              INSERT INTO ${tableName} (ID, SITIO_SLUG, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID)
+              VALUES (?, ?, ?, datetime('now'), 0, NULL, NULL)
+            `).bind(crypto.randomUUID(), siteSlug.toLowerCase(), paraId)
           ]);
 
           RSS_LOG(`[${siteSlug}] Published: "${title.substring(0, 40)}..."`);
@@ -1230,7 +1230,7 @@ export async function processPreScrapedArticle(env, siteSlug, article) {
   }
 
   // 6. Store in D1
-  const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+  const tableName = 'ARTICULOS_SITIO';
   try {
     await env.DB.batch([
       env.DB.prepare(`
@@ -1241,9 +1241,9 @@ export async function processPreScrapedArticle(env, siteSlug, article) {
       `).bind(paraId, paraphrasedTitle, slug, paraphrasedContent, paraphrasedContent.substring(0, 200),
               category || 'NACIONAL', now, finalImageUrl, sourceUrl, siteSlug),
       env.DB.prepare(`
-        INSERT INTO ${tableName} (ID, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID)
-        VALUES (?, ?, datetime('now'), 0, NULL, NULL)
-      `).bind(crypto.randomUUID(), paraId)
+        INSERT INTO ${tableName} (ID, SITIO_SLUG, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID)
+        VALUES (?, ?, ?, datetime('now'), 0, NULL, NULL)
+      `).bind(crypto.randomUUID(), siteSlug.toLowerCase(), paraId)
     ]);
 
     RSS_LOG(`[${siteSlug}] Published pre-scraped: "${paraphrasedTitle.substring(0, 40)}..."`);

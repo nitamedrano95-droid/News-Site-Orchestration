@@ -91,19 +91,19 @@ revision.post('/approve/:id', async (c) => {
       rev.FB_REQUERIDO || 0, rev.ES_BREVE || 0
     ).run();
 
-    // DISTRIBUCIÓN: Insertar en cada tabla ARTICULOS_SITIO_{SLUG}
+    // DISTRIBUCIÓN: Insertar en la tabla consolidada
     const sitiosArray = sitiosStr.split(',').map((s) => s.trim()).filter((s) => s);
     for (const siteSlug of sitiosArray) {
       const siteId     = crypto.randomUUID();
-      const tableName  = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+      const tableName  = 'ARTICULOS_SITIO';
 
       try {
         await c.env.DB.prepare(`
           INSERT INTO ${tableName} (
-            ID, ID_PARAFRASEADO, FECHA_ASIGNACION,
+            ID, SITIO_SLUG, ID_PARAFRASEADO, FECHA_ASIGNACION,
             FB_PUBLICADO, FB_FECHA, FB_POST_ID
-          ) VALUES (?, ?, datetime('now'), 0, NULL, NULL)
-        `).bind(siteId, paraId).run();
+          ) VALUES (?, ?, ?, datetime('now'), 0, NULL, NULL)
+        `).bind(siteId, siteSlug.toLowerCase(), paraId).run();
         console.log(`[DISTRIBUTION] Revision article ${paraId} assigned to ${siteSlug}`);
       } catch (e) {
         console.error(`[DISTRIBUTION] Error inserting into ${tableName}:`, e.message);

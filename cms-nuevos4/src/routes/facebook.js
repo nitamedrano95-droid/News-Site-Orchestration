@@ -61,7 +61,7 @@ facebook.get('/monitor', async (c) => {
     const results = [];
 
     for (const siteSlug of SITIOS_LIST) {
-      const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+      const tableName = 'ARTICULOS_SITIO';
 
       const siteArticles = await c.env.DB.prepare(`
         SELECT
@@ -80,10 +80,10 @@ facebook.get('/monitor', async (c) => {
           'PARA' as TIPO
         FROM ${tableName} s
         JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
-        WHERE s.FB_PUBLICADO = 0
+        WHERE s.SITIO_SLUG = ? AND s.FB_PUBLICADO = 0
         ORDER BY s.FECHA_ASIGNACION DESC
         LIMIT 20
-      `).all();
+      `).bind(siteSlug).all();
 
       results.push(...(siteArticles.results || []));
     }
@@ -105,7 +105,7 @@ facebook.get('/queue', async (c) => {
     const results = [];
 
     for (const siteSlug of SITIOS_LIST) {
-      const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+      const tableName = 'ARTICULOS_SITIO';
 
       const pending = await c.env.DB.prepare(`
         SELECT
@@ -119,12 +119,12 @@ facebook.get('/queue', async (c) => {
           '${siteSlug}' as SITIO
         FROM ${tableName} s
         JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
-        WHERE s.FB_PUBLICADO = 0
+        WHERE s.SITIO_SLUG = ? AND s.FB_PUBLICADO = 0
           AND p.URL_IMAGEN IS NOT NULL
           AND p.URL_IMAGEN != ''
         ORDER BY s.FECHA_ASIGNACION DESC
         LIMIT 10
-      `).all();
+      `).bind(siteSlug).all();
 
       results.push(...(pending.results || []));
     }
@@ -155,7 +155,7 @@ facebook.post('/reset-timer/:siteSlug', async (c) => {
 facebook.post('/force-publish/:siteSlug', async (c) => {
   if (!await checkAuth(c)) return c.json({ error: '401' }, 401);
   const siteSlug  = c.req.param('siteSlug');
-  const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+  const tableName = 'ARTICULOS_SITIO';
 
   try {
     const article = await c.env.DB.prepare(`
@@ -167,10 +167,10 @@ facebook.post('/force-publish/:siteSlug', async (c) => {
         p.URL_IMAGEN
       FROM ${tableName} s
       JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
-      WHERE s.FB_PUBLICADO = 0
+      WHERE s.SITIO_SLUG = ? AND s.FB_PUBLICADO = 0
       ORDER BY s.FECHA_ASIGNACION DESC
       LIMIT 1
-    `).first();
+    `).bind(siteSlug).first();
 
     if (!article) {
       return c.json({ error: 'No articles pending for Facebook', success: false });
@@ -200,7 +200,7 @@ facebook.get('/recent-posts/:siteSlug', async (c) => {
   
   const siteSlug = c.req.param('siteSlug');
   const hours = c.req.query('hours') || '24';
-  const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+  const tableName = 'ARTICULOS_SITIO';
 
   try {
     const posts = await c.env.DB.prepare(`
@@ -216,11 +216,11 @@ facebook.get('/recent-posts/:siteSlug', async (c) => {
         s.FECHA_ASIGNACION
       FROM ${tableName} s
       JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
-      WHERE s.FB_PUBLICADO = 1
+      WHERE s.SITIO_SLUG = ? AND s.FB_PUBLICADO = 1
         AND s.FB_FECHA >= datetime('now', '-${hours} hours')
       ORDER BY s.FB_FECHA DESC
       LIMIT 50
-    `).all();
+    `).bind(siteSlug).all();
 
     return c.json(posts.results || []);
   } catch (e) {
@@ -234,7 +234,7 @@ facebook.post('/update-post/:siteSlug/:postId', async (c) => {
   
   const siteSlug = c.req.param('siteSlug');
   const postId = c.req.param('postId');
-  const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+  const tableName = 'ARTICULOS_SITIO';
 
   try {
     // Obtener datos del artículo
@@ -307,7 +307,7 @@ facebook.post('/update-recent/:siteSlug', async (c) => {
   
   const siteSlug = c.req.param('siteSlug');
   const hours = c.req.query('hours') || '24';
-  const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+  const tableName = 'ARTICULOS_SITIO';
 
   try {
     // Obtener posts recientes
@@ -319,11 +319,11 @@ facebook.post('/update-recent/:siteSlug', async (c) => {
         p.SLUG
       FROM ${tableName} s
       JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
-      WHERE s.FB_PUBLICADO = 1
+      WHERE s.SITIO_SLUG = ? AND s.FB_PUBLICADO = 1
         AND s.FB_FECHA >= datetime('now', '-${hours} hours')
       ORDER BY s.FB_FECHA DESC
       LIMIT 50
-    `).all();
+    `).bind(siteSlug).all();
 
     const results = { updated: 0, failed: 0, errors: [] };
 
