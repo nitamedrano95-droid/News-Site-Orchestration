@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
@@ -24,6 +24,8 @@ import { common, createLowlight } from 'lowlight'
 
 import SeoPanel from '../components/SeoPanel'
 import EditorToolbar from '../components/EditorToolbar'
+import SerpPreview from '../components/SerpPreview'
+import ArticlePreview from '../components/ArticlePreview'
 import { API_BASE } from '../main.jsx'
 
 const lowlight = createLowlight(common)
@@ -44,6 +46,15 @@ export default function Editor() {
   const [tagInput, setTagInput] = useState('')
   const [lastSaved, setLastSaved] = useState(null)
   const [focusMode, setFocusMode] = useState(false)
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  // Refs espejo para que el handleKeyDown del editor (que se registra una sola
+  // vez al montar) lea los valores actuales sin necesidad de re-registrarse.
+  const previewOpenRef = useRef(false)
+  const deletingRef = useRef(false)
+  useEffect(() => { previewOpenRef.current = previewOpen }, [previewOpen])
+  useEffect(() => { deletingRef.current = deleting }, [deleting])
 
   const editor = useEditor({
     extensions: [
@@ -83,6 +94,17 @@ export default function Editor() {
           event.preventDefault()
           handleSave()
           return true
+        }
+        if (event.key === 'Escape') {
+          // Salir del editor (volver al dashboard) cuando el foco está aquí.
+          // Si hay un modal abierto (LinkDialog, ArticlePreview), el modal
+          // tiene su propio listener y se cierra primero; este Esc solo
+          // dispara si el editor es el receptor natural.
+          if (!previewOpenRef.current && !deletingRef.current) {
+            event.preventDefault()
+            navigate('/')
+            return true
+          }
         }
         return false
       },
@@ -212,6 +234,35 @@ export default function Editor() {
     }
   }, [editor, saving, cms, articleId, title, slug, metaTitle, metaDescription, focusKeyword, tags, navigate])
 
+  const handleDelete = useCallback(async () => {
+    if (articleId === 'new' || deleting) return
+    const displayTitle = (title || article?.title || 'este artículo').slice(0, 80)
+    const ok = window.confirm(
+      `¿Eliminar "${displayTitle}"?\n\nEsta acción no se puede deshacer. El artículo se borrará del CMS y de cualquier sitio donde esté publicado.`
+    )
+    if (!ok) return
+    setDeleting(true)
+    const token = localStorage.getItem('hub_token')
+    try {
+      const res = await fetch(`${API_BASE}/cms/${cms}/articles/${articleId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || `HTTP ${res.status}`)
+      }
+      navigate('/', {
+        state: { deleted: articleId, deletedTitle: title || article?.title },
+      })
+    } catch (err) {
+      console.error('Error al eliminar:', err)
+      alert(`No se pudo eliminar el artículo: ${err.message}`)
+    } finally {
+      setDeleting(false)
+    }
+  }, [articleId, article, cms, deleting, navigate, title])
+
   if (loading) {
     return (
       <div className="dashboard-content">
@@ -246,6 +297,13 @@ export default function Editor() {
         </div>
         <div className="flex" style={{ gap: '8px' }}>
           <button
+            onClick={() => setPreviewOpen(true)}
+            className="btn-secondary"
+            title="Abre una vista previa del artículo tal como se vería en el sitio público"
+          >
+            👁 Vista previa
+          </button>
+          <button
             onClick={() => setFocusMode(!focusMode)}
             className="btn-secondary"
             title="Modo enfoque (oculta las distracciones del panel lateral)"
@@ -260,6 +318,16 @@ export default function Editor() {
           >
             {saving ? 'Guardando…' : '💾 Guardar'}
           </button>
+          {articleId !== 'new' && (
+            <button
+              onClick={handleDelete}
+              className="btn-danger"
+              disabled={deleting}
+              title="Elimina este artículo de forma permanente"
+            >
+              {deleting ? 'Eliminando…' : '🗑 Eliminar'}
+            </button>
+          )}
         </div>
       </header>
 
@@ -315,6 +383,17 @@ export default function Editor() {
             />
 
             <div className="card">
+              <SerpPreview
+                title={title}
+                slug={slug}
+                metaDescription={metaDescription}
+                focusKeyword={focusKeyword}
+                siteName={cms}
+                siteBase={`${cms}.chispakimnueve.workers.dev`}
+              />
+            </div>
+
+            <div className="card">
               <h3 className="card-title" style={{ marginBottom: '12px' }}>Etiquetas</h3>
               <form onSubmit={handleAddTag} style={{ marginBottom: '12px' }}>
                 <input
@@ -345,6 +424,18 @@ export default function Editor() {
           </div>
         </div>
       </main>
+
+      <ArticlePreview
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        title={title}
+        category={article?.category}
+        author={article?.author}
+        imageUrl={article?.imageUrl}
+        metaDescription={metaDescription}
+        contentHtml={editor?.getHTML() || ''}
+        siteName={cms}
+      />
     </div>
   )
 }

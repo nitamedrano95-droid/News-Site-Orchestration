@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Sintagma Nacional - News</title>
+    <meta content="La sintaxis de la noticia" name="description"/>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" media="print" onload="this.media='all'"/>
+    <link href="style.css" rel="stylesheet" media="print" onload="this.media='all'"/>
+    <link href="style-custom.css" rel="stylesheet" media="print" onload="this.media='all'"/>
+    <link rel="alternate" type="application/rss+xml" title="Sintagma Nacional RSS" href="/rss.xml"/>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <meta name="theme-color" content="#581c87">
+</head>
+<body>
+    <div id="site-preloader"><div class="loader"></div></div>
+    <div id="site-header"></div>
+
+    <main class="main-content" style="margin-top: 10px;">
+    </main>
+
+    <div id="site-footer"></div>
+
+    <script src="pwa-manager.js" defer></script>
+    <script src="script.js" defer></script>
+    <script src="components.js" defer></script>
+    <script>
+    (async function(){
+        function isWeatherArticle(t){return t&&(t.includes('Clima')||t.includes('No Circula')||t.includes('Hoy No'));}
+        const apiUrl = 'https://cms-nuevos4.chispakimnueve.workers.dev/api/articles?site=sintagmanacional&limit=12';
+        let articles = [];
+        try {
+            const res = await fetch(apiUrl);
+            if(!res.ok) throw new Error('Network');
+            const data = await res.json();
+            articles = data.articles || [];
+        } catch(e) {
+            if (window.PWAManager) articles = await PWAManager.getLocalArticles();
+        }
+        if(!articles?.length) return;
+        const container = document.querySelector('.main-content');
+        if(container) {
+            container.innerHTML = '<div class="masonry-wall">' + articles.map((a, i) => {
+                const shape = i % 3 === 0 ? 'tall' : i % 3 === 1 ? 'wide' : 'normal';
+                const descLen = i % 3 === 0 ? 200 : 80;
+                return '<a href="/articulo/?slug=' + encodeURIComponent(a.slug) + '" class="masonry-brick brick-' + shape + '">' +
+                    '<div class="brick-img"><img src="' + (isWeatherArticle(a.title)?'./logo.png':(a.imageUrl||'./logo-header.png')) + '" alt="' + a.title + '"></div>' +
+                    '<div class="brick-body"><span class="brick-cat">' + (a.category || 'Noticias') + '</span>' +
+                    '<h3>' + a.title + '</h3><p>' + (a.excerpt ? a.excerpt.substring(0, descLen) + '...' : '') + '</p></div></a>';
+            }).join('') + '</div>';
+        }
+    })();
+    </script>
+</body>
+    <script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}))}</script>
+</html>

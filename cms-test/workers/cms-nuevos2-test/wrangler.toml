@@ -1,0 +1,28 @@
+name = "cms-nuevos2-test"
+main = "src/index.js"
+compatibility_date = "2023-12-01"
+workers_dev = true
+
+[vars]
+ENVIRONMENT = "test"
+SERVICE_NAME = "cms-nuevos2-test"
+SITIO_DESTINO = "alavistanoticias"
+SITIO_NOMBRE = "A la Vista Noticias"
+ARTICLE_PUBLISH_WEBHOOK = "TBD_WEBHOOK_URL"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "news_db_cms_nuevos2_test"
+database_id = "804500d2-0928-4a60-87bf-c197b2c2a933"
+
+[[kv_namespaces]]
+binding = "AUTH_KV"
+id = "870119c22d9f4091bda431b13716654f"
+
+[observability]
+enabled = false
+
+[observability.logs]
+enabled = true
+persist = true
+invocation_logs = true

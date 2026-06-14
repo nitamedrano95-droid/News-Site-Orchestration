@@ -2,7 +2,7 @@
 
 import { Hono } from 'hono';
 import { checkAuth } from '../middleware/auth.js';
-import { articleSlugify, parseArticleRow, seededShuffle } from '../utils/helpers.js';
+import { articleSlugify, parseArticleRow, sanitizePublishedAt, seededShuffle } from '../utils/helpers.js';
 
 const articles = new Hono();
 
@@ -256,7 +256,7 @@ articles.post('/', async (c) => {
         article.excerpt || article.content.substring(0, 200) + '...',
         (article.category || 'NACIONAL').toUpperCase(),
         article.author || 'Editorial',
-        article.publishedAt || now,
+        sanitizePublishedAt(article.publishedAt, now),
         article.imageUrl || '',
         sitiosDestino,
         article.featured ? 1 : 0,
@@ -334,7 +334,7 @@ articles.post('/bulk', async (c) => {
             article.excerpt || article.description || article.content.substring(0, 200) + '...',
             article.category.toUpperCase(),
             article.author || 'Redacción',
-            article.publishedAt || now,
+            sanitizePublishedAt(article.publishedAt, now),
             article.imageUrl || '',
             sitiosDestino,
             article.featured ? 1 : 0,

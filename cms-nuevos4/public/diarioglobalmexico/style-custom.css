@@ -1,0 +1,117 @@
+/* ============================================================
+   Diario Global México — style-custom.css
+   Postura: magazine  ·  Slug: diarioglobalmexico
+   Generado por scaffold_new_sites.py
+   ============================================================ */
+:root {
+  --primary: #0ea5e9;
+  --secondary: #f43f5e;
+  --light: #daf1fb;
+  --bg: #f9fcfe;
+  --text: #021d29;
+  --header: #0b8cc6;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Source Serif 4', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Source Serif 4', 'Iowan Old Style', Georgia, serif;
+  color: var(--text);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+/* ===== DIARIO GLOBAL MÉXICO TICKER ===== */
+.diariogl-ticker {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #0b8cc6 0%, #f43f5e 100%);
+  color: #fff;
+  height: 44px;
+  overflow: hidden;
+}
+.ticker-diariogl-left { display: flex; align-items: center; flex-shrink: 0; }
+.ticker-diariogl-logo {
+  display: flex; align-items: center; padding: 0 12px; height: 100%;
+  background: #fff; flex-shrink: 0;
+}
+.ticker-diariogl-logo img { height: 28px; width: auto; object-fit: contain; }
+.ticker-diariogl-viewport { flex: 1; overflow: hidden; white-space: nowrap; position: relative; }
+.ticker-diariogl-inner { display: inline-block; white-space: nowrap; }
+.ticker-diariogl-item {
+  color: rgba(255,255,255,0.9); text-decoration: none; font-size: 0.8em;
+  padding: 0 16px; white-space: nowrap; transition: color 0.3s;
+}
+.ticker-diariogl-item:hover { color: #fff; }
+.ticker-diariogl-sep { color: #f43f5e; padding: 0 4px; }
+.ticker-diariogl-loading { color: rgba(255,255,255,0.5); font-size: 0.8em; font-style: italic; }
+.ticker-diariogl-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; padding: 0 12px; }
+.ticker-diariogl-time {
+  background: #daf1fb; color: #0ea5e9;
+  font-weight: 800; font-size: 0.7em;
+  padding: 4px 10px; border-radius: 4px; letter-spacing: 1px;
+}
+.ticker-diariogl-social { display: flex; gap: 8px; }
+.ticker-diariogl-social a {
+  color: rgba(255,255,255,0.7); text-decoration: none; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center; border-radius: 4px;
+  transition: all 0.3s; font-size: 0.85em;
+}
+.ticker-diariogl-social a:hover { color: #fff; background: rgba(255,255,255,0.15); }
+
+/* ===== DIARIO GLOBAL MÉXICO HEADER ===== */
+.site-header-diariogl {
+  background: linear-gradient(135deg, #0ea5e9 0%, #f43f5e 100%);
+  padding: 0;
+}
+.header-diariogl-nav { padding: 0 24px; }
+.nav-diariogl-inner {
+  display: flex; align-items: center; justify-content: center;
+  gap: 4px; height: 48px;
+}
+.nav-diariogl-link {
+  color: rgba(255,255,255,0.85); text-decoration: none;
+  font-weight: 600; font-size: 0.8em; letter-spacing: 0.5px;
+  padding: 6px 14px; border-radius: 4px; transition: all 0.3s; white-space: nowrap;
+}
+.nav-diariogl-link:hover { color: #fff; background: rgba(255,255,255,0.15); }
+.nav-diariogl-link.active { background: rgba(255,255,255,0.2); color: #fff; }
+
+/* ===== DIARIO GLOBAL MÉXICO FOOTER ===== */
+.site-footer-diariogl { background: #0ea5e9; padding: 36px 20px 20px; margin-top: 60px; }
+.footer-diariogl-inner { max-width: 800px; margin: 0 auto; }
+.footer-diariogl-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px;
+  max-width: 480px; margin: 0 auto 20px;
+}
+.footer-diariogl-col { text-align: center; }
+.footer-diariogl-title {
+  font-size: 0.7em; font-weight: 800; letter-spacing: 2px;
+  text-transform: uppercase; color: #daf1fb;
+  margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 2px solid #f43f5e; display: inline-block;
+}
+.footer-diariogl-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.footer-diariogl-list li a {
+  color: rgba(255,255,255,0.7); text-decoration: none;
+  font-size: 0.85em; transition: color 0.3s;
+}
+.footer-diariogl-list li a:hover { color: #daf1fb; }
+.footer-diariogl-bottom {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 14px; text-align: center;
+  font-size: 0.75em; color: rgba(255,255,255,0.45);
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .footer-diariogl-grid { grid-template-columns: 1fr; }
+  .nav-diariogl-inner { overflow-x: auto; }
+}

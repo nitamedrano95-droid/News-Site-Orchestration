@@ -1,0 +1,117 @@
+/* ============================================================
+   Impacto Diario México — style-custom.css
+   Postura: urgente  ·  Slug: impactodiariomexico
+   Generado por scaffold_new_sites.py
+   ============================================================ */
+:root {
+  --primary: #dc2626;
+  --secondary: #0f172a;
+  --light: #f9dede;
+  --bg: #fefafa;
+  --text: #270606;
+  --header: #bb2020;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Anton', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Anton', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--text);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+/* ===== IMPACTO DIARIO MÉXICO TICKER ===== */
+.impactod-ticker {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #bb2020 0%, #0f172a 100%);
+  color: #fff;
+  height: 44px;
+  overflow: hidden;
+}
+.ticker-impactod-left { display: flex; align-items: center; flex-shrink: 0; }
+.ticker-impactod-logo {
+  display: flex; align-items: center; padding: 0 12px; height: 100%;
+  background: #fff; flex-shrink: 0;
+}
+.ticker-impactod-logo img { height: 28px; width: auto; object-fit: contain; }
+.ticker-impactod-viewport { flex: 1; overflow: hidden; white-space: nowrap; position: relative; }
+.ticker-impactod-inner { display: inline-block; white-space: nowrap; }
+.ticker-impactod-item {
+  color: rgba(255,255,255,0.9); text-decoration: none; font-size: 0.8em;
+  padding: 0 16px; white-space: nowrap; transition: color 0.3s;
+}
+.ticker-impactod-item:hover { color: #fff; }
+.ticker-impactod-sep { color: #0f172a; padding: 0 4px; }
+.ticker-impactod-loading { color: rgba(255,255,255,0.5); font-size: 0.8em; font-style: italic; }
+.ticker-impactod-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; padding: 0 12px; }
+.ticker-impactod-time {
+  background: #f9dede; color: #dc2626;
+  font-weight: 800; font-size: 0.7em;
+  padding: 4px 10px; border-radius: 4px; letter-spacing: 1px;
+}
+.ticker-impactod-social { display: flex; gap: 8px; }
+.ticker-impactod-social a {
+  color: rgba(255,255,255,0.7); text-decoration: none; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center; border-radius: 4px;
+  transition: all 0.3s; font-size: 0.85em;
+}
+.ticker-impactod-social a:hover { color: #fff; background: rgba(255,255,255,0.15); }
+
+/* ===== IMPACTO DIARIO MÉXICO HEADER ===== */
+.site-header-impactod {
+  background: linear-gradient(135deg, #dc2626 0%, #0f172a 100%);
+  padding: 0;
+}
+.header-impactod-nav { padding: 0 24px; }
+.nav-impactod-inner {
+  display: flex; align-items: center; justify-content: center;
+  gap: 4px; height: 48px;
+}
+.nav-impactod-link {
+  color: rgba(255,255,255,0.85); text-decoration: none;
+  font-weight: 600; font-size: 0.8em; letter-spacing: 0.5px;
+  padding: 6px 14px; border-radius: 4px; transition: all 0.3s; white-space: nowrap;
+}
+.nav-impactod-link:hover { color: #fff; background: rgba(255,255,255,0.15); }
+.nav-impactod-link.active { background: rgba(255,255,255,0.2); color: #fff; }
+
+/* ===== IMPACTO DIARIO MÉXICO FOOTER ===== */
+.site-footer-impactod { background: #dc2626; padding: 36px 20px 20px; margin-top: 60px; }
+.footer-impactod-inner { max-width: 800px; margin: 0 auto; }
+.footer-impactod-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px;
+  max-width: 480px; margin: 0 auto 20px;
+}
+.footer-impactod-col { text-align: center; }
+.footer-impactod-title {
+  font-size: 0.7em; font-weight: 800; letter-spacing: 2px;
+  text-transform: uppercase; color: #f9dede;
+  margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 2px solid #0f172a; display: inline-block;
+}
+.footer-impactod-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.footer-impactod-list li a {
+  color: rgba(255,255,255,0.7); text-decoration: none;
+  font-size: 0.85em; transition: color 0.3s;
+}
+.footer-impactod-list li a:hover { color: #f9dede; }
+.footer-impactod-bottom {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 14px; text-align: center;
+  font-size: 0.75em; color: rgba(255,255,255,0.45);
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .footer-impactod-grid { grid-template-columns: 1fr; }
+  .nav-impactod-inner { overflow-x: auto; }
+}

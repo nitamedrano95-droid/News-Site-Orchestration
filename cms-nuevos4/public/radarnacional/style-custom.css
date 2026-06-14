@@ -1,0 +1,117 @@
+/* ============================================================
+   Radar Nacional — style-custom.css
+   Postura: tecnico  ·  Slug: radarnacional
+   Generado por scaffold_new_sites.py
+   ============================================================ */
+:root {
+  --primary: #0369a1;
+  --secondary: #a3e635;
+  --light: #d9e8f0;
+  --bg: #f9fbfc;
+  --text: #00121c;
+  --header: #025988;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Space Mono', ui-monospace, 'IBM Plex Mono', Menlo, monospace;
+  font-weight: 500;
+  letter-spacing: 0;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--text);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+/* ===== RADAR NACIONAL TICKER ===== */
+.radarnac-ticker {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #025988 0%, #a3e635 100%);
+  color: #fff;
+  height: 44px;
+  overflow: hidden;
+}
+.ticker-radarnac-left { display: flex; align-items: center; flex-shrink: 0; }
+.ticker-radarnac-logo {
+  display: flex; align-items: center; padding: 0 12px; height: 100%;
+  background: #fff; flex-shrink: 0;
+}
+.ticker-radarnac-logo img { height: 28px; width: auto; object-fit: contain; }
+.ticker-radarnac-viewport { flex: 1; overflow: hidden; white-space: nowrap; position: relative; }
+.ticker-radarnac-inner { display: inline-block; white-space: nowrap; }
+.ticker-radarnac-item {
+  color: rgba(255,255,255,0.9); text-decoration: none; font-size: 0.8em;
+  padding: 0 16px; white-space: nowrap; transition: color 0.3s;
+}
+.ticker-radarnac-item:hover { color: #fff; }
+.ticker-radarnac-sep { color: #a3e635; padding: 0 4px; }
+.ticker-radarnac-loading { color: rgba(255,255,255,0.5); font-size: 0.8em; font-style: italic; }
+.ticker-radarnac-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; padding: 0 12px; }
+.ticker-radarnac-time {
+  background: #d9e8f0; color: #0369a1;
+  font-weight: 800; font-size: 0.7em;
+  padding: 4px 10px; border-radius: 4px; letter-spacing: 1px;
+}
+.ticker-radarnac-social { display: flex; gap: 8px; }
+.ticker-radarnac-social a {
+  color: rgba(255,255,255,0.7); text-decoration: none; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center; border-radius: 4px;
+  transition: all 0.3s; font-size: 0.85em;
+}
+.ticker-radarnac-social a:hover { color: #fff; background: rgba(255,255,255,0.15); }
+
+/* ===== RADAR NACIONAL HEADER ===== */
+.site-header-radarnac {
+  background: linear-gradient(135deg, #0369a1 0%, #a3e635 100%);
+  padding: 0;
+}
+.header-radarnac-nav { padding: 0 24px; }
+.nav-radarnac-inner {
+  display: flex; align-items: center; justify-content: center;
+  gap: 4px; height: 48px;
+}
+.nav-radarnac-link {
+  color: rgba(255,255,255,0.85); text-decoration: none;
+  font-weight: 600; font-size: 0.8em; letter-spacing: 0.5px;
+  padding: 6px 14px; border-radius: 4px; transition: all 0.3s; white-space: nowrap;
+}
+.nav-radarnac-link:hover { color: #fff; background: rgba(255,255,255,0.15); }
+.nav-radarnac-link.active { background: rgba(255,255,255,0.2); color: #fff; }
+
+/* ===== RADAR NACIONAL FOOTER ===== */
+.site-footer-radarnac { background: #0369a1; padding: 36px 20px 20px; margin-top: 60px; }
+.footer-radarnac-inner { max-width: 800px; margin: 0 auto; }
+.footer-radarnac-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px;
+  max-width: 480px; margin: 0 auto 20px;
+}
+.footer-radarnac-col { text-align: center; }
+.footer-radarnac-title {
+  font-size: 0.7em; font-weight: 800; letter-spacing: 2px;
+  text-transform: uppercase; color: #d9e8f0;
+  margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 2px solid #a3e635; display: inline-block;
+}
+.footer-radarnac-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.footer-radarnac-list li a {
+  color: rgba(255,255,255,0.7); text-decoration: none;
+  font-size: 0.85em; transition: color 0.3s;
+}
+.footer-radarnac-list li a:hover { color: #d9e8f0; }
+.footer-radarnac-bottom {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 14px; text-align: center;
+  font-size: 0.75em; color: rgba(255,255,255,0.45);
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .footer-radarnac-grid { grid-template-columns: 1fr; }
+  .nav-radarnac-inner { overflow-x: auto; }
+}

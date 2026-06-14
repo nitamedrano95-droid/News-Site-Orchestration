@@ -1,0 +1,117 @@
+/* ============================================================
+   Reporte de Vanguardia — style-custom.css
+   Postura: magazine  ·  Slug: reportedevanguardia
+   Generado por scaffold_new_sites.py
+   ============================================================ */
+:root {
+  --primary: #0f172a;
+  --secondary: #f59e0b;
+  --light: #dbdcdf;
+  --bg: #f9f9fa;
+  --text: #020407;
+  --header: #0c1323;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'IBM Plex Serif', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--text);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+/* ===== REPORTE DE VANGUARDIA TICKER ===== */
+.reported-ticker {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #0c1323 0%, #f59e0b 100%);
+  color: #fff;
+  height: 44px;
+  overflow: hidden;
+}
+.ticker-reported-left { display: flex; align-items: center; flex-shrink: 0; }
+.ticker-reported-logo {
+  display: flex; align-items: center; padding: 0 12px; height: 100%;
+  background: #fff; flex-shrink: 0;
+}
+.ticker-reported-logo img { height: 28px; width: auto; object-fit: contain; }
+.ticker-reported-viewport { flex: 1; overflow: hidden; white-space: nowrap; position: relative; }
+.ticker-reported-inner { display: inline-block; white-space: nowrap; }
+.ticker-reported-item {
+  color: rgba(255,255,255,0.9); text-decoration: none; font-size: 0.8em;
+  padding: 0 16px; white-space: nowrap; transition: color 0.3s;
+}
+.ticker-reported-item:hover { color: #fff; }
+.ticker-reported-sep { color: #f59e0b; padding: 0 4px; }
+.ticker-reported-loading { color: rgba(255,255,255,0.5); font-size: 0.8em; font-style: italic; }
+.ticker-reported-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; padding: 0 12px; }
+.ticker-reported-time {
+  background: #dbdcdf; color: #0f172a;
+  font-weight: 800; font-size: 0.7em;
+  padding: 4px 10px; border-radius: 4px; letter-spacing: 1px;
+}
+.ticker-reported-social { display: flex; gap: 8px; }
+.ticker-reported-social a {
+  color: rgba(255,255,255,0.7); text-decoration: none; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center; border-radius: 4px;
+  transition: all 0.3s; font-size: 0.85em;
+}
+.ticker-reported-social a:hover { color: #fff; background: rgba(255,255,255,0.15); }
+
+/* ===== REPORTE DE VANGUARDIA HEADER ===== */
+.site-header-reported {
+  background: linear-gradient(135deg, #0f172a 0%, #f59e0b 100%);
+  padding: 0;
+}
+.header-reported-nav { padding: 0 24px; }
+.nav-reported-inner {
+  display: flex; align-items: center; justify-content: center;
+  gap: 4px; height: 48px;
+}
+.nav-reported-link {
+  color: rgba(255,255,255,0.85); text-decoration: none;
+  font-weight: 600; font-size: 0.8em; letter-spacing: 0.5px;
+  padding: 6px 14px; border-radius: 4px; transition: all 0.3s; white-space: nowrap;
+}
+.nav-reported-link:hover { color: #fff; background: rgba(255,255,255,0.15); }
+.nav-reported-link.active { background: rgba(255,255,255,0.2); color: #fff; }
+
+/* ===== REPORTE DE VANGUARDIA FOOTER ===== */
+.site-footer-reported { background: #0f172a; padding: 36px 20px 20px; margin-top: 60px; }
+.footer-reported-inner { max-width: 800px; margin: 0 auto; }
+.footer-reported-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px;
+  max-width: 480px; margin: 0 auto 20px;
+}
+.footer-reported-col { text-align: center; }
+.footer-reported-title {
+  font-size: 0.7em; font-weight: 800; letter-spacing: 2px;
+  text-transform: uppercase; color: #dbdcdf;
+  margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 2px solid #f59e0b; display: inline-block;
+}
+.footer-reported-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.footer-reported-list li a {
+  color: rgba(255,255,255,0.7); text-decoration: none;
+  font-size: 0.85em; transition: color 0.3s;
+}
+.footer-reported-list li a:hover { color: #dbdcdf; }
+.footer-reported-bottom {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 14px; text-align: center;
+  font-size: 0.75em; color: rgba(255,255,255,0.45);
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .footer-reported-grid { grid-template-columns: 1fr; }
+  .nav-reported-inner { overflow-x: auto; }
+}

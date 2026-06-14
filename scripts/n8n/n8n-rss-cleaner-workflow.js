@@ -326,6 +326,20 @@ return htmlItems.map((item, index) => {
 
   const slug = slugBase || 'articulo-' + Date.now();
 
+  // ── Normalizar publishedAt a ISO 8601 (fix fecha corrupta) ──
+  // rssItem.isoDate viene del nodo rssFeedRead cuando existe (formato ISO 8601).
+  // rssItem.pubDate viene en RFC-2822 ("Mon, 01 Jan 2024 10:00:00 GMT") y
+  // debe parsearse antes de guardarse, si no rompe new Date() en el CMS.
+  const fallbackNow = new Date().toISOString();
+  let publishedAt = fallbackNow;
+  if (rssItem.isoDate) {
+    const d = new Date(rssItem.isoDate);
+    publishedAt = isNaN(d.getTime()) ? fallbackNow : d.toISOString();
+  } else if (rssItem.pubDate) {
+    const d = new Date(rssItem.pubDate);
+    publishedAt = isNaN(d.getTime()) ? fallbackNow : d.toISOString();
+  }
+
   return {
     json: {
       title,
@@ -335,7 +349,7 @@ return htmlItems.map((item, index) => {
       imageUrl: isImageValid ? imageUrl : '',
       sourceUrl: rssItem.link || '',
       sourceTitle: rssItem.title || '',
-      publishedAt: rssItem.isoDate || rssItem.pubDate || new Date().toISOString(),
+      publishedAt,
       category: (config.category || 'NACIONAL').toUpperCase(),
       sites: config.targetSites || '',
       author: config.feedName || 'Redacción',

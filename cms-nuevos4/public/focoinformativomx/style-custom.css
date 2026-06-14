@@ -1,0 +1,117 @@
+/* ============================================================
+   Foco Informativo MX — style-custom.css
+   Postura: urgente  ·  Slug: focoinformativomx
+   Generado por scaffold_new_sites.py
+   ============================================================ */
+:root {
+  --primary: #ea580c;
+  --secondary: #1e293b;
+  --light: #fbe5da;
+  --bg: #fefbf9;
+  --text: #2a0f02;
+  --header: #c64a0a;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Bebas Neue', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Bebas Neue', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--text);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+/* ===== FOCO INFORMATIVO MX TICKER ===== */
+.focoinfo-ticker {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #c64a0a 0%, #1e293b 100%);
+  color: #fff;
+  height: 44px;
+  overflow: hidden;
+}
+.ticker-focoinfo-left { display: flex; align-items: center; flex-shrink: 0; }
+.ticker-focoinfo-logo {
+  display: flex; align-items: center; padding: 0 12px; height: 100%;
+  background: #fff; flex-shrink: 0;
+}
+.ticker-focoinfo-logo img { height: 28px; width: auto; object-fit: contain; }
+.ticker-focoinfo-viewport { flex: 1; overflow: hidden; white-space: nowrap; position: relative; }
+.ticker-focoinfo-inner { display: inline-block; white-space: nowrap; }
+.ticker-focoinfo-item {
+  color: rgba(255,255,255,0.9); text-decoration: none; font-size: 0.8em;
+  padding: 0 16px; white-space: nowrap; transition: color 0.3s;
+}
+.ticker-focoinfo-item:hover { color: #fff; }
+.ticker-focoinfo-sep { color: #1e293b; padding: 0 4px; }
+.ticker-focoinfo-loading { color: rgba(255,255,255,0.5); font-size: 0.8em; font-style: italic; }
+.ticker-focoinfo-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; padding: 0 12px; }
+.ticker-focoinfo-time {
+  background: #fbe5da; color: #ea580c;
+  font-weight: 800; font-size: 0.7em;
+  padding: 4px 10px; border-radius: 4px; letter-spacing: 1px;
+}
+.ticker-focoinfo-social { display: flex; gap: 8px; }
+.ticker-focoinfo-social a {
+  color: rgba(255,255,255,0.7); text-decoration: none; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center; border-radius: 4px;
+  transition: all 0.3s; font-size: 0.85em;
+}
+.ticker-focoinfo-social a:hover { color: #fff; background: rgba(255,255,255,0.15); }
+
+/* ===== FOCO INFORMATIVO MX HEADER ===== */
+.site-header-focoinfo {
+  background: linear-gradient(135deg, #ea580c 0%, #1e293b 100%);
+  padding: 0;
+}
+.header-focoinfo-nav { padding: 0 24px; }
+.nav-focoinfo-inner {
+  display: flex; align-items: center; justify-content: center;
+  gap: 4px; height: 48px;
+}
+.nav-focoinfo-link {
+  color: rgba(255,255,255,0.85); text-decoration: none;
+  font-weight: 600; font-size: 0.8em; letter-spacing: 0.5px;
+  padding: 6px 14px; border-radius: 4px; transition: all 0.3s; white-space: nowrap;
+}
+.nav-focoinfo-link:hover { color: #fff; background: rgba(255,255,255,0.15); }
+.nav-focoinfo-link.active { background: rgba(255,255,255,0.2); color: #fff; }
+
+/* ===== FOCO INFORMATIVO MX FOOTER ===== */
+.site-footer-focoinfo { background: #ea580c; padding: 36px 20px 20px; margin-top: 60px; }
+.footer-focoinfo-inner { max-width: 800px; margin: 0 auto; }
+.footer-focoinfo-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px;
+  max-width: 480px; margin: 0 auto 20px;
+}
+.footer-focoinfo-col { text-align: center; }
+.footer-focoinfo-title {
+  font-size: 0.7em; font-weight: 800; letter-spacing: 2px;
+  text-transform: uppercase; color: #fbe5da;
+  margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 2px solid #1e293b; display: inline-block;
+}
+.footer-focoinfo-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.footer-focoinfo-list li a {
+  color: rgba(255,255,255,0.7); text-decoration: none;
+  font-size: 0.85em; transition: color 0.3s;
+}
+.footer-focoinfo-list li a:hover { color: #fbe5da; }
+.footer-focoinfo-bottom {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 14px; text-align: center;
+  font-size: 0.75em; color: rgba(255,255,255,0.45);
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .footer-focoinfo-grid { grid-template-columns: 1fr; }
+  .nav-focoinfo-inner { overflow-x: auto; }
+}

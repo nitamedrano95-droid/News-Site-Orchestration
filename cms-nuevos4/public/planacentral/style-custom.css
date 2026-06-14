@@ -1,0 +1,117 @@
+/* ============================================================
+   Plana Central — style-custom.css
+   Postura: narrativa  ·  Slug: planacentral
+   Generado por scaffold_new_sites.py
+   ============================================================ */
+:root {
+  --primary: #475569;
+  --secondary: #fbbf24;
+  --light: #e3e5e8;
+  --bg: #fafbfb;
+  --text: #0c0f12;
+  --header: #3c4859;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--text);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+/* ===== PLANA CENTRAL TICKER ===== */
+.planacen-ticker {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #3c4859 0%, #fbbf24 100%);
+  color: #fff;
+  height: 44px;
+  overflow: hidden;
+}
+.ticker-planacen-left { display: flex; align-items: center; flex-shrink: 0; }
+.ticker-planacen-logo {
+  display: flex; align-items: center; padding: 0 12px; height: 100%;
+  background: #fff; flex-shrink: 0;
+}
+.ticker-planacen-logo img { height: 28px; width: auto; object-fit: contain; }
+.ticker-planacen-viewport { flex: 1; overflow: hidden; white-space: nowrap; position: relative; }
+.ticker-planacen-inner { display: inline-block; white-space: nowrap; }
+.ticker-planacen-item {
+  color: rgba(255,255,255,0.9); text-decoration: none; font-size: 0.8em;
+  padding: 0 16px; white-space: nowrap; transition: color 0.3s;
+}
+.ticker-planacen-item:hover { color: #fff; }
+.ticker-planacen-sep { color: #fbbf24; padding: 0 4px; }
+.ticker-planacen-loading { color: rgba(255,255,255,0.5); font-size: 0.8em; font-style: italic; }
+.ticker-planacen-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; padding: 0 12px; }
+.ticker-planacen-time {
+  background: #e3e5e8; color: #475569;
+  font-weight: 800; font-size: 0.7em;
+  padding: 4px 10px; border-radius: 4px; letter-spacing: 1px;
+}
+.ticker-planacen-social { display: flex; gap: 8px; }
+.ticker-planacen-social a {
+  color: rgba(255,255,255,0.7); text-decoration: none; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center; border-radius: 4px;
+  transition: all 0.3s; font-size: 0.85em;
+}
+.ticker-planacen-social a:hover { color: #fff; background: rgba(255,255,255,0.15); }
+
+/* ===== PLANA CENTRAL HEADER ===== */
+.site-header-planacen {
+  background: linear-gradient(135deg, #475569 0%, #fbbf24 100%);
+  padding: 0;
+}
+.header-planacen-nav { padding: 0 24px; }
+.nav-planacen-inner {
+  display: flex; align-items: center; justify-content: center;
+  gap: 4px; height: 48px;
+}
+.nav-planacen-link {
+  color: rgba(255,255,255,0.85); text-decoration: none;
+  font-weight: 600; font-size: 0.8em; letter-spacing: 0.5px;
+  padding: 6px 14px; border-radius: 4px; transition: all 0.3s; white-space: nowrap;
+}
+.nav-planacen-link:hover { color: #fff; background: rgba(255,255,255,0.15); }
+.nav-planacen-link.active { background: rgba(255,255,255,0.2); color: #fff; }
+
+/* ===== PLANA CENTRAL FOOTER ===== */
+.site-footer-planacen { background: #475569; padding: 36px 20px 20px; margin-top: 60px; }
+.footer-planacen-inner { max-width: 800px; margin: 0 auto; }
+.footer-planacen-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px;
+  max-width: 480px; margin: 0 auto 20px;
+}
+.footer-planacen-col { text-align: center; }
+.footer-planacen-title {
+  font-size: 0.7em; font-weight: 800; letter-spacing: 2px;
+  text-transform: uppercase; color: #e3e5e8;
+  margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 2px solid #fbbf24; display: inline-block;
+}
+.footer-planacen-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.footer-planacen-list li a {
+  color: rgba(255,255,255,0.7); text-decoration: none;
+  font-size: 0.85em; transition: color 0.3s;
+}
+.footer-planacen-list li a:hover { color: #e3e5e8; }
+.footer-planacen-bottom {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 14px; text-align: center;
+  font-size: 0.75em; color: rgba(255,255,255,0.45);
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .footer-planacen-grid { grid-template-columns: 1fr; }
+  .nav-planacen-inner { overflow-x: auto; }
+}

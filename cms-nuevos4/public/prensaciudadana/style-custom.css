@@ -1,0 +1,117 @@
+/* ============================================================
+   Prensa Ciudadana — style-custom.css
+   Postura: narrativa  ·  Slug: prensaciudadana
+   Generado por scaffold_new_sites.py
+   ============================================================ */
+:root {
+  --primary: #16a34a;
+  --secondary: #facc15;
+  --light: #dcf1e3;
+  --bg: #f9fcfa;
+  --text: #031d0d;
+  --header: #128a3e;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--text);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+/* ===== PRENSA CIUDADANA TICKER ===== */
+.prensaci-ticker {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #128a3e 0%, #facc15 100%);
+  color: #fff;
+  height: 44px;
+  overflow: hidden;
+}
+.ticker-prensaci-left { display: flex; align-items: center; flex-shrink: 0; }
+.ticker-prensaci-logo {
+  display: flex; align-items: center; padding: 0 12px; height: 100%;
+  background: #fff; flex-shrink: 0;
+}
+.ticker-prensaci-logo img { height: 28px; width: auto; object-fit: contain; }
+.ticker-prensaci-viewport { flex: 1; overflow: hidden; white-space: nowrap; position: relative; }
+.ticker-prensaci-inner { display: inline-block; white-space: nowrap; }
+.ticker-prensaci-item {
+  color: rgba(255,255,255,0.9); text-decoration: none; font-size: 0.8em;
+  padding: 0 16px; white-space: nowrap; transition: color 0.3s;
+}
+.ticker-prensaci-item:hover { color: #fff; }
+.ticker-prensaci-sep { color: #facc15; padding: 0 4px; }
+.ticker-prensaci-loading { color: rgba(255,255,255,0.5); font-size: 0.8em; font-style: italic; }
+.ticker-prensaci-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; padding: 0 12px; }
+.ticker-prensaci-time {
+  background: #dcf1e3; color: #16a34a;
+  font-weight: 800; font-size: 0.7em;
+  padding: 4px 10px; border-radius: 4px; letter-spacing: 1px;
+}
+.ticker-prensaci-social { display: flex; gap: 8px; }
+.ticker-prensaci-social a {
+  color: rgba(255,255,255,0.7); text-decoration: none; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center; border-radius: 4px;
+  transition: all 0.3s; font-size: 0.85em;
+}
+.ticker-prensaci-social a:hover { color: #fff; background: rgba(255,255,255,0.15); }
+
+/* ===== PRENSA CIUDADANA HEADER ===== */
+.site-header-prensaci {
+  background: linear-gradient(135deg, #16a34a 0%, #facc15 100%);
+  padding: 0;
+}
+.header-prensaci-nav { padding: 0 24px; }
+.nav-prensaci-inner {
+  display: flex; align-items: center; justify-content: center;
+  gap: 4px; height: 48px;
+}
+.nav-prensaci-link {
+  color: rgba(255,255,255,0.85); text-decoration: none;
+  font-weight: 600; font-size: 0.8em; letter-spacing: 0.5px;
+  padding: 6px 14px; border-radius: 4px; transition: all 0.3s; white-space: nowrap;
+}
+.nav-prensaci-link:hover { color: #fff; background: rgba(255,255,255,0.15); }
+.nav-prensaci-link.active { background: rgba(255,255,255,0.2); color: #fff; }
+
+/* ===== PRENSA CIUDADANA FOOTER ===== */
+.site-footer-prensaci { background: #16a34a; padding: 36px 20px 20px; margin-top: 60px; }
+.footer-prensaci-inner { max-width: 800px; margin: 0 auto; }
+.footer-prensaci-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px;
+  max-width: 480px; margin: 0 auto 20px;
+}
+.footer-prensaci-col { text-align: center; }
+.footer-prensaci-title {
+  font-size: 0.7em; font-weight: 800; letter-spacing: 2px;
+  text-transform: uppercase; color: #dcf1e3;
+  margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 2px solid #facc15; display: inline-block;
+}
+.footer-prensaci-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.footer-prensaci-list li a {
+  color: rgba(255,255,255,0.7); text-decoration: none;
+  font-size: 0.85em; transition: color 0.3s;
+}
+.footer-prensaci-list li a:hover { color: #dcf1e3; }
+.footer-prensaci-bottom {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 14px; text-align: center;
+  font-size: 0.75em; color: rgba(255,255,255,0.45);
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .footer-prensaci-grid { grid-template-columns: 1fr; }
+  .nav-prensaci-inner { overflow-x: auto; }
+}

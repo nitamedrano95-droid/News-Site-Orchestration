@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { API_BASE } from '../main.jsx'
 
 const CMS_CONFIG = [
@@ -14,12 +14,28 @@ export default function Dashboard() {
   const [cmsStats, setCmsStats] = useState({})
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState(null)
+  const [toast, setToast] = useState(null)
+  const location = useLocation()
 
   useEffect(() => {
     const stored = localStorage.getItem('hub_user')
     if (stored) setUser(JSON.parse(stored))
     fetchStats()
   }, [])
+
+  // Capturar notificación de borrado desde el editor
+  useEffect(() => {
+    if (location.state?.deleted) {
+      setToast({
+        type: 'success',
+        message: `Artículo "${location.state.deletedTitle || 'sin título'}" eliminado correctamente.`,
+      })
+      // Limpiar el state del navigate para que no reaparezca al recargar
+      window.history.replaceState({}, '')
+      const t = setTimeout(() => setToast(null), 4000)
+      return () => clearTimeout(t)
+    }
+  }, [location.state])
 
   const fetchStats = async () => {
     const token = localStorage.getItem('hub_token')
@@ -79,6 +95,24 @@ export default function Dashboard() {
           </button>
         </div>
       </header>
+
+      {toast && (
+        <div
+          className={`toast toast-${toast.type}`}
+          role="status"
+          aria-live="polite"
+        >
+          {toast.type === 'success' ? '✓' : '⚠'} {toast.message}
+          <button
+            type="button"
+            className="toast-close"
+            onClick={() => setToast(null)}
+            aria-label="Cerrar notificación"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       <main className="dashboard-content">
         {/* Resumen general */}

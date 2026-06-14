@@ -1,0 +1,28 @@
+name = "cms-nuevos-test"
+main = "src/index.js"
+compatibility_date = "2023-12-01"
+workers_dev = true
+
+[vars]
+ENVIRONMENT = "test"
+SERVICE_NAME = "cms-nuevos-test"
+SITIO_DESTINO = "monitorexpresso"
+SITIO_NOMBRE = "Monitor Expresso"
+ARTICLE_PUBLISH_WEBHOOK = "TBD_WEBHOOK_URL"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "news_db_cms_nuevos_test"
+database_id = "5832a033-7a39-4069-95b9-d0cdf14ffdb5"
+
+[[kv_namespaces]]
+binding = "AUTH_KV"
+id = "d6c1d4c0e5f1408295a0882e0dc37d19"
+
+[observability]
+enabled = false
+
+[observability.logs]
+enabled = true
+persist = true
+invocation_logs = true

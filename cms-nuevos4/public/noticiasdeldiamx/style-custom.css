@@ -1,0 +1,117 @@
+/* ============================================================
+   Noticias del Día MX — style-custom.css
+   Postura: urgente  ·  Slug: noticiasdeldiamx
+   Generado por scaffold_new_sites.py
+   ============================================================ */
+:root {
+  --primary: #b91c1c;
+  --secondary: #0f172a;
+  --light: #f4dcdc;
+  --bg: #fdf9f9;
+  --text: #210505;
+  --header: #9d1717;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--text);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+/* ===== NOTICIAS DEL DÍA MX TICKER ===== */
+.noticias-ticker {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #9d1717 0%, #0f172a 100%);
+  color: #fff;
+  height: 44px;
+  overflow: hidden;
+}
+.ticker-noticias-left { display: flex; align-items: center; flex-shrink: 0; }
+.ticker-noticias-logo {
+  display: flex; align-items: center; padding: 0 12px; height: 100%;
+  background: #fff; flex-shrink: 0;
+}
+.ticker-noticias-logo img { height: 28px; width: auto; object-fit: contain; }
+.ticker-noticias-viewport { flex: 1; overflow: hidden; white-space: nowrap; position: relative; }
+.ticker-noticias-inner { display: inline-block; white-space: nowrap; }
+.ticker-noticias-item {
+  color: rgba(255,255,255,0.9); text-decoration: none; font-size: 0.8em;
+  padding: 0 16px; white-space: nowrap; transition: color 0.3s;
+}
+.ticker-noticias-item:hover { color: #fff; }
+.ticker-noticias-sep { color: #0f172a; padding: 0 4px; }
+.ticker-noticias-loading { color: rgba(255,255,255,0.5); font-size: 0.8em; font-style: italic; }
+.ticker-noticias-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; padding: 0 12px; }
+.ticker-noticias-time {
+  background: #f4dcdc; color: #b91c1c;
+  font-weight: 800; font-size: 0.7em;
+  padding: 4px 10px; border-radius: 4px; letter-spacing: 1px;
+}
+.ticker-noticias-social { display: flex; gap: 8px; }
+.ticker-noticias-social a {
+  color: rgba(255,255,255,0.7); text-decoration: none; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center; border-radius: 4px;
+  transition: all 0.3s; font-size: 0.85em;
+}
+.ticker-noticias-social a:hover { color: #fff; background: rgba(255,255,255,0.15); }
+
+/* ===== NOTICIAS DEL DÍA MX HEADER ===== */
+.site-header-noticias {
+  background: linear-gradient(135deg, #b91c1c 0%, #0f172a 100%);
+  padding: 0;
+}
+.header-noticias-nav { padding: 0 24px; }
+.nav-noticias-inner {
+  display: flex; align-items: center; justify-content: center;
+  gap: 4px; height: 48px;
+}
+.nav-noticias-link {
+  color: rgba(255,255,255,0.85); text-decoration: none;
+  font-weight: 600; font-size: 0.8em; letter-spacing: 0.5px;
+  padding: 6px 14px; border-radius: 4px; transition: all 0.3s; white-space: nowrap;
+}
+.nav-noticias-link:hover { color: #fff; background: rgba(255,255,255,0.15); }
+.nav-noticias-link.active { background: rgba(255,255,255,0.2); color: #fff; }
+
+/* ===== NOTICIAS DEL DÍA MX FOOTER ===== */
+.site-footer-noticias { background: #b91c1c; padding: 36px 20px 20px; margin-top: 60px; }
+.footer-noticias-inner { max-width: 800px; margin: 0 auto; }
+.footer-noticias-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px;
+  max-width: 480px; margin: 0 auto 20px;
+}
+.footer-noticias-col { text-align: center; }
+.footer-noticias-title {
+  font-size: 0.7em; font-weight: 800; letter-spacing: 2px;
+  text-transform: uppercase; color: #f4dcdc;
+  margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 2px solid #0f172a; display: inline-block;
+}
+.footer-noticias-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.footer-noticias-list li a {
+  color: rgba(255,255,255,0.7); text-decoration: none;
+  font-size: 0.85em; transition: color 0.3s;
+}
+.footer-noticias-list li a:hover { color: #f4dcdc; }
+.footer-noticias-bottom {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 14px; text-align: center;
+  font-size: 0.75em; color: rgba(255,255,255,0.45);
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .footer-noticias-grid { grid-template-columns: 1fr; }
+  .nav-noticias-inner { overflow-x: auto; }
+}

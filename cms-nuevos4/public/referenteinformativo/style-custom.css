@@ -1,0 +1,117 @@
+/* ============================================================
+   Referente Informativo — style-custom.css
+   Postura: magazine  ·  Slug: referenteinformativo
+   Generado por scaffold_new_sites.py
+   ============================================================ */
+:root {
+  --primary: #0d9488;
+  --secondary: #f59e0b;
+  --light: #daeeed;
+  --bg: #f9fcfc;
+  --text: #021a18;
+  --header: #0b7d73;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--text);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+/* ===== REFERENTE INFORMATIVO TICKER ===== */
+.referent-ticker {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #0b7d73 0%, #f59e0b 100%);
+  color: #fff;
+  height: 44px;
+  overflow: hidden;
+}
+.ticker-referent-left { display: flex; align-items: center; flex-shrink: 0; }
+.ticker-referent-logo {
+  display: flex; align-items: center; padding: 0 12px; height: 100%;
+  background: #fff; flex-shrink: 0;
+}
+.ticker-referent-logo img { height: 28px; width: auto; object-fit: contain; }
+.ticker-referent-viewport { flex: 1; overflow: hidden; white-space: nowrap; position: relative; }
+.ticker-referent-inner { display: inline-block; white-space: nowrap; }
+.ticker-referent-item {
+  color: rgba(255,255,255,0.9); text-decoration: none; font-size: 0.8em;
+  padding: 0 16px; white-space: nowrap; transition: color 0.3s;
+}
+.ticker-referent-item:hover { color: #fff; }
+.ticker-referent-sep { color: #f59e0b; padding: 0 4px; }
+.ticker-referent-loading { color: rgba(255,255,255,0.5); font-size: 0.8em; font-style: italic; }
+.ticker-referent-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; padding: 0 12px; }
+.ticker-referent-time {
+  background: #daeeed; color: #0d9488;
+  font-weight: 800; font-size: 0.7em;
+  padding: 4px 10px; border-radius: 4px; letter-spacing: 1px;
+}
+.ticker-referent-social { display: flex; gap: 8px; }
+.ticker-referent-social a {
+  color: rgba(255,255,255,0.7); text-decoration: none; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center; border-radius: 4px;
+  transition: all 0.3s; font-size: 0.85em;
+}
+.ticker-referent-social a:hover { color: #fff; background: rgba(255,255,255,0.15); }
+
+/* ===== REFERENTE INFORMATIVO HEADER ===== */
+.site-header-referent {
+  background: linear-gradient(135deg, #0d9488 0%, #f59e0b 100%);
+  padding: 0;
+}
+.header-referent-nav { padding: 0 24px; }
+.nav-referent-inner {
+  display: flex; align-items: center; justify-content: center;
+  gap: 4px; height: 48px;
+}
+.nav-referent-link {
+  color: rgba(255,255,255,0.85); text-decoration: none;
+  font-weight: 600; font-size: 0.8em; letter-spacing: 0.5px;
+  padding: 6px 14px; border-radius: 4px; transition: all 0.3s; white-space: nowrap;
+}
+.nav-referent-link:hover { color: #fff; background: rgba(255,255,255,0.15); }
+.nav-referent-link.active { background: rgba(255,255,255,0.2); color: #fff; }
+
+/* ===== REFERENTE INFORMATIVO FOOTER ===== */
+.site-footer-referent { background: #0d9488; padding: 36px 20px 20px; margin-top: 60px; }
+.footer-referent-inner { max-width: 800px; margin: 0 auto; }
+.footer-referent-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px;
+  max-width: 480px; margin: 0 auto 20px;
+}
+.footer-referent-col { text-align: center; }
+.footer-referent-title {
+  font-size: 0.7em; font-weight: 800; letter-spacing: 2px;
+  text-transform: uppercase; color: #daeeed;
+  margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 2px solid #f59e0b; display: inline-block;
+}
+.footer-referent-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.footer-referent-list li a {
+  color: rgba(255,255,255,0.7); text-decoration: none;
+  font-size: 0.85em; transition: color 0.3s;
+}
+.footer-referent-list li a:hover { color: #daeeed; }
+.footer-referent-bottom {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 14px; text-align: center;
+  font-size: 0.75em; color: rgba(255,255,255,0.45);
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .footer-referent-grid { grid-template-columns: 1fr; }
+  .nav-referent-inner { overflow-x: auto; }
+}

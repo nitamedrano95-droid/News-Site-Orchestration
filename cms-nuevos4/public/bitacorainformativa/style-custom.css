@@ -1,0 +1,117 @@
+/* ============================================================
+   Bitácora Informativa — style-custom.css
+   Postura: narrativa  ·  Slug: bitacorainformativa
+   Generado por scaffold_new_sites.py
+   ============================================================ */
+:root {
+  --primary: #059669;
+  --secondary: #fbbf24;
+  --light: #d9efe8;
+  --bg: #f9fcfb;
+  --text: #001b12;
+  --header: #047f59;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'IBM Plex Mono', ui-monospace, 'IBM Plex Mono', Menlo, monospace;
+  font-weight: 400;
+  letter-spacing: 0;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'IBM Plex Serif', 'Iowan Old Style', Georgia, serif;
+  color: var(--text);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+/* ===== BITÁCORA INFORMATIVA TICKER ===== */
+.bitacora-ticker {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #047f59 0%, #fbbf24 100%);
+  color: #fff;
+  height: 44px;
+  overflow: hidden;
+}
+.ticker-bitacora-left { display: flex; align-items: center; flex-shrink: 0; }
+.ticker-bitacora-logo {
+  display: flex; align-items: center; padding: 0 12px; height: 100%;
+  background: #fff; flex-shrink: 0;
+}
+.ticker-bitacora-logo img { height: 28px; width: auto; object-fit: contain; }
+.ticker-bitacora-viewport { flex: 1; overflow: hidden; white-space: nowrap; position: relative; }
+.ticker-bitacora-inner { display: inline-block; white-space: nowrap; }
+.ticker-bitacora-item {
+  color: rgba(255,255,255,0.9); text-decoration: none; font-size: 0.8em;
+  padding: 0 16px; white-space: nowrap; transition: color 0.3s;
+}
+.ticker-bitacora-item:hover { color: #fff; }
+.ticker-bitacora-sep { color: #fbbf24; padding: 0 4px; }
+.ticker-bitacora-loading { color: rgba(255,255,255,0.5); font-size: 0.8em; font-style: italic; }
+.ticker-bitacora-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; padding: 0 12px; }
+.ticker-bitacora-time {
+  background: #d9efe8; color: #059669;
+  font-weight: 800; font-size: 0.7em;
+  padding: 4px 10px; border-radius: 4px; letter-spacing: 1px;
+}
+.ticker-bitacora-social { display: flex; gap: 8px; }
+.ticker-bitacora-social a {
+  color: rgba(255,255,255,0.7); text-decoration: none; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center; border-radius: 4px;
+  transition: all 0.3s; font-size: 0.85em;
+}
+.ticker-bitacora-social a:hover { color: #fff; background: rgba(255,255,255,0.15); }
+
+/* ===== BITÁCORA INFORMATIVA HEADER ===== */
+.site-header-bitacora {
+  background: linear-gradient(135deg, #059669 0%, #fbbf24 100%);
+  padding: 0;
+}
+.header-bitacora-nav { padding: 0 24px; }
+.nav-bitacora-inner {
+  display: flex; align-items: center; justify-content: center;
+  gap: 4px; height: 48px;
+}
+.nav-bitacora-link {
+  color: rgba(255,255,255,0.85); text-decoration: none;
+  font-weight: 600; font-size: 0.8em; letter-spacing: 0.5px;
+  padding: 6px 14px; border-radius: 4px; transition: all 0.3s; white-space: nowrap;
+}
+.nav-bitacora-link:hover { color: #fff; background: rgba(255,255,255,0.15); }
+.nav-bitacora-link.active { background: rgba(255,255,255,0.2); color: #fff; }
+
+/* ===== BITÁCORA INFORMATIVA FOOTER ===== */
+.site-footer-bitacora { background: #059669; padding: 36px 20px 20px; margin-top: 60px; }
+.footer-bitacora-inner { max-width: 800px; margin: 0 auto; }
+.footer-bitacora-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px;
+  max-width: 480px; margin: 0 auto 20px;
+}
+.footer-bitacora-col { text-align: center; }
+.footer-bitacora-title {
+  font-size: 0.7em; font-weight: 800; letter-spacing: 2px;
+  text-transform: uppercase; color: #d9efe8;
+  margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 2px solid #fbbf24; display: inline-block;
+}
+.footer-bitacora-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.footer-bitacora-list li a {
+  color: rgba(255,255,255,0.7); text-decoration: none;
+  font-size: 0.85em; transition: color 0.3s;
+}
+.footer-bitacora-list li a:hover { color: #d9efe8; }
+.footer-bitacora-bottom {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 14px; text-align: center;
+  font-size: 0.75em; color: rgba(255,255,255,0.45);
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .footer-bitacora-grid { grid-template-columns: 1fr; }
+  .nav-bitacora-inner { overflow-x: auto; }
+}

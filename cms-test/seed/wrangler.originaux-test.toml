@@ -1,0 +1,28 @@
+name = "cms-originaux-test"
+main = "src/index.js"
+compatibility_date = "2023-12-01"
+workers_dev = true
+
+[vars]
+ENVIRONMENT = "test"
+SERVICE_NAME = "cms-originaux-test"
+SITIO_DESTINO = "bitacoraurbana"
+SITIO_NOMBRE = "Bitácora Urbana"
+ARTICLE_PUBLISH_WEBHOOK = "TBD_WEBHOOK_URL"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "news_db_cms_originaux_test"
+database_id = "8a188501-cc17-4a42-9ea2-fa137458cd70"
+
+[[kv_namespaces]]
+binding = "AUTH_KV"
+id = "f9edcca34df944de9868ad37fc562766"
+
+[observability]
+enabled = false
+
+[observability.logs]
+enabled = true
+persist = true
+invocation_logs = true

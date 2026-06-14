@@ -1,0 +1,28 @@
+name = "cms-nuevos3-test"
+main = "src/index.js"
+compatibility_date = "2023-12-01"
+workers_dev = true
+
+[vars]
+ENVIRONMENT = "test"
+SERVICE_NAME = "cms-nuevos3-test"
+SITIO_DESTINO = "enfoquemexicano"
+SITIO_NOMBRE = "Enfoque Mexicano"
+ARTICLE_PUBLISH_WEBHOOK = "TBD_WEBHOOK_URL"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "news_db_cms_nuevos3_test"
+database_id = "cf1ccbd5-b4c2-4665-8d35-e97364989eb8"
+
+[[kv_namespaces]]
+binding = "AUTH_KV"
+id = "67edd094609b4c90b1a05132dd1cdebc"
+
+[observability]
+enabled = false
+
+[observability.logs]
+enabled = true
+persist = true
+invocation_logs = true

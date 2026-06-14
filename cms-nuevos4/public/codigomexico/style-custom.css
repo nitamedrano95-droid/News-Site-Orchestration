@@ -1,0 +1,117 @@
+/* ============================================================
+   Código México — style-custom.css
+   Postura: tecnico  ·  Slug: codigomexico
+   Generado por scaffold_new_sites.py
+   ============================================================ */
+:root {
+  --primary: #0f766e;
+  --secondary: #fb7185;
+  --light: #dbeae9;
+  --bg: #f9fbfb;
+  --text: #021513;
+  --header: #0c645d;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 500;
+  letter-spacing: 0;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--text);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+/* ===== CÓDIGO MÉXICO TICKER ===== */
+.codigome-ticker {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #0c645d 0%, #fb7185 100%);
+  color: #fff;
+  height: 44px;
+  overflow: hidden;
+}
+.ticker-codigome-left { display: flex; align-items: center; flex-shrink: 0; }
+.ticker-codigome-logo {
+  display: flex; align-items: center; padding: 0 12px; height: 100%;
+  background: #fff; flex-shrink: 0;
+}
+.ticker-codigome-logo img { height: 28px; width: auto; object-fit: contain; }
+.ticker-codigome-viewport { flex: 1; overflow: hidden; white-space: nowrap; position: relative; }
+.ticker-codigome-inner { display: inline-block; white-space: nowrap; }
+.ticker-codigome-item {
+  color: rgba(255,255,255,0.9); text-decoration: none; font-size: 0.8em;
+  padding: 0 16px; white-space: nowrap; transition: color 0.3s;
+}
+.ticker-codigome-item:hover { color: #fff; }
+.ticker-codigome-sep { color: #fb7185; padding: 0 4px; }
+.ticker-codigome-loading { color: rgba(255,255,255,0.5); font-size: 0.8em; font-style: italic; }
+.ticker-codigome-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; padding: 0 12px; }
+.ticker-codigome-time {
+  background: #dbeae9; color: #0f766e;
+  font-weight: 800; font-size: 0.7em;
+  padding: 4px 10px; border-radius: 4px; letter-spacing: 1px;
+}
+.ticker-codigome-social { display: flex; gap: 8px; }
+.ticker-codigome-social a {
+  color: rgba(255,255,255,0.7); text-decoration: none; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center; border-radius: 4px;
+  transition: all 0.3s; font-size: 0.85em;
+}
+.ticker-codigome-social a:hover { color: #fff; background: rgba(255,255,255,0.15); }
+
+/* ===== CÓDIGO MÉXICO HEADER ===== */
+.site-header-codigome {
+  background: linear-gradient(135deg, #0f766e 0%, #fb7185 100%);
+  padding: 0;
+}
+.header-codigome-nav { padding: 0 24px; }
+.nav-codigome-inner {
+  display: flex; align-items: center; justify-content: center;
+  gap: 4px; height: 48px;
+}
+.nav-codigome-link {
+  color: rgba(255,255,255,0.85); text-decoration: none;
+  font-weight: 600; font-size: 0.8em; letter-spacing: 0.5px;
+  padding: 6px 14px; border-radius: 4px; transition: all 0.3s; white-space: nowrap;
+}
+.nav-codigome-link:hover { color: #fff; background: rgba(255,255,255,0.15); }
+.nav-codigome-link.active { background: rgba(255,255,255,0.2); color: #fff; }
+
+/* ===== CÓDIGO MÉXICO FOOTER ===== */
+.site-footer-codigome { background: #0f766e; padding: 36px 20px 20px; margin-top: 60px; }
+.footer-codigome-inner { max-width: 800px; margin: 0 auto; }
+.footer-codigome-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px;
+  max-width: 480px; margin: 0 auto 20px;
+}
+.footer-codigome-col { text-align: center; }
+.footer-codigome-title {
+  font-size: 0.7em; font-weight: 800; letter-spacing: 2px;
+  text-transform: uppercase; color: #dbeae9;
+  margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 2px solid #fb7185; display: inline-block;
+}
+.footer-codigome-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.footer-codigome-list li a {
+  color: rgba(255,255,255,0.7); text-decoration: none;
+  font-size: 0.85em; transition: color 0.3s;
+}
+.footer-codigome-list li a:hover { color: #dbeae9; }
+.footer-codigome-bottom {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 14px; text-align: center;
+  font-size: 0.75em; color: rgba(255,255,255,0.45);
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .footer-codigome-grid { grid-template-columns: 1fr; }
+  .nav-codigome-inner { overflow-x: auto; }
+}

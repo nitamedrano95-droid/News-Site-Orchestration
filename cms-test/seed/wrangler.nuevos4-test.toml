@@ -1,0 +1,28 @@
+name = "cms-nuevos4-test"
+main = "src/index.js"
+compatibility_date = "2023-12-01"
+workers_dev = true
+
+[vars]
+ENVIRONMENT = "test"
+SERVICE_NAME = "cms-nuevos4-test"
+SITIO_DESTINO = "cronicanacionalmx"
+SITIO_NOMBRE = "Crónica Nacional MX"
+ARTICLE_PUBLISH_WEBHOOK = "TBD_WEBHOOK_URL"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "news_db_cms_nuevos4"
+database_id = "3230c0c3-c1ac-4a90-b827-675222b1b878"
+
+[[kv_namespaces]]
+binding = "AUTH_KV"
+id = "93ffff48290f4faab82584ec9d37567d"
+
+[observability]
+enabled = false
+
+[observability.logs]
+enabled = true
+persist = true
+invocation_logs = true

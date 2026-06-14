@@ -1,0 +1,117 @@
+/* ============================================================
+   Horizonte Informativo — style-custom.css
+   Postura: data  ·  Slug: horizonteinformativo
+   Generado por scaffold_new_sites.py
+   ============================================================ */
+:root {
+  --primary: #0284c7;
+  --secondary: #fb923c;
+  --light: #d9ecf6;
+  --bg: #f9fcfd;
+  --text: #001723;
+  --header: #0170a9;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--text);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+/* ===== HORIZONTE INFORMATIVO TICKER ===== */
+.horizont-ticker {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #0170a9 0%, #fb923c 100%);
+  color: #fff;
+  height: 44px;
+  overflow: hidden;
+}
+.ticker-horizont-left { display: flex; align-items: center; flex-shrink: 0; }
+.ticker-horizont-logo {
+  display: flex; align-items: center; padding: 0 12px; height: 100%;
+  background: #fff; flex-shrink: 0;
+}
+.ticker-horizont-logo img { height: 28px; width: auto; object-fit: contain; }
+.ticker-horizont-viewport { flex: 1; overflow: hidden; white-space: nowrap; position: relative; }
+.ticker-horizont-inner { display: inline-block; white-space: nowrap; }
+.ticker-horizont-item {
+  color: rgba(255,255,255,0.9); text-decoration: none; font-size: 0.8em;
+  padding: 0 16px; white-space: nowrap; transition: color 0.3s;
+}
+.ticker-horizont-item:hover { color: #fff; }
+.ticker-horizont-sep { color: #fb923c; padding: 0 4px; }
+.ticker-horizont-loading { color: rgba(255,255,255,0.5); font-size: 0.8em; font-style: italic; }
+.ticker-horizont-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; padding: 0 12px; }
+.ticker-horizont-time {
+  background: #d9ecf6; color: #0284c7;
+  font-weight: 800; font-size: 0.7em;
+  padding: 4px 10px; border-radius: 4px; letter-spacing: 1px;
+}
+.ticker-horizont-social { display: flex; gap: 8px; }
+.ticker-horizont-social a {
+  color: rgba(255,255,255,0.7); text-decoration: none; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center; border-radius: 4px;
+  transition: all 0.3s; font-size: 0.85em;
+}
+.ticker-horizont-social a:hover { color: #fff; background: rgba(255,255,255,0.15); }
+
+/* ===== HORIZONTE INFORMATIVO HEADER ===== */
+.site-header-horizont {
+  background: linear-gradient(135deg, #0284c7 0%, #fb923c 100%);
+  padding: 0;
+}
+.header-horizont-nav { padding: 0 24px; }
+.nav-horizont-inner {
+  display: flex; align-items: center; justify-content: center;
+  gap: 4px; height: 48px;
+}
+.nav-horizont-link {
+  color: rgba(255,255,255,0.85); text-decoration: none;
+  font-weight: 600; font-size: 0.8em; letter-spacing: 0.5px;
+  padding: 6px 14px; border-radius: 4px; transition: all 0.3s; white-space: nowrap;
+}
+.nav-horizont-link:hover { color: #fff; background: rgba(255,255,255,0.15); }
+.nav-horizont-link.active { background: rgba(255,255,255,0.2); color: #fff; }
+
+/* ===== HORIZONTE INFORMATIVO FOOTER ===== */
+.site-footer-horizont { background: #0284c7; padding: 36px 20px 20px; margin-top: 60px; }
+.footer-horizont-inner { max-width: 800px; margin: 0 auto; }
+.footer-horizont-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px;
+  max-width: 480px; margin: 0 auto 20px;
+}
+.footer-horizont-col { text-align: center; }
+.footer-horizont-title {
+  font-size: 0.7em; font-weight: 800; letter-spacing: 2px;
+  text-transform: uppercase; color: #d9ecf6;
+  margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 2px solid #fb923c; display: inline-block;
+}
+.footer-horizont-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.footer-horizont-list li a {
+  color: rgba(255,255,255,0.7); text-decoration: none;
+  font-size: 0.85em; transition: color 0.3s;
+}
+.footer-horizont-list li a:hover { color: #d9ecf6; }
+.footer-horizont-bottom {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 14px; text-align: center;
+  font-size: 0.75em; color: rgba(255,255,255,0.45);
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .footer-horizont-grid { grid-template-columns: 1fr; }
+  .nav-horizont-inner { overflow-x: auto; }
+}

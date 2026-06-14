@@ -174,6 +174,22 @@ export const decodeHTMLEntities = (text) => {
 };
 
 // ============================================================
+// ============================================================
+// sanitizePublishedAt — Devuelve un ISO 8601 válido o el fallback
+// ============================================================
+// Fix bug fecha corrupta: si article.publishedAt llega como string RFC-2822
+// ("Mon, 01 Jan 2024 10:00:00 GMT"), null, undefined, o cualquier valor
+// que new Date() no pueda parsear, devolvemos el fallback en lugar de
+// guardar basura que rompe ORDER BY y new Date() en parseArticleRow.
+export const sanitizePublishedAt = (value, fallback) => {
+  const fb = fallback || new Date().toISOString();
+  if (value === null || value === undefined || value === '') return fb;
+  if (typeof value !== 'string' && typeof value !== 'number') return fb;
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return fb;
+  return d.toISOString();
+};
+
 // parseArticleRow — Normaliza una fila de DB a objeto artículo
 // ============================================================
 export const parseArticleRow = (row) => {

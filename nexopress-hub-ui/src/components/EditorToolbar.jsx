@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import Tooltip from './Tooltip.jsx'
+import InternalLinkDialog from './InternalLinkDialog.jsx'
 
 /**
  * Barra de herramientas del editor NexoPress Hub.
@@ -15,8 +16,8 @@ import Tooltip from './Tooltip.jsx'
  */
 export default function EditorToolbar({ editor, cms, onUploadImage }) {
   const fileInputRef = useRef(null)
-  const [linkUrl, setLinkUrl] = useState('')
-  const [showLinkInput, setShowLinkInput] = useState(false)
+  const [showLinkDialog, setShowLinkDialog] = useState(false)
+  const [embedUrl, setEmbedUrl] = useState('')
   const [showEmbedInput, setShowEmbedInput] = useState(null) // 'youtube' | 'twitter' | 'instagram'
 
   if (!editor) return null
@@ -56,7 +57,7 @@ export default function EditorToolbar({ editor, cms, onUploadImage }) {
 
   // === EMBEDS: YOUTUBE / TWITTER / INSTAGRAM =============================
   const submitEmbed = () => {
-    const url = linkUrl.trim()
+    const url = embedUrl.trim()
     if (!url) return
     if (showEmbedInput === 'youtube') {
       // TipTap: usar la extensión oficial YouTube si está disponible
@@ -85,24 +86,81 @@ export default function EditorToolbar({ editor, cms, onUploadImage }) {
         `<div class="instagram-embed" style="display:flex; justify-content:center; margin:25px 0;"><blockquote class="instagram-media" data-instgrm-permalink="${cleanUrl}" data-instgrm-version="14" style="background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:99.375%;"></blockquote></div><script async src="//www.instagram.com/embed.js"></script>`
       ).run()
     }
-    setLinkUrl('')
+    setEmbedUrl('')
     setShowEmbedInput(null)
   }
 
   // === ENLACE ============================================================
   const handleLink = () => {
-    if (showLinkInput) {
-      if (linkUrl) {
-        editor.chain().focus().extendMarkRange('link').setLink({ href: linkUrl }).run()
-      } else {
-        editor.chain().focus().unsetLink().run()
+    // Abre el dialog modal (con tabs interno/externo).
+    setShowLinkDialog(true)
+  }
+
+  // === ANCHOR LINKS =====================================================
+  const slugifyHeading = (text) => {
+    return (text || '')
+      .toString()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // quitar diacríticos
+      .replace(/[^a-z0-9\s-]/g, '') // solo alfanum + espacios + guiones
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .slice(0, 60)
+  }
+
+  const anchorSelectedHeading = () => {
+    if (!editor) return
+    // Detectar si el cursor está en un heading
+    const { $from } = editor.state.selection
+    const parent = $from.parent
+    const headingLevels = [1, 2, 3, 4, 5, 6]
+    const isInHeading =
+      parent.type.name === 'heading' && headingLevels.includes(parent.attrs.level)
+
+    if (!isInHeading) {
+      alert('Coloca el cursor dentro de un encabezado (H1, H2 o H3) para anclarlo.')
+      return
+    }
+
+    const baseId = slugifyHeading(parent.textContent)
+    if (!baseId) {
+      alert('El encabezado no tiene texto para generar un ancla.')
+      return
+    }
+
+    // Asegurar unicidad: si ya existe un heading con el mismo id, agregar sufijo
+    let id = baseId
+    let n = 1
+    const existing = new Set()
+    editor.state.doc.descendants((node) => {
+      if (node.type.name === 'heading' && node.attrs.id) {
+        existing.add(node.attrs.id)
       }
-      setLinkUrl('')
-      setShowLinkInput(false)
-    } else {
-      const existing = editor.getAttributes('link').href
-      setLinkUrl(existing || '')
-      setShowLinkInput(true)
+    })
+    while (existing.has(id)) {
+      n += 1
+      id = `${baseId}-${n}`
+    }
+
+    // Aplicar el id al heading
+    const pos = $from.before(1) // posición de inicio del nodo
+    const node = editor.state.doc.nodeAt(pos)
+    if (node && node.type.name === 'heading') {
+      const tr = editor.state.tr.setNodeMarkup(pos, undefined, {
+        ...node.attrs,
+        id,
+      })
+      editor.view.dispatch(tr)
+      // Copiar el #anchor al portapapeles para que el editor lo pegue en su link
+      const anchorLink = `#${id}`
+      try {
+        navigator.clipboard.writeText(anchorLink)
+      } catch (e) {
+        // Fallback: prompt con el anchor
+        prompt('Copia este ancla para enlazarla desde otro punto:', anchorLink)
+      }
     }
   }
 
@@ -165,7 +223,7 @@ export default function EditorToolbar({ editor, cms, onUploadImage }) {
     }
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
-  }, [editor, showLinkInput, linkUrl])
+  }, [editor])
 
   return (
     <div className="editor-toolbar-new">
@@ -403,22 +461,18 @@ export default function EditorToolbar({ editor, cms, onUploadImage }) {
             🔗 Enlace
           </button>
         </Tooltip>
-        {showLinkInput && (
-          <input
-            type="text"
-            className="toolbar-input"
-            placeholder="Pega la URL del enlace (por ejemplo, https://ejemplo.com)"
-            value={linkUrl}
-            onChange={(e) => setLinkUrl(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleLink()}
-            onBlur={handleLink}
-            autoFocus
-          />
-        )}
 
         <span className="toolbar-divider" />
 
-        {/* === IMÁGENES === */}
+        {/* === ANCHOR LINKS === */}
+        <Tooltip content="Asigna un id (ancla) al encabezado seleccionado para poder enlazarlo desde otra parte del artículo. El enlace (#anchor) se copia al portapapeles.">
+          <button type="button" onClick={anchorSelectedHeading}>
+            📑 Anclar heading
+          </button>
+        </Tooltip>
+
+        <span className="toolbar-divider" />
+
         <Tooltip content="Sube una imagen desde tu computadora. Se almacena en el almacenamiento del CMS. Peso máximo: 5 MB.">
           <button type="button" onClick={() => fileInputRef.current?.click()}>
             🖼️ Subir imagen
@@ -441,17 +495,17 @@ export default function EditorToolbar({ editor, cms, onUploadImage }) {
 
         {/* === EMBEDS DE REDES SOCIALES === */}
         <Tooltip content="Inserta un video de YouTube. Acepta enlaces completos, acortados (youtu.be) o de Shorts.">
-          <button type="button" onClick={() => { setLinkUrl(''); setShowEmbedInput('youtube') }}>
+          <button type="button" onClick={() => { setEmbedUrl(''); setShowEmbedInput('youtube') }}>
             📺 YouTube
           </button>
         </Tooltip>
         <Tooltip content="Inserta una publicación de X (antes Twitter). Pega la URL del tuit que quieres mostrar.">
-          <button type="button" onClick={() => { setLinkUrl(''); setShowEmbedInput('twitter') }}>
+          <button type="button" onClick={() => { setEmbedUrl(''); setShowEmbedInput('twitter') }}>
             🐦 X (Twitter)
           </button>
         </Tooltip>
         <Tooltip content="Inserta una publicación de Instagram. Pega la URL de la foto o reel que quieres mostrar.">
-          <button type="button" onClick={() => { setLinkUrl(''); setShowEmbedInput('instagram') }}>
+          <button type="button" onClick={() => { setEmbedUrl(''); setShowEmbedInput('instagram') }}>
             📷 Instagram
           </button>
         </Tooltip>
@@ -467,8 +521,8 @@ export default function EditorToolbar({ editor, cms, onUploadImage }) {
                 showEmbedInput === 'twitter'   ? 'Pega aquí la URL del tuit o publicación de X' :
                                                  'Pega aquí la URL de la publicación de Instagram'
               }
-              value={linkUrl}
-              onChange={(e) => setLinkUrl(e.target.value)}
+              value={embedUrl}
+              onChange={(e) => setEmbedUrl(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && submitEmbed()}
               autoFocus
             />
@@ -480,7 +534,7 @@ export default function EditorToolbar({ editor, cms, onUploadImage }) {
             <Tooltip content="Cancela la inserción y cierra este campo.">
               <button
                 type="button"
-                onClick={() => { setLinkUrl(''); setShowEmbedInput(null) }}
+                onClick={() => { setEmbedUrl(''); setShowEmbedInput(null) }}
                 className="btn-secondary btn-sm"
               >
                 Cancelar
@@ -544,6 +598,14 @@ export default function EditorToolbar({ editor, cms, onUploadImage }) {
           </select>
         </Tooltip>
       </div>
+
+      {showLinkDialog && (
+        <InternalLinkDialog
+          editor={editor}
+          cms={cms}
+          onClose={() => setShowLinkDialog(false)}
+        />
+      )}
     </div>
   )
 }

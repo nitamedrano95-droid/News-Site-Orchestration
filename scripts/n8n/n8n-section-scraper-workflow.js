@@ -317,6 +317,32 @@ return items.map((item) => {
     return { json: { isValid: false, reason: 'HTML vacio o muy corto', sourceUrl } };
   }
 
+  // ── Extraer publishedAt del HTML (fix fecha siempre = now) ──
+  // Busca en orden: Open Graph article:published_time, JSON-LD datePublished,
+  // meta tag con itemprop datePublished, <time datetime="...">.
+  // Si nada parsea, fallback a now (preserva el comportamiento original).
+  const fallbackNow = new Date().toISOString();
+  let extractedPublishedAt = null;
+  const datePatterns = [
+    /<meta[^>]+property=["']article:published_time["'][^>]+content=["']([^"']+)["']/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']article:published_time["']/i,
+    /<meta[^>]+property=["']og:article:published_time["'][^>]+content=["']([^"']+)["']/i,
+    /<meta[^>]+name=["']datePublished["'][^>]+content=["']([^"']+)["']/i,
+    /<meta[^>]+itemprop=["']datePublished["'][^>]+content=["']([^"']+)["']/i,
+    /"datePublished"\s*:\s*"([^"]+)"/i,
+    /<time[^>]+datetime=["']([^"']+)["']/i,
+  ];
+  for (const pat of datePatterns) {
+    const m = html.match(pat);
+    if (m && m[1]) {
+      const d = new Date(m[1]);
+      if (!isNaN(d.getTime())) {
+        extractedPublishedAt = d.toISOString();
+        break;
+      }
+    }
+  }
+
   // Extraer titulo
   let title = '';
   const ogTitle = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i);
@@ -482,6 +508,7 @@ return items.map((item) => {
       excerpt: content.substring(0, 200) + (content.length > 200 ? '...' : ''),
       imageUrl: isImageValid ? imageUrl : '',
       sourceUrl,
+      publishedAt: extractedPublishedAt || fallbackNow,
       category,
       sites,
       author: sourceName,
@@ -531,7 +558,7 @@ const formatOutput = node({
       mode: 'manual',
       assignments: {
         assignments: [
-          { id: '1', name: 'article', value: expr('{{ { title: $json.title, slug: $json.slug, content: $json.content, excerpt: $json.excerpt, imageUrl: $json.imageUrl, sourceUrl: $json.sourceUrl, publishedAt: $now.toISO(), category: $json.category, sites: $json.sites, author: $json.author, wordCount: $json.wordCount } }}'), type: 'object' },
+          { id: '1', name: 'article', value: expr('{{ { title: $json.title, slug: $json.slug, content: $json.content, excerpt: $json.excerpt, imageUrl: $json.imageUrl, sourceUrl: $json.sourceUrl, publishedAt: $json.publishedAt, category: $json.category, sites: $json.sites, author: $json.author, wordCount: $json.wordCount } }}'), type: 'object' },
           { id: '2', name: 'sourceName', value: expr('{{ $json.author }}'), type: 'string' },
           { id: '3', name: 'processedAt', value: expr('{{ $now.toISO() }}'), type: 'string' }
         ]

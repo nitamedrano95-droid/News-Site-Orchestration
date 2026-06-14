@@ -1,0 +1,117 @@
+/* ============================================================
+   Síntesis Informativa — style-custom.css
+   Postura: tecnico  ·  Slug: sintesisinformativa
+   Generado por scaffold_new_sites.py
+   ============================================================ */
+:root {
+  --primary: #6366f1;
+  --secondary: #facc15;
+  --light: #e7e8fc;
+  --bg: #fbfbfe;
+  --text: #11122b;
+  --header: #5456cc;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 500;
+  letter-spacing: 0;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--text);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+/* ===== SÍNTESIS INFORMATIVA TICKER ===== */
+.sintesis-ticker {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #5456cc 0%, #facc15 100%);
+  color: #fff;
+  height: 44px;
+  overflow: hidden;
+}
+.ticker-sintesis-left { display: flex; align-items: center; flex-shrink: 0; }
+.ticker-sintesis-logo {
+  display: flex; align-items: center; padding: 0 12px; height: 100%;
+  background: #fff; flex-shrink: 0;
+}
+.ticker-sintesis-logo img { height: 28px; width: auto; object-fit: contain; }
+.ticker-sintesis-viewport { flex: 1; overflow: hidden; white-space: nowrap; position: relative; }
+.ticker-sintesis-inner { display: inline-block; white-space: nowrap; }
+.ticker-sintesis-item {
+  color: rgba(255,255,255,0.9); text-decoration: none; font-size: 0.8em;
+  padding: 0 16px; white-space: nowrap; transition: color 0.3s;
+}
+.ticker-sintesis-item:hover { color: #fff; }
+.ticker-sintesis-sep { color: #facc15; padding: 0 4px; }
+.ticker-sintesis-loading { color: rgba(255,255,255,0.5); font-size: 0.8em; font-style: italic; }
+.ticker-sintesis-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; padding: 0 12px; }
+.ticker-sintesis-time {
+  background: #e7e8fc; color: #6366f1;
+  font-weight: 800; font-size: 0.7em;
+  padding: 4px 10px; border-radius: 4px; letter-spacing: 1px;
+}
+.ticker-sintesis-social { display: flex; gap: 8px; }
+.ticker-sintesis-social a {
+  color: rgba(255,255,255,0.7); text-decoration: none; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center; border-radius: 4px;
+  transition: all 0.3s; font-size: 0.85em;
+}
+.ticker-sintesis-social a:hover { color: #fff; background: rgba(255,255,255,0.15); }
+
+/* ===== SÍNTESIS INFORMATIVA HEADER ===== */
+.site-header-sintesis {
+  background: linear-gradient(135deg, #6366f1 0%, #facc15 100%);
+  padding: 0;
+}
+.header-sintesis-nav { padding: 0 24px; }
+.nav-sintesis-inner {
+  display: flex; align-items: center; justify-content: center;
+  gap: 4px; height: 48px;
+}
+.nav-sintesis-link {
+  color: rgba(255,255,255,0.85); text-decoration: none;
+  font-weight: 600; font-size: 0.8em; letter-spacing: 0.5px;
+  padding: 6px 14px; border-radius: 4px; transition: all 0.3s; white-space: nowrap;
+}
+.nav-sintesis-link:hover { color: #fff; background: rgba(255,255,255,0.15); }
+.nav-sintesis-link.active { background: rgba(255,255,255,0.2); color: #fff; }
+
+/* ===== SÍNTESIS INFORMATIVA FOOTER ===== */
+.site-footer-sintesis { background: #6366f1; padding: 36px 20px 20px; margin-top: 60px; }
+.footer-sintesis-inner { max-width: 800px; margin: 0 auto; }
+.footer-sintesis-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px;
+  max-width: 480px; margin: 0 auto 20px;
+}
+.footer-sintesis-col { text-align: center; }
+.footer-sintesis-title {
+  font-size: 0.7em; font-weight: 800; letter-spacing: 2px;
+  text-transform: uppercase; color: #e7e8fc;
+  margin-bottom: 12px; padding-bottom: 8px;
+  border-bottom: 2px solid #facc15; display: inline-block;
+}
+.footer-sintesis-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.footer-sintesis-list li a {
+  color: rgba(255,255,255,0.7); text-decoration: none;
+  font-size: 0.85em; transition: color 0.3s;
+}
+.footer-sintesis-list li a:hover { color: #e7e8fc; }
+.footer-sintesis-bottom {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 14px; text-align: center;
+  font-size: 0.75em; color: rgba(255,255,255,0.45);
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .footer-sintesis-grid { grid-template-columns: 1fr; }
+  .nav-sintesis-inner { overflow-x: auto; }
+}
