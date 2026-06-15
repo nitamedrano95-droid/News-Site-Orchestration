@@ -2,6 +2,7 @@ name = "cms-nuevos2"
 main = "src/index.js"
 compatibility_date = "2023-12-01"
 workers_dev = true
+account_id = "cf8a5985e0acb5ebd3683786a4d5bea2"
 
 # Rutas para inyectar OG tags en sitios Pages
 routes = [
@@ -30,12 +31,12 @@ HUB_API_URL = "https://nexopress-hub.sebastianvernis.workers.dev"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "news_db_cms_nuevos2"
-database_id = "e3d0d028-fd76-4d7e-ae02-d2a928692bb8"
+database_name = "news_db_cms-nuevos2"
+database_id = "138ab980-4f89-4756-8f3d-d0abbd766753"
 
 [[kv_namespaces]]
 binding = "ARTICLES_KV"
-id = "0d0be3689d2342db8ad2a70070e1ecb3"
+id = "446b9ffe30174ffe9299c722c7c6d9c0"
 
 [[r2_buckets]]
 binding = "UPLOADS"

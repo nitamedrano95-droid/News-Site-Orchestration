@@ -2,6 +2,7 @@ name = "cms-nuevos3"
 main = "src/index.js"
 compatibility_date = "2023-12-01"
 workers_dev = true
+account_id = "cf8a5985e0acb5ebd3683786a4d5bea2"
 
 # Rutas para interceptar requests a los sitios Pages e inyectar OG tags
 # El Worker recibe requests a estos dominios, hace proxy al contenido Pages,
@@ -92,12 +93,12 @@ HUB_API_URL = "https://nexopress-hub.sebastianvernis.workers.dev"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "news_db_cms_nuevos3"
-database_id = "18583adc-e878-4e0d-929d-62000fa1d81c"
+database_name = "news_db_cms-nuevos3"
+database_id = "7b723763-45fb-44da-90c7-6c37c5e249f8"
 
 [[kv_namespaces]]
 binding = "ARTICLES_KV"
-id = "fbf21fb75f5647a8966858d199b44e0b"
+id = "2a6da6233290455089102a92fdbed80d"
 
 [[r2_buckets]]
 binding = "UPLOADS"
