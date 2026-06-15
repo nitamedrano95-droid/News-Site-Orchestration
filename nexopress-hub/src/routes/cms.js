@@ -9,7 +9,10 @@ import { audit } from '../utils/audit.js';
 
 const cms = new Hono();
 
-// All routes require Hub auth
+// Todas las rutas /cms/* requieren sesión válida del Hub.
+// Sin esto, c.get('user') queda undefined y proxyTo() revienta
+// con TypeError ("user.cms_access.includes is not a function"),
+// que Hono reporta como "error code: 1042" en runtime.
 cms.use('*', requireAuth);
 
 // GET /cms — list of all 5 CMSs with health + stats (parallel ping)
@@ -128,63 +131,91 @@ cms.post('/:cms/articles/:id/state', async (c) => {
 
 // ── Helper: proxy a request to the target CMS ──
 const proxyTo = async (c, cmsKey, path, overrides = {}) => {
-  const user = c.get('user');
-  const token = c.get('token');
-
-  if (!CMS_ENDPOINTS[cmsKey]) {
-    return c.json({ error: `unknown cms: ${cmsKey}` }, 404);
-  }
-  if (!user.cms_access.includes(cmsKey)) {
-    return c.json({ error: `forbidden: no access to ${cmsKey}` }, 403);
-  }
-
-  const baseUrl = CMS_ENDPOINTS[cmsKey];
-  const queryString = new URL(c.req.url).search;
-  const targetUrl = `${baseUrl}${path}${queryString}`;
-
-  // Forward method, headers, body
-  const init = {
-    method: overrides.method || c.req.method,
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': c.req.header('Content-Type') || 'application/json',
-    },
-  };
-  if (!['GET', 'HEAD'].includes(init.method)) {
-    init.body = await c.req.raw.clone().arrayBuffer();
-  }
-
-  let res;
   try {
-    res = await fetch(targetUrl, init);
-  } catch (e) {
-    console.error(`[Hub cms] fetch failed: ${cmsKey}${path} -> ${e.message}`);
-    await audit(c.env, {
-      user_id: user.id,
-      action: 'proxy_error',
-      cms: cmsKey,
-      target_id: path,
-      metadata: { error: e.message },
+    const user = c.get('user');
+    const token = c.get('token');
+
+    if (!CMS_ENDPOINTS[cmsKey]) {
+      return c.json({ error: `unknown cms: ${cmsKey}` }, 404);
+    }
+    if (!user || !Array.isArray(user.cms_access) || !user.cms_access.includes(cmsKey)) {
+      return c.json({ error: `forbidden: no access to ${cmsKey}` }, 403);
+    }
+
+    const baseUrl = CMS_ENDPOINTS[cmsKey];
+    const queryString = new URL(c.req.url).search;
+    const targetUrl = `${baseUrl}${path}${queryString}`;
+
+    // Si hay service binding configurado (CMS_<KEY>), lo usamos para evitar
+    // el "error code: 1042" de Cloudflare cuando el subrequest va a otro
+    // worker en la misma cuenta. Fallback al fetch público si no hay binding.
+    const bindingKey = `CMS_${cmsKey.toUpperCase()}`;
+    const binding = c.env?.[bindingKey];
+
+    // Forward method, headers, body
+    const init = {
+      method: overrides.method || c.req.method,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': c.req.header('Content-Type') || 'application/json',
+      },
+    };
+    if (!['GET', 'HEAD'].includes(init.method)) {
+      init.body = await c.req.raw.clone().arrayBuffer();
+    }
+
+    let res;
+    try {
+      // Por ahora usamos fetch() directo a la URL pública. El binding se
+      // puede re-introducir cuando aclaremos la situación de las dos
+      // cuentas de Cloudflare. El fetch público requiere que el subdomain
+      // destino sea accesible (chispakimnueve.workers.dev en este caso).
+      console.log(`[Hub cms] fetch ${init.method} ${targetUrl}`);
+      res = await fetch(targetUrl, init);
+    } catch (e) {
+      console.error(`[Hub cms] fetch failed: ${cmsKey}${path} -> ${e.message}`);
+      try {
+        await audit(c.env, {
+          user_id: user.id,
+          action: 'proxy_error',
+          cms: cmsKey,
+          target_id: path,
+          metadata: { error: e.message },
+        });
+      } catch (_) { /* audit is best-effort */ }
+      return c.json({ error: `upstream unreachable: ${e.message}` }, 502);
+    }
+
+    // Audit successful operations (best-effort)
+    try {
+      await audit(c.env, {
+        user_id: user.id,
+        action: `${init.method.toLowerCase()}_proxy`,
+        cms: cmsKey,
+        target_id: path,
+        metadata: { upstream_status: res.status },
+      });
+    } catch (_) { /* audit is best-effort */ }
+
+    // Stream response back
+    return new Response(res.body, {
+      status: res.status,
+      headers: {
+        'Content-Type': res.headers.get('Content-Type') || 'application/json',
+      },
     });
-    return c.json({ error: `upstream unreachable: ${e.message}` }, 502);
+  } catch (e) {
+    // Catch-all: cualquier throw no manejado (incluyendo el "error code: 1042"
+    // fantasma de Hono cuando un handler revienta) se reporta como 502
+    // con detalle, en vez del genérico 404.
+    console.error(`[Hub cms] proxyTo crashed: ${cmsKey}${path} -> ${e?.stack || e?.message || e}`);
+    return c.json({
+      error: 'proxy handler crashed',
+      cms: cmsKey,
+      path,
+      detail: e?.message || String(e),
+    }, 502);
   }
-
-  // Audit successful operations
-  await audit(c.env, {
-    user_id: user.id,
-    action: `${init.method.toLowerCase()}_proxy`,
-    cms: cmsKey,
-    target_id: path,
-    metadata: { upstream_status: res.status },
-  });
-
-  // Stream response back
-  return new Response(res.body, {
-    status: res.status,
-    headers: {
-      'Content-Type': res.headers.get('Content-Type') || 'application/json',
-    },
-  });
 };
 
 export default cms;

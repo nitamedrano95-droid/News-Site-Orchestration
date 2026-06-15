@@ -26,6 +26,7 @@ import SeoPanel from '../components/SeoPanel'
 import EditorToolbar from '../components/EditorToolbar'
 import SerpPreview from '../components/SerpPreview'
 import ArticlePreview from '../components/ArticlePreview'
+import { TweetEmbed, InstagramEmbed } from '../components/TweetEmbed'
 import { API_BASE } from '../main.jsx'
 
 const lowlight = createLowlight(common)
@@ -82,6 +83,8 @@ export default function Editor() {
       Youtube.configure({ width: 640, height: 360, HTMLAttributes: { class: 'video-container' } }),
       CharacterCount,
       CodeBlockLowlight.configure({ lowlight }),
+      TweetEmbed,
+      InstagramEmbed,
     ],
     content: '',
     editorProps: {
@@ -203,7 +206,7 @@ export default function Editor() {
         ? `${API_BASE}/cms/${cms}/articles`
         : `${API_BASE}/cms/${cms}/articles/${articleId}`
 
-      const method = articleId === 'new' ? 'POST' : 'PUT'
+      const method = articleId === 'new' ? 'POST' : 'PATCH'
 
       const res = await fetch(url, {
         method,

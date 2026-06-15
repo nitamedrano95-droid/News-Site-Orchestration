@@ -31,6 +31,7 @@ routes = [
 [vars]
 ENVIRONMENT = "production"
 ARTICLE_PUBLISH_WEBHOOK = "https://TUN8N.tun8n.workers.dev/webhook/article-published"
+HUB_API_URL = "https://nexopress-hub.sebastianvernis.workers.dev"
 
 [[d1_databases]]
 binding = "DB"

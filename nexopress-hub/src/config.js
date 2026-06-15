@@ -5,12 +5,16 @@ export const DEBUG = false;
 export const log = DEBUG ? console.log.bind(console) : () => {};
 
 // CMS endpoint registry — must match the Worker URLs in wrangler.toml [vars]
+// Subdominios chispakimnueve.workers.dev (cuenta actual de deploy).
+// Esos workers tienen código actualizado y DB con migraciones aplicadas.
+// Los subdomains viejos sebastianvernis.workers.dev tienen código y schema
+// drift que requieren re-deploy con esta misma cuenta para arreglarse.
 export const CMS_ENDPOINTS = {
-  originaux: 'https://cms-originaux.sebastianvernis.workers.dev',
-  nuevos:    'https://cms-nuevos.sebastianvernis.workers.dev',
-  nuevos2:   'https://cms-nuevos2.sebastianvernis.workers.dev',
-  nuevos3:   'https://cms-nuevos3.sebastianvernis.workers.dev',
-  nuevos4:   'https://cms-nuevos4.sebastianvernis.workers.dev',
+  originaux: 'https://cms-originaux.chispakimnueve.workers.dev',
+  nuevos:    'https://cms-nuevos.chispakimnueve.workers.dev',
+  nuevos2:   'https://cms-nuevos2.chispakimnueve.workers.dev',
+  nuevos3:   'https://cms-nuevos3.chispakimnueve.workers.dev',
+  nuevos4:   'https://cms-nuevos4.chispakimnueve.workers.dev',
 };
 
 export const CMS_LIST = Object.keys(CMS_ENDPOINTS);

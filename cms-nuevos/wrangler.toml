@@ -44,6 +44,7 @@ routes = [
 
 [vars]
 ENVIRONMENT = "production"
+HUB_API_URL = "https://nexopress-hub.sebastianvernis.workers.dev"
 
 [[d1_databases]]
 binding = "DB"

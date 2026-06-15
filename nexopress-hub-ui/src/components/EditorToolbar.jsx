@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Tooltip from './Tooltip.jsx'
 import InternalLinkDialog from './InternalLinkDialog.jsx'
+import { isValidTweetUrl, isValidInstagramUrl } from './TweetEmbed.jsx'
 
 /**
  * Barra de herramientas del editor NexoPress Hub.
@@ -77,14 +78,34 @@ export default function EditorToolbar({ editor, cms, onUploadImage }) {
         }
       }
     } else if (showEmbedInput === 'twitter') {
-      editor.chain().focus().insertContent(
-        `<blockquote class="twitter-tweet"><a href="${url}"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>`
-      ).run()
+      // Nodo atómico TweetEmbed: ProseMirror rechaza <script> por seguridad
+      // y el <a> vacío rompía el parseo del <blockquote>. El nodo se
+      // serializa como <blockquote class="twitter-tweet"><a>URL</a></blockquote>
+      // para que el sitio público cargue widgets.js.
+      if (!isValidTweetUrl(url)) {
+        alert('La URL no parece un tuit válido. Pega un enlace del tipo https://x.com/usuario/status/1234567890')
+        return
+      }
+      const ok = editor.chain().focus().setTweetEmbed(url).run()
+      if (!ok) {
+        alert('No se pudo insertar el tuit. Revisa la consola para más detalles.')
+      }
     } else if (showEmbedInput === 'instagram') {
+      // Mismo patrón: nodo atómico para no meter <script>/<iframe> en ProseMirror.
+      // Se renderiza como <blockquote class="instagram-media"> con data-instgrm-permalink
+      // y el sitio público carga embed.js al final del <body>.
       const cleanUrl = url.split('?')[0]
-      editor.chain().focus().insertContent(
-        `<div class="instagram-embed" style="display:flex; justify-content:center; margin:25px 0;"><blockquote class="instagram-media" data-instgrm-permalink="${cleanUrl}" data-instgrm-version="14" style="background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:99.375%;"></blockquote></div><script async src="//www.instagram.com/embed.js"></script>`
-      ).run()
+      if (!isValidInstagramUrl(cleanUrl)) {
+        alert('La URL de Instagram no es válida. Pega un enlace de post, reel o TV.')
+        return
+      }
+      const ok = editor.chain().focus().insertContent({
+        type: 'instagramEmbed',
+        attrs: { url: cleanUrl },
+      }).run()
+      if (!ok) {
+        alert('No se pudo insertar el post de Instagram. Revisa la consola.')
+      }
     }
     setEmbedUrl('')
     setShowEmbedInput(null)

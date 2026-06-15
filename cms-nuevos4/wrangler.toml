@@ -13,6 +13,11 @@ workers_dev = true
 
 [vars]
 ENVIRONMENT = "production"
+# URL del Hub para que el CMS pueda validar tokens de sesión del Hub vía
+# /api/auth/validate-token. Sin esto, los tokens emitidos por el Hub son
+# rechazados por el CMS con 401, y todo el flujo de guardado desde el Hub UI
+# falla.
+HUB_API_URL = "https://nexopress-hub.sebastianvernis.workers.dev"
 
 # SECRETS / VARIABLES DE ENTORNO PENDIENTES (configurar con wrangler secret put):
 #   ADMIN_TOKEN          -> wrangler secret put ADMIN_TOKEN

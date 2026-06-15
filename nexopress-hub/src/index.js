@@ -4,7 +4,7 @@
 
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { getAllowedOrigins } from './config.js';
+import { getAllowedOrigins, CMS_ENDPOINTS, CMS_LIST } from './config.js';
 import authRoutes from './routes/auth.js';
 import cmsRoutes from './routes/cms.js';
 import seoRoutes from './routes/seo.js';
@@ -34,6 +34,17 @@ app.route('/auth', authRoutes);
 app.route('/cms',  cmsRoutes);
 app.route('/seo',  seoRoutes);
 
+// Catch-all: cualquier throw no manejado en un handler se reporta con
+// detalle, en vez del genérico "error code: 1042" de Hono.
+app.onError((err, c) => {
+  console.error(`[Hub] unhandled error on ${c.req.method} ${c.req.path}:`, err?.stack || err);
+  return c.json({
+    error: 'unhandled',
+    detail: err?.message || String(err),
+    path: c.req.path,
+  }, 500);
+});
+
 // Favicon (silence 404)
 app.get('/favicon.ico', (c) => c.body(null, 204));
 app.get('/favicon.png',  (c) => c.body(null, 204));
@@ -45,6 +56,16 @@ app.get('/health', (c) => c.json({
   timestamp: new Date().toISOString(),
   version:   '1.0.0',
 }));
+
+// Debug: muestra el config que está deployado (solo en producción sin secret)
+// Útil para verificar que config.js tiene las URLs correctas después de un deploy.
+app.get('/debug/config', (c) => {
+  return c.json({
+    cms_endpoints: CMS_ENDPOINTS,
+    cms_list: CMS_LIST,
+    version_id: c.req.header('cf-worker-version') || 'unknown',
+  });
+});
 
 // Root
 app.get('/', (c) => c.json({
