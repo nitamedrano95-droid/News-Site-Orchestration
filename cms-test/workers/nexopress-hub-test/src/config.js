@@ -5,6 +5,11 @@ export const DEBUG = false;
 export const log = DEBUG ? console.log.bind(console) : () => {};
 
 // CMS endpoint registry — must match the Worker URLs in wrangler.toml [vars]
+// NOTE: el Hub test usa las URLs PRODUCTIVAS por bug de routing edge (1042
+// "host not available" cuando intenta fetchearse a sí mismo entre workers
+// del mismo subdominio). El fix definitivo es usar service bindings entre
+// workers, pero eso requiere cambios arquitecturales. Por ahora el HUB test
+// orquesta contra los CMS productivos.
 export const CMS_ENDPOINTS = {
   originaux: 'https://cms-originaux.sebastianvernis.workers.dev',
   nuevos:    'https://cms-nuevos.sebastianvernis.workers.dev',

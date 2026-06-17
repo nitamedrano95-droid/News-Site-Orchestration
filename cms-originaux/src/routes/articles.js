@@ -517,25 +517,35 @@ articles.put('/:id', async (c) => {
 articles.delete('/:id', async (c) => {
   if (!await checkAuth(c)) return c.json({ error: 'Unauthorized' }, 401);
   const id = c.req.param('id');
+  const results = { cms: false, parafraseados: false };
+
+  // Cascada de limpieza: cada tabla se intenta borrar de forma independiente.
+  // Si una tabla no existe (schema drift), el try/catch interno evita que el
+  // delete completo falle — solo registramos el resultado.
+  // Tablas que originalmente se intentaban limpiar:
+  //   - METRICAS_CONTENIDO   → eliminada jun 2026 (cascada muerta)
+  //   - ARTICULOS_PARAFRASEADOS → vigente
+  //   - ARTICULOS_CMS           → vigente
   try {
-    // 1. Eliminar métricas (FOREIGN KEY)
-    await c.env.DB.prepare(
-      'DELETE FROM METRICAS_CONTENIDO WHERE ID_ARTICULO_PARAFRASEADO = ?'
-    ).bind(id).run();
-
-    // 2. Eliminar de PARAFRASEADOS
-    await c.env.DB.prepare(
-      'DELETE FROM ARTICULOS_PARAFRASEADOS WHERE ID = ?'
-    ).bind(id).run();
-
-    // 3. Intentar eliminar de CMS también
+    // 1. ARTICULOS_PARAFRASEADOS
     try {
-      await c.env.DB.prepare('DELETE FROM ARTICULOS_CMS WHERE ID = ?').bind(id).run();
+      await c.env.DB.prepare(
+        'DELETE FROM ARTICULOS_PARAFRASEADOS WHERE ID = ?'
+      ).bind(id).run();
+      results.parafraseados = true;
     } catch (e) {
-      console.error('Error deleting from CMS (may not exist):', e.message);
+      console.error('Delete parafraseados (skip):', e.message);
     }
 
-    return c.json({ success: true });
+    // 2. ARTICULOS_CMS (el principal)
+    try {
+      await c.env.DB.prepare('DELETE FROM ARTICULOS_CMS WHERE ID = ?').bind(id).run();
+      results.cms = true;
+    } catch (e) {
+      console.error('Delete CMS (may not exist):', e.message);
+    }
+
+    return c.json({ success: true, cleaned: results });
   } catch (e) {
     console.error('Delete Error:', e.message);
     return c.json({ error: e.message }, 500);
