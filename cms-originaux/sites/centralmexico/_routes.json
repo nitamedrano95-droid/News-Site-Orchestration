@@ -1,5 +1,21 @@
 {
   "version": 1,
-  "include": ["/articulo/*", "/sitemap.xml", "/robots.txt"],
-  "exclude": []
+  "include": ["/*"],
+  "exclude": [
+    "/assets/*",
+    "/admin/*",
+    "/*.css",
+    "/*.js",
+    "/*.ico",
+    "/*.png",
+    "/*.jpg",
+    "/*.jpeg",
+    "/*.gif",
+    "/*.webp",
+    "/*.svg",
+    "/*.woff",
+    "/*.woff2",
+    "/*.ttf",
+    "/*.map"
+  ]
 }
