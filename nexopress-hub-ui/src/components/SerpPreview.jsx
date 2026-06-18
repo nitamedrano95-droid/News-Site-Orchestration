@@ -1,3 +1,5 @@
+import { CMS_ID, API_BASE } from '../main.jsx'
+
 /**
  * Vista previa de cómo se verá el snippet del artículo en Google.
  * Muestra el title con la keyword en negrita (lo que Google hace al
@@ -13,8 +15,8 @@ export default function SerpPreview({
   slug,
   metaDescription,
   focusKeyword,
-  siteName = 'cms-originaux',
-  siteBase = 'cms-originaux.sebastianvernis.workers.dev',
+  siteName = CMS_ID,
+  siteBase = `${CMS_ID}.sebastianvernis.workers.dev`,
 }) {
   const cleanTitle = (title || 'Título del artículo').trim()
   const cleanSlug = (slug || 'titulo-del-articulo').trim()

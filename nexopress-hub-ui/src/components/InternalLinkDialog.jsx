@@ -41,7 +41,7 @@ export default function InternalLinkDialog({ editor, cms, onClose }) {
     setError(null)
     debounceRef.current = setTimeout(async () => {
       try {
-        const token = localStorage.getItem('hub_token')
+        const token = localStorage.getItem('cms_token')
         const url = `${API_BASE}/cms/${cms}/articles?search=${encodeURIComponent(query)}&limit=10`
         const res = await fetch(url, {
           headers: { Authorization: `Bearer ${token}` },

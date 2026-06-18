@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { API_BASE } from '../main.jsx'
 
 export default function Login() {
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -18,14 +18,14 @@ export default function Login() {
       const res = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, password }),
       })
 
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'No se pudo iniciar sesión')
 
-      localStorage.setItem('hub_token', data.token)
-      localStorage.setItem('hub_user', JSON.stringify(data.user))
+      localStorage.setItem('cms_token', data.token)
+      localStorage.setItem('cms_user', JSON.stringify(data.user))
       navigate('/')
     } catch (err) {
       setError(err.message)
@@ -37,20 +37,20 @@ export default function Login() {
   return (
     <div className="login-container">
       <div className="login-card card">
-        <h1 className="login-title">NexoPress Hub</h1>
-        <p className="login-subtitle">Panel editorial unificado para los 5 CMS</p>
+        <h1 className="login-title">NexoPress CMS</h1>
+        <p className="login-subtitle">Editor de artículos</p>
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label">Correo electrónico</label>
+            <label className="form-label">Usuario</label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="tu@correo.com"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Nombre de usuario"
               required
               disabled={loading}
-              autoComplete="email"
+              autoComplete="username"
             />
           </div>
 

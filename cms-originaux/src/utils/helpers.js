@@ -216,6 +216,8 @@ export const sanitizePublishedAt = (value, fallback) => {
 export const parseArticleRow = (row) => {
   if (!row) return null;
   const category = row.CATEGORIA || row.category || 'General';
+  const sourceTable = row.SOURCE_TABLE || row.source_table || 'PARAFRASEADO';
+  const status = row.ESTADO || (sourceTable === 'CMS' ? 'BORRADOR' : 'PUBLICADO');
 
   const title   = decodeHTMLEntities(row.TITULO_PARAFRASEADO || row.TITULO || row.title || '');
   const content = decodeHTMLEntities(row.CONTENIDO || row.content || '');
@@ -233,6 +235,8 @@ export const parseArticleRow = (row) => {
     imageUrl:    row.URL_IMAGEN || row.image_url || '',
     featured:    Boolean(row.DESTACADO || row.featured || 0),
     site:        row.SITIO_DESTINO || row.SITIOS_DESTINO || row.site || '',
+    status,
+    sourceTable,
     fb_published: Boolean(row.FB_PUBLICADO || 0),
   };
 };

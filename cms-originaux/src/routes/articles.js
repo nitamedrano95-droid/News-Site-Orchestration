@@ -2,7 +2,7 @@
 
 import { Hono } from 'hono';
 import { checkAuth } from '../middleware/auth.js';
-import { articleSlugify, parseArticleRow, sanitizePublishedAt, seededShuffle } from '../utils/helpers.js';
+import { articleSlugify, parseArticleRow, sanitizePublishedAt } from '../utils/helpers.js';
 
 const articles = new Hono();
 
@@ -28,666 +28,200 @@ const normalizeTargetSites = ({ value, allowedSet, fallbackSite }) => {
 
 // ── GET /articles — Listado con filtros ──────────────────────
 articles.get('/', async (c) => {
-  const { site, limit = 20, offset = 0, category, shuffle } = c.req.query();
-  const l = parseInt(limit);
-  const o = parseInt(offset);
-  const MIN_ARTICLES = 8;
+  const { site, limit = 20, offset = 0, category } = c.req.query();
+  const l = parseInt(limit) || 20;
+  const o = parseInt(offset) || 0;
 
   try {
-    const fetchArticles = async (siteFilter, applyOffset = true) => {
-      // Si hay sitio específico, consultar ARTICULOS_SITIO_{SLUG}
-      if (siteFilter) {
-        const tableName = `ARTICULOS_SITIO_${siteFilter.toUpperCase()}`;
-        let query = `
-          SELECT p.*, s.FB_PUBLICADO, s.FB_FECHA, s.FB_POST_ID
-          FROM ${tableName} s
-          JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
-          WHERE p.ESTADO = 'PUBLICADO'
-        `;
-        const params = [];
-
-        if (category) {
-          query += ' AND LOWER(p.CATEGORIA) = LOWER(?)';
-          params.push(category);
-        }
-
-        // Excluir artículos sin imagen
-        // Image filter removed - articles without images will be included and frontend handles fallback
-
-        query += ' ORDER BY p.FECHA_PUBLICACION DESC LIMIT ? OFFSET ?';
-        params.push(l, applyOffset ? o : 0);
-
-        const res = await c.env.DB.prepare(query).bind(...params).all();
-        return (res.results || []).map(parseArticleRow).filter(Boolean);
-      }
-
-      // Sin filtro de sitio: consultar PARAFRASEADOS y CMS
-      let queryPara  = "SELECT *, 'PARAFRASEADO' as SOURCE_TABLE FROM ARTICULOS_PARAFRASEADOS WHERE ESTADO = 'PUBLICADO'";
-      let paramsPara = [];
-      let queryCMS   = "SELECT *, 'CMS' as SOURCE_TABLE FROM ARTICULOS_CMS WHERE ESTADO = 'PUBLICADO'";
-      let paramsCMS  = [];
-
+    if (site) {
+      const tableName = `ARTICULOS_SITIO_${site.toUpperCase()}`;
+      let query = `
+        SELECT p.*, s.FB_PUBLICADO, s.FB_FECHA, s.FB_POST_ID
+        FROM ${tableName} s
+        JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
+        WHERE p.ESTADO = 'PUBLICADO'
+      `;
+      const params = [];
       if (category) {
-        queryPara += ' AND LOWER(CATEGORIA) = LOWER(?)';
-        paramsPara.push(category);
-        queryCMS += ' AND LOWER(CATEGORIA) = LOWER(?)';
-        paramsCMS.push(category);
+        query += ' AND LOWER(p.CATEGORIA) = LOWER(?)';
+        params.push(category);
       }
-
-      queryPara += ' ORDER BY FECHA_PUBLICACION DESC LIMIT ? OFFSET ?';
-      paramsPara.push(l, applyOffset ? o : 0);
-      queryCMS += ' ORDER BY FECHA_PUBLICACION DESC LIMIT ? OFFSET ?';
-      paramsCMS.push(l, applyOffset ? o : 0);
-
-      const [resPara, resCMS] = await Promise.all([
-        c.env.DB.prepare(queryPara).bind(...paramsPara).all(),
-        c.env.DB.prepare(queryCMS).bind(...paramsCMS).all(),
-      ]);
-
-      return [...(resPara.results || []), ...(resCMS.results || [])]
-        .map(parseArticleRow)
-        .filter(Boolean)
-        .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt))
-        .slice(0, l);
-    };
-
-    let arts = await fetchArticles(site);
-
-    // Complementar si hay menos del mínimo y estamos en un sitio específico
-    if (site && arts.length < MIN_ARTICLES && o === 0) {
-      const allArticles = await fetchArticles(null, false);
-      const existingIds = new Set(arts.map((a) => a.id));
-      const extras = allArticles.filter((a) => !existingIds.has(a.id));
-      arts = [...arts, ...extras].slice(0, l);
+      query += ' ORDER BY p.FECHA_PUBLICACION DESC LIMIT ? OFFSET ?';
+      params.push(l, o);
+      const res = await c.env.DB.prepare(query).bind(...params).all();
+      const rows = (res.results || []).map(parseArticleRow).filter(Boolean);
+      return c.json({ articles: rows });
     }
 
-    if (shuffle === 'true' && site) {
-      arts = seededShuffle(arts, site);
+    // Sin filtro: consultar PARAFRASEADOS y CMS
+    let queryPara  = "SELECT *, 'PARAFRASEADO' as SOURCE_TABLE FROM ARTICULOS_PARAFRASEADOS WHERE ESTADO = 'PUBLICADO'";
+    let paramsPara = [];
+    let queryCMS   = "SELECT *, 'CMS' as SOURCE_TABLE FROM ARTICULOS_CMS WHERE ESTADO = 'PUBLICADO'";
+    let paramsCMS  = [];
+
+    if (category) {
+      queryPara += ' AND LOWER(CATEGORIA) = LOWER(?)';
+      paramsPara.push(category);
+      queryCMS += ' AND LOWER(CATEGORIA) = LOWER(?)';
+      paramsCMS.push(category);
     }
 
-    return c.json({ articles: arts });
-  } catch (e) {
-    console.error('Error fetching articles:', e.message);
-    return c.json({ articles: [] });
-  }
-});
+    queryPara += ' ORDER BY FECHA_PUBLICACION DESC LIMIT ? OFFSET ?';
+    paramsPara.push(l, o);
+    queryCMS += ' ORDER BY FECHA_PUBLICACION DESC LIMIT ? OFFSET ?';
+    paramsCMS.push(l, o);
 
-// ── GET /articles/timeline — Noticias breves ─────────────────
-articles.get('/timeline', async (c) => {
-  const { site, limit = 20 } = c.req.query();
-  try {
-    const s   = site ? `%${site}%` : '%';
-    const res = await c.env.DB.prepare(
-      'SELECT * FROM ARTICULOS_PARAFRASEADOS WHERE ES_BREVE = 1 AND SITIO_DESTINO LIKE ? ORDER BY FECHA_PUBLICACION DESC LIMIT ?'
-    ).bind(s, parseInt(limit)).all();
-    return c.json({ articles: (res.results || []).map(parseArticleRow) });
+    const [resPara, resCMS] = await Promise.all([
+      c.env.DB.prepare(queryPara).bind(...paramsPara).all(),
+      c.env.DB.prepare(queryCMS).bind(...paramsCMS).all(),
+    ]);
+
+    const rows = [...(resPara.results || []), ...(resCMS.results || [])]
+      .map(parseArticleRow)
+      .filter(Boolean)
+      .sort((a, b) => new Date(b.publishedAt || b.createdAt || 0) - new Date(a.publishedAt || a.createdAt || 0))
+      .slice(0, l);
+
+    return c.json({ articles: rows });
   } catch (e) {
+    console.error('Error en GET /articles:', e.message);
     return c.json({ error: e.message }, 500);
   }
 });
 
 // ── GET /articles/id/:id — Artículo por ID ───────────────────
 articles.get('/id/:id', async (c) => {
-  const id = c.req.param('id');
+  if (!await checkAuth(c)) return c.json({ error: 'Unauthorized' }, 401);
   try {
-    const rowPara = await c.env.DB.prepare(
-      "SELECT *, 'PARAFRASEADO' as SOURCE_TABLE FROM ARTICULOS_PARAFRASEADOS WHERE ID = ? LIMIT 1"
-    ).bind(id).first();
+    const id = c.req.param('id');
+    const rowPara = await c.env.DB.prepare("SELECT *, 'PARAFRASEADO' as SOURCE_TABLE FROM ARTICULOS_PARAFRASEADOS WHERE ID = ?").bind(id).first();
     if (rowPara) return c.json({ article: parseArticleRow(rowPara) });
 
-    const rowCMS = await c.env.DB.prepare(
-      "SELECT *, 'CMS' as SOURCE_TABLE FROM ARTICULOS_CMS WHERE ID = ? LIMIT 1"
-    ).bind(id).first();
-    if (rowCMS) {
-      return c.json({
-        article: {
-          id:          rowCMS.ID,
-          title:       rowCMS.TITULO,
-          slug:        rowCMS.SLUG,
-          content:     rowCMS.CONTENIDO,
-          excerpt:     rowCMS.DESCRIPCION,
-          category:    rowCMS.CATEGORIA,
-          author:      rowCMS.AUTOR || 'Redacción CMS',
-          publishedAt: rowCMS.FECHA_PUBLICACION,
-          imageUrl:    rowCMS.URL_IMAGEN,
-          featured:    Boolean(rowCMS.DESTACADO || 0),
-          site:        rowCMS.SITIOS_DESTINO,
-          status:      rowCMS.ESTADO,
-          sourceTable: 'CMS',
-        },
-      });
-    }
+    const rowCMS = await c.env.DB.prepare("SELECT *, 'CMS' as SOURCE_TABLE FROM ARTICULOS_CMS WHERE ID = ?").bind(id).first();
+    if (rowCMS) return c.json({ article: parseArticleRow(rowCMS) });
 
     return c.json({ error: 'Artículo no encontrado' }, 404);
   } catch (e) {
-    console.error('Error fetching article by id:', e);
     return c.json({ error: e.message }, 500);
   }
 });
 
-// ── GET /articles/:slug — Artículo por slug ──────────────────
-articles.get('/:slug', async (c) => {
-  const slug = c.req.param('slug');
-  try {
-    // 1. Buscar por SLUG exacto en PARAFRASEADOS
-    const rowPara = await c.env.DB.prepare(
-      "SELECT *, 'PARAFRASEADO' as SOURCE_TABLE FROM ARTICULOS_PARAFRASEADOS WHERE SLUG = ? LIMIT 1"
-    ).bind(slug).first();
-    if (rowPara) return c.json({ article: parseArticleRow(rowPara) });
-
-    // 2. Buscar en CMS por SLUG
-    let rowCMS = null;
-    try {
-      rowCMS = await c.env.DB.prepare(
-        "SELECT *, 'CMS' as SOURCE_TABLE FROM ARTICULOS_CMS WHERE ESTADO = 'PUBLICADO' AND SLUG = ? LIMIT 1"
-      ).bind(slug).first();
-    } catch (e) {
-      console.error('Error fetching CMS article by slug:', e.message);
-    }
-    if (rowCMS) return c.json({ article: parseArticleRow(rowCMS) });
-
-    // 3. Fallback: artículos con SLUG NULL — comparar slug generado desde título
-    const allPara = await c.env.DB.prepare(
-      "SELECT *, 'PARAFRASEADO' as SOURCE_TABLE FROM ARTICULOS_PARAFRASEADOS WHERE SLUG IS NULL ORDER BY FECHA_PUBLICACION DESC LIMIT 100"
-    ).all();
-    const matchPara = (allPara.results || []).find((r) => {
-       const generated = articleSlugify(r.TITULO_PARAFRASEADO || r.TITULO || '');
-       return generated === slug;
-     });
-     if (matchPara) return c.json({ article: parseArticleRow(matchPara) });
-
-     const legacyPara = await c.env.DB.prepare(
-       "SELECT *, 'PARAFRASEADO' as SOURCE_TABLE FROM ARTICULOS_PARAFRASEADOS WHERE LEGACY_SLUG = ? LIMIT 1"
-     ).bind(slug).first();
-     if (legacyPara) return c.json({ article: parseArticleRow(legacyPara), legacySlug: slug, canonicalSlug: legacyPara.SLUG || parseArticleRow(legacyPara)?.slug });
-
-     let legacyCMS = null;
-     try {
-       legacyCMS = await c.env.DB.prepare(
-         "SELECT *, 'CMS' as SOURCE_TABLE FROM ARTICULOS_CMS WHERE ESTADO = 'PUBLICADO' AND LEGACY_SLUG = ? LIMIT 1"
-       ).bind(slug).first();
-     } catch (e) {
-       console.error('Error fetching CMS legacy article by slug:', e.message);
-     }
-     if (legacyCMS) return c.json({ article: parseArticleRow(legacyCMS), legacySlug: slug, canonicalSlug: legacyCMS.SLUG || parseArticleRow(legacyCMS)?.slug });
-
-     return c.json({ error: 'Article not found' }, 404);
-  } catch (e) {
-    console.error('Error fetching article by slug:', e.message);
-    return c.json({ error: e.message }, 500);
-  }
-});
-
-// ── POST /articles — Crear artículo ──────────────────────────
-articles.post('/', async (c) => {
+// ── PUT /articles/:id — Actualizar artículo publicado ─────────
+articles.put('/:id', async (c) => {
   if (!await checkAuth(c)) return c.json({ error: 'Unauthorized' }, 401);
   try {
-    const article = await c.req.json();
+    const id = c.req.param('id');
+    const body = await c.req.json();
 
-    if (!article.title || !article.content) {
-      return c.json({ error: 'Título y contenido requeridos' }, 400);
+    const paraRow = await c.env.DB.prepare('SELECT ID FROM ARTICULOS_PARAFRASEADOS WHERE ID = ?').bind(id).first();
+    if (!paraRow) {
+      // Fallback: actualizar CMS
+      const cmsRow = await c.env.DB.prepare('SELECT ID FROM ARTICULOS_CMS WHERE ID = ?').bind(id).first();
+      if (!cmsRow) return c.json({ error: 'Artículo no encontrado' }, 404);
+      await c.env.DB.prepare(`
+        UPDATE ARTICULOS_CMS SET
+          TITULO = ?, SLUG = ?, CONTENIDO = ?, DESCRIPCION = ?,
+          CATEGORIA = ?, URL_IMAGEN = ?, SITIOS_DESTINO = ?, DESTACADO = ?, FB_REQUERIDO = ?
+        WHERE ID = ?
+      `).bind(
+        body.title, body.slug, body.content, body.excerpt,
+        body.category, body.imageUrl, Array.isArray(body.site) ? body.site.join(',') : (body.site || ''),
+        body.featured ? 1 : 0, body.fbRequired ? 1 : 0, id
+      ).run();
+      return c.json({ success: true, table: 'ARTICULOS_CMS' });
     }
-
-    const wordCount = article.content.trim().split(/\s+/).length;
-    const slug      = article.slug || articleSlugify(article.title);
-    const now       = new Date().toISOString();
-    const articleId = crypto.randomUUID();
 
     const { SITIOS_LIST } = await import('../config.js');
     const allowedSet = new Set((SITIOS_LIST || []).map((s) => (typeof s === 'string' ? s.toLowerCase() : '')).filter(Boolean));
     const fallbackSite = allowedSet.has('cbnnoticias') ? 'cbnnoticias' : (SITIOS_LIST?.[0]?.toLowerCase() || null);
-    const targetSites = normalizeTargetSites({ value: article.sites ?? article.site, allowedSet, fallbackSite });
-    if (targetSites.length === 0) return c.json({ error: 'Sitio destino inválido o no configurado' }, 400);
+    const targetSites = normalizeTargetSites({ value: body.sites ?? body.site, allowedSet, fallbackSite });
 
-    const sitiosDestino = targetSites.join(',');
-    const statements = [];
-
-    statements.push(
-      c.env.DB.prepare(`
-        INSERT INTO ARTICULOS_PARAFRASEADOS (
-          ID, TITULO_PARAFRASEADO, SLUG, CONTENIDO, DESCRIPCION_PARAFRASEADA,
-          CATEGORIA, AUTOR, FECHA_PUBLICACION, URL_IMAGEN, SITIO_DESTINO,
-          DESTACADO, VISTAS, ESTADO
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).bind(
-        articleId,
-        article.title,
-        slug,
-        article.content,
-        article.excerpt || article.content.substring(0, 200) + '...',
-        (article.category || 'NACIONAL').toUpperCase(),
-        article.author || 'Editorial',
-        sanitizePublishedAt(article.publishedAt, now),
-        article.imageUrl || '',
-        sitiosDestino,
-        article.featured ? 1 : 0,
-        0,
-        'PUBLICADO'
-      )
-    );
-
-    for (const siteSlug of targetSites) {
-      const siteId = crypto.randomUUID();
-      const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
-      statements.push(
-        c.env.DB.prepare(`
-          INSERT INTO ${tableName} (ID, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID)
-          VALUES (?, ?, datetime('now'), 0, NULL, NULL)
-        `).bind(siteId, articleId)
-      );
-    }
-
-    await c.env.DB.batch(statements);
-
-    // Fire-and-forget: notificar a n8n sobre nuevo artículo
-    try {
-      const wh = c.env.ARTICLE_PUBLISH_WEBHOOK;
-      if (wh) {
-        fetch(wh, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            event: 'article.published',
-            id: articleId,
-            slug,
-            title: article.title,
-            sites: targetSites,
-            category: (article.category || 'NACIONAL').toUpperCase(),
-            author: article.author || 'Editorial',
-            wordCount,
-          }),
-        }).catch(() => {});
-      }
-    } catch (_) { /* fire-and-forget */ }
-
-    return c.json({ success: true, article: { id: articleId, slug, title: article.title, wordCount } });
-  } catch (e) {
-    return c.json({ error: e.message }, 500);
-  }
-});
-
-// ── POST /articles/bulk — Insertar múltiples artículos ───────
-articles.post('/bulk', async (c) => {
-  try {
-    const { articles: items } = await c.req.json();
-
-    if (!Array.isArray(items) || items.length === 0) {
-      return c.json({ error: 'Se requiere array de artículos' }, 400);
-    }
-
-    const results = [];
-    const errors  = [];
-
-    for (const article of items) {
-      try {
-        if (!article.title || !article.content || !article.category) {
-          errors.push({ article: article.title || 'sin-titulo', error: 'Campos requeridos faltantes' });
-          continue;
-        }
-
-        const slug = article.slug || articleSlugify(article.title);
-        const now  = new Date().toISOString();
-        const articleId = crypto.randomUUID();
-
-        const { SITIOS_LIST } = await import('../config.js');
-        const allowedSet = new Set((SITIOS_LIST || []).map((s) => (typeof s === 'string' ? s.toLowerCase() : '')).filter(Boolean));
-        const fallbackSite = allowedSet.has('cbnnoticias') ? 'cbnnoticias' : (SITIOS_LIST?.[0]?.toLowerCase() || null);
-        const targetSites = normalizeTargetSites({ value: article.sites ?? article.site, allowedSet, fallbackSite });
-        if (targetSites.length === 0) {
-          errors.push({ article: article.title || 'sin-titulo', error: 'Sitio destino inválido o no configurado' });
-          continue;
-        }
-
-        const sitiosDestino = targetSites.join(',');
-        const statements = [];
-
-        statements.push(
-          c.env.DB.prepare(`
-            INSERT INTO ARTICULOS_PARAFRASEADOS (
-              ID, TITULO_PARAFRASEADO, SLUG, CONTENIDO, DESCRIPCION_PARAFRASEADA,
-              CATEGORIA, AUTOR, FECHA_PUBLICACION, URL_IMAGEN, SITIO_DESTINO,
-              DESTACADO, VISTAS, ESTADO
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-          `).bind(
-            articleId,
-            article.title,
-            slug,
-            article.content,
-            article.excerpt || article.description || article.content.substring(0, 200) + '...',
-            article.category.toUpperCase(),
-            article.author || 'Redacción',
-            sanitizePublishedAt(article.publishedAt, now),
-            article.imageUrl || '',
-            sitiosDestino,
-            article.featured ? 1 : 0,
-            0,
-            'PUBLICADO'
-          )
-        );
-
-        for (const siteSlug of targetSites) {
-          const siteId = crypto.randomUUID();
-          const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
-          statements.push(
-            c.env.DB.prepare(`
-              INSERT INTO ${tableName} (ID, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID)
-              VALUES (?, ?, datetime('now'), 0, NULL, NULL)
-            `).bind(siteId, articleId)
-          );
-        }
-
-        await c.env.DB.batch(statements);
-
-        // Fire-and-forget: notificar a n8n
-        try {
-          const wh = c.env.ARTICLE_PUBLISH_WEBHOOK;
-          if (wh) {
-            const wc = article.content?.trim().split(/\s+/).length || 0;
-            fetch(wh, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                event: 'article.published',
-                id: articleId,
-                slug,
-                title: article.title,
-                sites: targetSites,
-                category: article.category?.toUpperCase() || 'NACIONAL',
-                author: article.author || 'Redacción',
-                wordCount: wc,
-              }),
-            }).catch(() => {});
-          }
-        } catch (_) { /* fire-and-forget */ }
-
-        results.push({ title: article.title, slug, status: 'inserted' });
-      } catch (e) {
-        errors.push({ article: article.title || 'sin-titulo', error: e.message });
-      }
-    }
-
-    return c.json({
-      success:  true,
-      inserted: results.length,
-      errors:   errors.length > 0 ? errors : undefined,
-      total:    items.length,
-    });
-  } catch (e) {
-    return c.json({ error: e.message }, 500);
-  }
-});
-
-// ── PUT /articles/:id — Actualizar artículo ──────────────────
-articles.put('/:id', async (c) => {
-  if (!await checkAuth(c)) return c.json({ error: 'Unauthorized' }, 401);
-  const id = c.req.param('id');
-  try {
-    const { title, slug, content, excerpt, category, author, imageUrl, featured, site, sites, status } =
-      await c.req.json();
-
-    if (!title) return c.json({ error: 'Título requerido' }, 400);
-
-    const articleSlug = slug || articleSlugify(title);
-    const now         = new Date().toISOString();
-
-    // Intentar actualizar en PARAFRASEADOS primero
-    const existingPara = await c.env.DB.prepare(
-      'SELECT ID, SLUG, SITIO_DESTINO FROM ARTICULOS_PARAFRASEADOS WHERE ID = ?'
-    ).bind(id).first();
-
-    if (existingPara) {
-      const { SITIOS_LIST } = await import('../config.js');
-      const allowedSet = new Set((SITIOS_LIST || []).map((s) => (typeof s === 'string' ? s.toLowerCase() : '')).filter(Boolean));
-      const fallbackSite = allowedSet.has('cbnnoticias') ? 'cbnnoticias' : (SITIOS_LIST?.[0]?.toLowerCase() || null);
-
-      const hasSitesInput = (sites !== undefined && sites !== null) || (site !== undefined && site !== null);
-      const targetSites = hasSitesInput
-        ? normalizeTargetSites({ value: sites ?? site, allowedSet, fallbackSite })
-        : null;
-
-      if (hasSitesInput && (!targetSites || targetSites.length === 0)) {
-        return c.json({ error: 'Sitio destino inválido o no configurado' }, 400);
-      }
-
-      const sitiosDestino = targetSites ? targetSites.join(',') : null;
-      const statements = [];
-
-      statements.push(
-        c.env.DB.prepare(`
-          UPDATE ARTICULOS_PARAFRASEADOS SET
-            TITULO_PARAFRASEADO = ?, SLUG = ?, CONTENIDO = ?,
-            DESCRIPCION_PARAFRASEADA = ?, CATEGORIA = ?, AUTOR = ?,
-            FECHA_PUBLICACION = ?, URL_IMAGEN = ?, SITIO_DESTINO = COALESCE(?, SITIO_DESTINO), DESTACADO = ?,
-            LEGACY_SLUG = CASE WHEN SLUG IS NOT NULL AND SLUG != ? THEN SLUG ELSE LEGACY_SLUG END
-          WHERE ID = ?
-        `).bind(
-          title, articleSlug, content || '', excerpt || '',
-          (category || 'NACIONAL').toUpperCase(), author || 'Redacción',
-          now, imageUrl || '', sitiosDestino, featured ? 1 : 0, articleSlug, id
-        )
-      );
-
-      if (targetSites) {
-        for (const siteSlug of targetSites) {
-          const siteId = crypto.randomUUID();
-          const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
-          statements.push(
-            c.env.DB.prepare(`
-              INSERT INTO ${tableName} (ID, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID)
-              SELECT ?, ?, datetime('now'), 0, NULL, NULL
-              WHERE NOT EXISTS (
-                SELECT 1 FROM ${tableName} WHERE ID_PARAFRASEADO = ?
-              )
-            `).bind(siteId, id, id)
-          );
-        }
-      }
-
-      await c.env.DB.batch(statements);
-      return c.json({ success: true, id, source: 'PARAFRASEADOS' });
-    }
-
-    // Si no está en PARA, intentar en CMS
-    const existingCMS = await c.env.DB.prepare(
-      'SELECT ID FROM ARTICULOS_CMS WHERE ID = ?'
-    ).bind(id).first();
-
-    if (existingCMS) {
-      await c.env.DB.prepare(`
-        UPDATE ARTICULOS_CMS SET
-          TITULO = ?, SLUG = ?, CONTENIDO = ?, DESCRIPCION = ?,
-          CATEGORIA = ?, URL_IMAGEN = ?, DESTACADO = ?, ESTADO = ?, FECHA_PUBLICACION = ?
-        WHERE ID = ?
-      `).bind(
-        title, articleSlug, content || '', excerpt || '',
-        (category || 'NACIONAL').toUpperCase(), imageUrl || '',
-        featured ? 1 : 0, status || 'BORRADOR', now, id
-      ).run();
-      return c.json({ success: true, id, source: 'CMS' });
-    }
-
-    return c.json({ error: 'Artículo no encontrado' }, 404);
-  } catch (e) {
-    console.error('Error updating article:', e);
-    return c.json({ error: e.message }, 500);
-  }
-});
-
-// ── DELETE /articles/:id — Eliminar artículo ─────────────────
-articles.delete('/:id', async (c) => {
-  if (!await checkAuth(c)) return c.json({ error: 'Unauthorized' }, 401);
-  const id = c.req.param('id');
-  const results = { cms: false, parafraseados: false };
-
-  // Cascada de limpieza: cada tabla se intenta borrar de forma independiente.
-  // Si una tabla no existe (schema drift), el try/catch interno evita que el
-  // delete completo falle — solo registramos el resultado.
-  // Tablas que originalmente se intentaban limpiar:
-  //   - METRICAS_CONTENIDO   → eliminada jun 2026 (cascada muerta)
-  //   - ARTICULOS_PARAFRASEADOS → vigente
-  //   - ARTICULOS_CMS           → vigente
-  try {
-    // 1. ARTICULOS_PARAFRASEADOS
-    try {
-      await c.env.DB.prepare(
-        'DELETE FROM ARTICULOS_PARAFRASEADOS WHERE ID = ?'
-      ).bind(id).run();
-      results.parafraseados = true;
-    } catch (e) {
-      console.error('Delete parafraseados (skip):', e.message);
-    }
-
-    // 2. ARTICULOS_CMS (el principal)
-    try {
-      await c.env.DB.prepare('DELETE FROM ARTICULOS_CMS WHERE ID = ?').bind(id).run();
-      results.cms = true;
-    } catch (e) {
-      console.error('Delete CMS (may not exist):', e.message);
-    }
-
-    return c.json({ success: true, cleaned: results });
-  } catch (e) {
-    console.error('Delete Error:', e.message);
-    return c.json({ error: e.message }, 500);
-  }
-});
-
-// SEO + workflow endpoints (appended by NexoPress Hub integration)
-import { analyzeReadability, analyzeFocusKeyword, generateNewsArticleSchema } from '../utils/seo.js';
-
-articles.get('/:id/seo', async (c) => {
-  const id = c.req.param('id');
-  try {
-    const row = await c.env.DB.prepare(
-      "SELECT ID, TITULO, SLUG, CONTENIDO, DESCRIPCION, META_TITLE, META_DESCRIPTION, FOCUS_KEYWORD, TAGS, READING_SCORE, READING_ANALYSIS, FECHA_PUBLICACION, URL_IMAGEN, AUTOR, CATEGORIA FROM ARTICULOS_CMS WHERE ID = ?"
-    ).bind(id).first();
-    if (!row) return c.json({ error: 'article not found' }, 404);
-
-    const article = {
-      id: row.ID, title: row.TITULO, slug: row.SLUG,
-      content: row.CONTENIDO, excerpt: row.DESCRIPCION,
-      metaTitle: row.META_TITLE, metaDescription: row.META_DESCRIPTION,
-      focusKeyword: row.FOCUS_KEYWORD, tags: row.TAGS ? JSON.parse(row.TAGS) : [],
-      publishedAt: row.FECHA_PUBLICACION, imageUrl: row.URL_IMAGEN,
-      author: row.AUTOR, category: row.CATEGORIA,
-    };
-
-    const readability = analyzeReadability(article.content);
-    const focusKeywordAnalysis = article.focusKeyword
-      ? analyzeFocusKeyword(article, article.focusKeyword)
-      : null;
-    const schema = generateNewsArticleSchema(article);
-
-    return c.json({
-      article, readability, focusKeywordAnalysis, schema,
-      meta: {
-        titleLength: (article.metaTitle || article.title || '').length,
-        descriptionLength: (article.metaDescription || article.excerpt || '').length,
-        slugLength: (article.slug || '').length,
-      },
-    });
-  } catch (e) {
-    return c.json({ error: e.message }, 500);
-  }
-});
-
-articles.post('/:id/seo', async (c) => {
-  if (!await checkAuth(c)) return c.json({ error: 'Unauthorized' }, 401);
-  const id = c.req.param('id');
-  try {
-    const body = await c.req.json();
-    const { metaTitle, metaDescription, focusKeyword, tags } = body;
-
-    const articleRow = await c.env.DB.prepare(
-      'SELECT CONTENIDO FROM ARTICULOS_CMS WHERE ID = ?'
-    ).bind(id).first();
-    if (!articleRow) return c.json({ error: 'article not found' }, 404);
-
-    const readability = analyzeReadability(articleRow.CONTENIDO);
-
-    await c.env.DB.prepare(
-      `UPDATE ARTICULOS_CMS SET
-         META_TITLE = COALESCE(?, META_TITLE),
-         META_DESCRIPTION = COALESCE(?, META_DESCRIPTION),
-         FOCUS_KEYWORD = COALESCE(?, FOCUS_KEYWORD),
-         TAGS = COALESCE(?, TAGS),
-         READING_SCORE = ?,
-         READING_ANALYSIS = ?
-       WHERE ID = ?`
-    ).bind(
-      metaTitle ?? null, metaDescription ?? null,
-      focusKeyword ?? null,
-      tags ? JSON.stringify(tags) : null,
-      readability.score, JSON.stringify(readability), id
+    await c.env.DB.prepare(`
+      UPDATE ARTICULOS_PARAFRASEADOS SET
+        TITULO_PARAFRASEADO = ?, SLUG = ?, CONTENIDO = ?, DESCRIPCION_PARAFRASEADA = ?,
+        CATEGORIA = ?, URL_IMAGEN = ?, SITIO_DESTINO = ?, DESTACADO = ?, FB_REQUERIDO = ?
+      WHERE ID = ?
+    `).bind(
+      body.title, body.slug, body.content, body.excerpt,
+      body.category, body.imageUrl, targetSites.join(','),
+      body.featured ? 1 : 0, body.fbRequired ? 1 : 0, id
     ).run();
 
-    return c.json({ success: true, readability });
+    await syncSiteTables(c.env.DB, id, targetSites);
+
+    return c.json({ success: true, table: 'ARTICULOS_PARAFRASEADOS' });
   } catch (e) {
+    console.error('Error PUT /articles/:id:', e.message);
     return c.json({ error: e.message }, 500);
   }
 });
 
-const VALID_TRANSITIONS = {
-  BORRADOR:    ['EN_REVISION', 'ARCHIVADO'],
-  EN_REVISION: ['APROBADO', 'BORRADOR', 'RECHAZADO'],
-  APROBADO:    ['PUBLICADO', 'PROGRAMADO', 'BORRADOR'],
-  PROGRAMADO:  ['PUBLICADO', 'BORRADOR'],
-  PUBLICADO:   ['ARCHIVADO'],
-  RECHAZADO:   ['BORRADOR', 'ARCHIVADO'],
-  ARCHIVADO:   ['BORRADOR'],
-};
-
-articles.post('/:id/state', async (c) => {
+// ── DELETE /articles/:id — Eliminar artículo publicado ───────
+articles.delete('/:id', async (c) => {
   if (!await checkAuth(c)) return c.json({ error: 'Unauthorized' }, 401);
-  const id = c.req.param('id');
   try {
-    const { state, comment } = await c.req.json();
-    if (!state) return c.json({ error: 'state required' }, 400);
+    const id = c.req.param('id');
 
-    const row = await c.env.DB.prepare(
-      'SELECT ID, ESTADO, STATE_HISTORY FROM ARTICULOS_CMS WHERE ID = ?'
-    ).bind(id).first();
-    if (!row) return c.json({ error: 'article not found' }, 404);
+    const paraRow = await c.env.DB.prepare('SELECT ID FROM ARTICULOS_PARAFRASEADOS WHERE ID = ?').bind(id).first();
+    const cmsRow = await c.env.DB.prepare('SELECT ID FROM ARTICULOS_CMS WHERE ID = ?').bind(id).first();
 
-    const currentState = row.ESTADO || 'BORRADOR';
-    const allowed = VALID_TRANSITIONS[currentState] || [];
-    if (!allowed.includes(state)) {
-      return c.json({ error: `invalid transition: ${currentState} -> ${state}`, allowed }, 400);
+    if (!paraRow && !cmsRow) return c.json({ error: 'Artículo no encontrado' }, 404);
+
+    if (paraRow) {
+      await c.env.DB.prepare('DELETE FROM ARTICULOS_PARAFRASEADOS WHERE ID = ?').bind(id).run();
+      const { SITIOS_LIST } = await import('../config.js');
+      for (const site of (SITIOS_LIST || [])) {
+        const tableName = `ARTICULOS_SITIO_${site.toUpperCase()}`;
+        try {
+          await c.env.DB.prepare(`DELETE FROM ${tableName} WHERE ID_PARAFRASEADO = ?`).bind(id).run();
+        } catch (err) { /* tabla no existe */ }
+      }
     }
 
-    const user = c.get('user') || { username: 'unknown' };
-    const history = row.STATE_HISTORY ? JSON.parse(row.STATE_HISTORY) : [];
-    history.push({
-      from: currentState, to: state,
-      by: user.username || user.email || 'unknown',
-      at: new Date().toISOString(),
-      comment: comment || null,
-    });
+    if (cmsRow) {
+      await c.env.DB.prepare('DELETE FROM ARTICULOS_CMS WHERE ID = ?').bind(id).run();
+    }
 
-    await c.env.DB.prepare(
-      'UPDATE ARTICULOS_CMS SET ESTADO = ?, STATE_HISTORY = ? WHERE ID = ?'
-    ).bind(state, JSON.stringify(history), id).run();
-
-    return c.json({ success: true, state, history });
+    return c.json({ success: true });
   } catch (e) {
+    console.error('Error DELETE /articles/:id:', e.message);
     return c.json({ error: e.message }, 500);
   }
 });
 
-articles.get('/:id/history', async (c) => {
-  const id = c.req.param('id');
-  try {
-    const row = await c.env.DB.prepare(
-      'SELECT ESTADO, STATE_HISTORY FROM ARTICULOS_CMS WHERE ID = ?'
-    ).bind(id).first();
-    if (!row) return c.json({ error: 'article not found' }, 404);
-    return c.json({
-      currentState: row.ESTADO || 'BORRADOR',
-      history: row.STATE_HISTORY ? JSON.parse(row.STATE_HISTORY) : [],
-    });
-  } catch (e) {
-    return c.json({ error: e.message }, 500);
+async function syncSiteTables(DB, paraId, newSites) {
+  const desired = [...new Set(newSites.filter(Boolean))];
+  const { SITIOS_LIST } = await import('../config.js');
+  const allSites = new Set((SITIOS_LIST || []).map((s) => (typeof s === 'string' ? s.toLowerCase() : '')).filter(Boolean));
+
+  const existing = [];
+  for (const siteSlug of allSites) {
+    const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+    try {
+      const row = await DB.prepare(`SELECT ID FROM ${tableName} WHERE ID_PARAFRASEADO = ?`).bind(paraId).first();
+      if (row) existing.push({ site: siteSlug, siteTableId: row.ID });
+    } catch (e) { /* tabla no existe */ }
   }
-});
+
+  const existingSites = new Set(existing.map((e) => e.site));
+
+  for (const { site, siteTableId } of existing) {
+    if (!desired.includes(site)) {
+      const tableName = `ARTICULOS_SITIO_${site.toUpperCase()}`;
+      await DB.prepare(`DELETE FROM ${tableName} WHERE ID = ?`).bind(siteTableId).run();
+    }
+  }
+
+  for (const site of desired) {
+    if (!existingSites.has(site)) {
+      const tableName = `ARTICULOS_SITIO_${site.toUpperCase()}`;
+      const siteId = crypto.randomUUID();
+      try {
+        await DB.prepare(`INSERT INTO ${tableName} (ID, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID) VALUES (?, ?, datetime('now'), 0, NULL, NULL)`)
+          .bind(siteId, paraId).run();
+      } catch (e) { console.error(`Error insertando en ${tableName}:`, e.message); }
+    }
+  }
+}
 
 export default articles;

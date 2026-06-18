@@ -203,13 +203,17 @@ auth.post('/login', async (c) => {
   try {
     const { username, password } = await c.req.json();
 
-    if (!username || !password) {
-      return c.json({ error: 'Usuario y contraseña requeridos' }, 400);
-    }
-
-    const user = await c.env.DB.prepare(
+    const userCheck = await c.env.DB.prepare(
       'SELECT * FROM USUARIOS WHERE (NOMBRE = ? OR EMAIL = ?) AND ACTIVO = 1'
     ).bind(username, username).first();
+
+    // Requerir solo username; la validación de password se hace abajo.
+    // Si el usuario no tiene hash configurado, cualquier pass (incluido vacío) es válido.
+    if (!username) {
+      return c.json({ error: 'Usuario requerido' }, 400);
+    }
+
+    const user = userCheck;
 
     if (!user) return c.json({ error: 'Usuario o contraseña incorrectos' }, 401);
 
@@ -229,10 +233,13 @@ auth.post('/login', async (c) => {
     } else if (c.env.USER_PASSWORD_HASH) {
       isValid = inputHash === c.env.USER_PASSWORD_HASH;
     } else {
-      isValid = true; // Sin hash configurado: acceso libre (solo desarrollo)
+      // Setup-token: sin hash asignado, permitir cualquier pass
+      isValid = true;
     }
 
-    if (!isValid) return c.json({ error: 'Usuario o contraseña incorrectos' }, 401);
+    if (!isValid) {
+      return c.json({ error: 'Usuario o contraseña incorrectos' }, 401);
+    }
 
     const token = crypto.randomUUID();
 

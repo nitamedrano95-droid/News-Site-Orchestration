@@ -6,23 +6,53 @@ import { SITIOS_LIST } from '../config.js';
 
 const stats = new Hono();
 
-// ── GET /stats/dashboard — Estadísticas reales para el admin ─
-stats.get('/dashboard', async (c) => {
+// ── GET /stats — Estadísticas compatibles con el editor nuevo ─
+stats.get('/', async (c) => {
   if (!await checkAuth(c)) return c.json({ error: 'Unauthorized' }, 401);
   try {
-    // Total de artículos parafraseados
     const totalPub = await c.env.DB.prepare(
       'SELECT COUNT(*) as count FROM ARTICULOS_PARAFRASEADOS WHERE ESTADO = "PUBLICADO"'
     ).first();
 
-    // Borradores CMS
+    const totalCMS = await c.env.DB.prepare(
+      "SELECT COUNT(*) as count FROM ARTICULOS_CMS"
+    ).first();
+
+    const totalDrafts = await c.env.DB.prepare(
+      "SELECT COUNT(*) as count FROM ARTICULOS_CMS WHERE ESTADO = 'BORRADOR'"
+    ).first();
+
+    return c.json({
+      articles: totalPub ? totalPub.count : 0,
+      drafts: totalDrafts ? totalDrafts.count : 0,
+      published: totalCMS ? totalCMS.count : 0,
+    });
+  } catch (e) {
+    console.error('Stats error:', e.message);
+    return c.json({ error: e.message }, 500);
+  }
+});
+
+// ── GET /stats/dashboard — Estadísticas reales para el admin ─
+stats.get('/dashboard', async (c) => {
+  if (!await checkAuth(c)) return c.json({ error: 'Unauthorized' }, 401);
+  try {
+    // Total de artículos publicados (PARAFRASEADOS + CMS PUBLICADO)
+    const totalPub = await c.env.DB.prepare(
+      'SELECT COUNT(*) as count FROM ARTICULOS_PARAFRASEADOS WHERE ESTADO = "PUBLICADO"'
+    ).first();
+
+    const totalCMSPub = await c.env.DB.prepare(
+      "SELECT COUNT(*) as count FROM ARTICULOS_CMS WHERE ESTADO = 'PUBLICADO'"
+    ).first();
+
+    // Borradores totales (CMS + PARAFRASEADOS)
     const totalCMS = await c.env.DB.prepare(
       "SELECT COUNT(*) as count FROM ARTICULOS_CMS WHERE ESTADO = 'BORRADOR'"
     ).first();
 
-    // Pendientes de revisión
-    const totalRev = await c.env.DB.prepare(
-      "SELECT COUNT(*) as count FROM REVISION_CONTENIDO WHERE ESTADO = 'PENDIENTE'"
+    const totalParaDraft = await c.env.DB.prepare(
+      "SELECT COUNT(*) as count FROM ARTICULOS_PARAFRASEADOS WHERE ESTADO = 'BORRADOR'"
     ).first();
 
     // Facebook: Contar publicados en todas las tablas de sitio
@@ -58,17 +88,60 @@ stats.get('/dashboard', async (c) => {
       WHERE ap.ESTADO = 'PUBLICADO' AND DATE(ap.FECHA_PUBLICACION) = DATE('now')
     `).first();
 
+    // Artículos ingestados en las últimas 24 horas
+    const ingested24h = await c.env.DB.prepare(`
+      SELECT COUNT(*) as count FROM ARTICULOS_PARAFRASEADOS
+      WHERE DATE(FECHA_PUBLICACION) >= DATE('now', '-1 day')
+    `).first();
+
     return c.json({
-      articles: totalPub ? totalPub.count : 0,
-      drafts: totalCMS ? totalCMS.count : 0,
-      pending: totalRev ? totalRev.count : 0,
+      articles: (totalPub ? totalPub.count : 0) + (totalCMSPub ? totalCMSPub.count : 0),
+      drafts: (totalCMS ? totalCMS.count : 0) + (totalParaDraft ? totalParaDraft.count : 0),
       facebook: fbPublished,
-      facebookPending: fbPending,
       sites: totalSites ? totalSites.count : 0,
       webToday: webToday ? webToday.count : 0,
+      ingested24h: ingested24h ? ingested24h.count : 0,
     });
   } catch (e) {
     console.error('Stats error:', e.message);
+    return c.json({ error: e.message }, 500);
+  }
+});
+
+// ── GET /stats/ingested — Artículos ingestados recientemente ─
+stats.get('/ingested', async (c) => {
+  if (!await checkAuth(c)) return c.json({ error: 'Unauthorized' }, 401);
+  try {
+    const days = parseInt(c.req.query('days') || '1', 10);
+    const validDays = [1, 7, 30].includes(days) ? days : 1;
+
+    const countResult = await c.env.DB.prepare(`
+      SELECT COUNT(*) as count FROM ARTICULOS_PARAFRASEADOS
+      WHERE DATE(FECHA_PUBLICACION) >= DATE('now', '-${validDays} day')
+    `).first();
+
+    const articles = await c.env.DB.prepare(`
+      SELECT
+        ID,
+        TITULO_PARAFRASEADO as title,
+        SLUG as slug,
+        CATEGORIA as category,
+        SITIO_DESTINO as site,
+        FECHA_PUBLICACION as date,
+        VISTAS as views
+      FROM ARTICULOS_PARAFRASEADOS
+      WHERE DATE(FECHA_PUBLICACION) >= DATE('now', '-${validDays} day')
+      ORDER BY FECHA_PUBLICACION DESC
+      LIMIT 50
+    `).all();
+
+    return c.json({
+      days: validDays,
+      count: countResult ? countResult.count : 0,
+      articles: articles.results || [],
+    });
+  } catch (e) {
+    console.error('Stats ingested error:', e.message);
     return c.json({ error: e.message }, 500);
   }
 });

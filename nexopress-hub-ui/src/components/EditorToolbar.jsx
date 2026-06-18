@@ -33,7 +33,7 @@ export default function EditorToolbar({ editor, cms, onUploadImage }) {
     }
     const formData = new FormData()
     formData.append('file', file)
-    const token = localStorage.getItem('hub_token')
+    const token = localStorage.getItem('cms_token')
     try {
       const res = await fetch(`https://${cms}.sebastianvernis.workers.dev/api/images/upload`, {
         method: 'POST',

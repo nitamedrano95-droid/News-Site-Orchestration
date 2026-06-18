@@ -1,6 +1,7 @@
 name = "nexopress-hub"
 main = "src/index.js"
 compatibility_date = "2026-06-10"
+account_id = "adf5d76bca341500fec8b8c04941978a"
 workers_dev = true
 
 # Permite que el Hub haga fetch() a los CMS Workers (*.workers.dev) que viven

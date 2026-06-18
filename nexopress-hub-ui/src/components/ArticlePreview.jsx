@@ -1,3 +1,5 @@
+import { CMS_ID } from '../main.jsx'
+
 /**
  * Vista previa del artículo en formato lectura — sin la barra de
  * herramientas, sin el SeoPanel, sin chrome editorial. Simula cómo
@@ -15,7 +17,7 @@ export default function ArticlePreview({
   imageUrl,
   metaDescription,
   contentHtml,
-  siteName = 'cms-originaux',
+  siteName = CMS_ID,
 }) {
   if (!open) return null
 
