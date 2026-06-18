@@ -48,11 +48,14 @@ export default function Editor() {
   const [focusMode, setFocusMode] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [imageUrl, setImageUrl] = useState('')
+  const [uploadingMainImage, setUploadingMainImage] = useState(false)
 
   // Refs espejo para que el handleKeyDown del editor (que se registra una sola
   // vez al montar) lea los valores actuales sin necesidad de re-registrarse.
   const previewOpenRef = useRef(false)
   const deletingRef = useRef(false)
+  const mainImageInputRef = useRef(null)
   useEffect(() => { previewOpenRef.current = previewOpen }, [previewOpen])
   useEffect(() => { deletingRef.current = deleting }, [deleting])
 
@@ -129,8 +132,40 @@ export default function Editor() {
     else setLoading(false)
   }, [cms, articleId])
 
+  const handleMainImageUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      alert('Solo se permiten archivos de imagen.')
+      return
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      alert('La imagen no puede pesar más de 20 MB.')
+      return
+    }
+    setUploadingMainImage(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const token = localStorage.getItem('cms_token')
+      const res = await fetch(`https://${cms}.sebastianvernis.workers.dev/api/images/upload`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData,
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      setImageUrl(data.url || data.imageUrl || '')
+    } catch (err) {
+      alert('Error al subir la imagen: ' + err.message)
+    } finally {
+      setUploadingMainImage(false)
+      if (mainImageInputRef.current) mainImageInputRef.current.value = ''
+    }
+  }
+
   const fetchArticle = async () => {
-    const token = localStorage.getItem('hub_token')
+    const token = localStorage.getItem('cms_token')
     try {
       const res = await fetch(`${API_BASE}/cms/${cms}/articles/${articleId}`, {
         headers: { 'Authorization': `Bearer ${token}` },
@@ -140,6 +175,7 @@ export default function Editor() {
       setArticle(data)
       setTitle(data.title || '')
       setSlug(data.slug || '')
+      setImageUrl(data.imageUrl || '')
       setMetaTitle(data.metaTitle || '')
       setMetaDescription(data.metaDescription || '')
       setFocusKeyword(data.focusKeyword || '')
@@ -155,7 +191,7 @@ export default function Editor() {
   }
 
   const fetchSeoAnalysis = async (id) => {
-    const token = localStorage.getItem('hub_token')
+    const token = localStorage.getItem('cms_token')
     try {
       const res = await fetch(`${API_BASE}/cms/${cms}/articles/${id}/seo`, {
         headers: { 'Authorization': `Bearer ${token}` },
@@ -185,13 +221,14 @@ export default function Editor() {
     if (!editor || saving) return
     setSaving(true)
 
-    const token = localStorage.getItem('hub_token')
+    const token = localStorage.getItem('cms_token')
     const content = editor.getHTML()
 
     const payload = {
       title,
       slug,
       content,
+      imageUrl,
       metaTitle,
       metaDescription,
       focusKeyword,
@@ -242,7 +279,7 @@ export default function Editor() {
     )
     if (!ok) return
     setDeleting(true)
-    const token = localStorage.getItem('hub_token')
+    const token = localStorage.getItem('cms_token')
     try {
       const res = await fetch(`${API_BASE}/cms/${cms}/articles/${articleId}`, {
         method: 'DELETE',
@@ -383,6 +420,43 @@ export default function Editor() {
             />
 
             <div className="card">
+              <h3 className="card-title" style={{ marginBottom: '12px' }}>Imagen destacada</h3>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                <input
+                  type="text"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="https://... o sube un archivo"
+                  style={{ flex: 1 }}
+                />
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  style={{ whiteSpace: 'nowrap' }}
+                  onClick={() => mainImageInputRef.current?.click()}
+                  disabled={uploadingMainImage}
+                >
+                  {uploadingMainImage ? 'Subiendo…' : '📤 Subir'}
+                </button>
+                <input
+                  ref={mainImageInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={handleMainImageUpload}
+                />
+              </div>
+              {imageUrl && (
+                <img
+                  src={imageUrl}
+                  alt="Vista previa"
+                  style={{ width: '100%', maxHeight: '140px', objectFit: 'cover', borderRadius: '6px' }}
+                  onError={(e) => { e.target.style.display = 'none' }}
+                />
+              )}
+            </div>
+
+            <div className="card">
               <SerpPreview
                 title={title}
                 slug={slug}
@@ -431,7 +505,7 @@ export default function Editor() {
         title={title}
         category={article?.category}
         author={article?.author}
-        imageUrl={article?.imageUrl}
+        imageUrl={imageUrl}
         metaDescription={metaDescription}
         contentHtml={editor?.getHTML() || ''}
         siteName={cms}
