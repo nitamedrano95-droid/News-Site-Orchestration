@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.cbnnoticias.click/sitemap.xml
+Sitemap: https://cbnnoticias.click/sitemap.xml

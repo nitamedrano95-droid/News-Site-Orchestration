@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.formulacdmx.top/sitemap.xml
+Sitemap: https://formulacdmx.top/sitemap.xml

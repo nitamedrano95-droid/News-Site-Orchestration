@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.reportecentral.site/sitemap.xml
+Sitemap: https://reportecentral.site/sitemap.xml

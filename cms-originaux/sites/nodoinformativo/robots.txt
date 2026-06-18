@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.nodoinformativo.lat/sitemap.xml
+Sitemap: https://nodoinformativo.lat/sitemap.xml

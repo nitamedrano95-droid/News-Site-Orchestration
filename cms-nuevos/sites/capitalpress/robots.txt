@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.capitalpress.lat/sitemap.xml
+Sitemap: https://capitalpress.lat/sitemap.xml

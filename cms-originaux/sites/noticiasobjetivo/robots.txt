@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.noticiasobjetivo.click/sitemap.xml
+Sitemap: https://noticiasobjetivo.click/sitemap.xml

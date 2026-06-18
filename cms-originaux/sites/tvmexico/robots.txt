@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.tvmexiconews.site/sitemap.xml
+Sitemap: https://tvmexiconews.site/sitemap.xml

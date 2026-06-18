@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.centralmexico.online/sitemap.xml
+Sitemap: https://centralmexico.online/sitemap.xml

@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.centronews.buzz/sitemap.xml
+Sitemap: https://centronews.buzz/sitemap.xml

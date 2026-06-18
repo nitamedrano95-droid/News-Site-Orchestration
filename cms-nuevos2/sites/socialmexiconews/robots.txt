@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.socialmexico.top/sitemap.xml
+Sitemap: https://socialmexico.top/sitemap.xml

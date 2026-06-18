@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.puntoclave.lat/sitemap.xml
+Sitemap: https://puntoclave.lat/sitemap.xml

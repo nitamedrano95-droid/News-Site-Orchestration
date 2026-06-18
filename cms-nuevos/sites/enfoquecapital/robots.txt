@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.enfoquecapital.top/sitemap.xml
+Sitemap: https://enfoquecapital.top/sitemap.xml

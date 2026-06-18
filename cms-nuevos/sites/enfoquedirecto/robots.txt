@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.enfoquedirecto.lat/sitemap.xml
+Sitemap: https://enfoquedirecto.lat/sitemap.xml

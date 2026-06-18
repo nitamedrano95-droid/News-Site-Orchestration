@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.noticias123.click/sitemap.xml
+Sitemap: https://noticias123.click/sitemap.xml

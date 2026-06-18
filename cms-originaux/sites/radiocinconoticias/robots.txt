@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.radiocinconoticias.click/sitemap.xml
+Sitemap: https://radiocinconoticias.click/sitemap.xml

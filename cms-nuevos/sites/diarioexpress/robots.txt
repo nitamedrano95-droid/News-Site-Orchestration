@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.diarioexpress.click/sitemap.xml
+Sitemap: https://diarioexpress.click/sitemap.xml

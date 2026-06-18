@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.tmznews.lat/sitemap.xml
+Sitemap: https://tmznews.lat/sitemap.xml

@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.mexico360noticias.click/sitemap.xml
+Sitemap: https://mexico360noticias.click/sitemap.xml

@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.puntonoticias.website/sitemap.xml
+Sitemap: https://puntonoticias.website/sitemap.xml

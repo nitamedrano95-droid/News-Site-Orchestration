@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.elpulsomexicano.lat/sitemap.xml
+Sitemap: https://elpulsomexicano.lat/sitemap.xml

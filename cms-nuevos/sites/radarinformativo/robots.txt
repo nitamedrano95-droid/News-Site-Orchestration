@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.radarinformativo.online/sitemap.xml
+Sitemap: https://radarinformativo.online/sitemap.xml

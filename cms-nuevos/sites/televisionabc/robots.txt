@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.televisionabc.lat/sitemap.xml
+Sitemap: https://televisionabc.lat/sitemap.xml

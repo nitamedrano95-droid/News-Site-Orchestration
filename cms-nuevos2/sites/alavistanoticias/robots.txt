@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.alavistanoticias.online/sitemap.xml
+Sitemap: https://alavistanoticias.online/sitemap.xml

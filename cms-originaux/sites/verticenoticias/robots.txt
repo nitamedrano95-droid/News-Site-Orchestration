@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.verticenoticias.today/sitemap.xml
+Sitemap: https://verticenoticias.today/sitemap.xml

@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.reportediario.online/sitemap.xml
+Sitemap: https://reportediario.online/sitemap.xml

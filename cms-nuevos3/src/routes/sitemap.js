@@ -29,7 +29,7 @@ app.get('/:site', async (c) => {
     const siteRow = await db.prepare(
       'SELECT DOMINIO FROM SITIOS WHERE SLUG = ? LIMIT 1'
     ).bind(siteSlug).first()
-    if (siteRow?.DOMINIO) siteOrigin = `https://www.${siteRow.DOMINIO}`
+    if (siteRow?.DOMINIO) siteOrigin = `https://${siteRow.DOMINIO}`
   } catch {}
 
   let articles = []

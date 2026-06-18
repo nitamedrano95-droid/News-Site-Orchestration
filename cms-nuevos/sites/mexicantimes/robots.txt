@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.mexicantimes.top/sitemap.xml
+Sitemap: https://mexicantimes.top/sitemap.xml

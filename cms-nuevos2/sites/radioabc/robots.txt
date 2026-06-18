@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.radioabc.space/sitemap.xml
+Sitemap: https://radioabc.space/sitemap.xml

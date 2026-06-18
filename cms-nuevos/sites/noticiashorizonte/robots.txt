@@ -17,4 +17,4 @@ Allow: /
 User-agent: Slackbot
 Allow: /
 
-Sitemap: https://www.noticiashorizonte.click/sitemap.xml
+Sitemap: https://noticiashorizonte.click/sitemap.xml
