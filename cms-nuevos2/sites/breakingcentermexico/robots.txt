@@ -16,3 +16,5 @@ Allow: /
 
 User-agent: Slackbot
 Allow: /
+
+Sitemap: https://www.breakingcenter.site/sitemap.xml
