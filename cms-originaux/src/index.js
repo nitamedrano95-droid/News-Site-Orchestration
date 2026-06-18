@@ -23,6 +23,8 @@ import tickerRoutes     from './routes/ticker.js';
 import weatherRoutes    from './routes/weather.js';
 import imageRoutes      from './routes/images.js';
 import jobsRoutes       from './routes/jobs.js';
+import embedRoutes      from './routes/embeds.js';
+import sitemapRoutes    from './routes/sitemap.js';
 
 // ── App ───────────────────────────────────────────────────────
 const app = new Hono().basePath('/api');
@@ -56,6 +58,8 @@ app.route('/ticker',     tickerRoutes);
 app.route('/weather',    weatherRoutes);
 app.route('/images',     imageRoutes);
 app.route('/jobs',       jobsRoutes);
+app.route('/embeds',     embedRoutes);
+app.route('/sitemap',    sitemapRoutes);
 
 // ── Rutas standalone ──────────────────────────────────────────
 
