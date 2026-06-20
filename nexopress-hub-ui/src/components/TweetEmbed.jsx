@@ -651,12 +651,10 @@ export const InstagramEmbed = Node.create({
         }),
         ['iframe', {
           src: embedUrl,
-          width: '100%',
-          height: '480',
           frameborder: '0',
           scrolling: 'no',
           allowtransparency: 'true',
-          style: 'border:0;max-width:100%;display:block;background:#fafafa;',
+          style: 'width:100%;aspect-ratio:4/5;height:auto;min-height:200px;border:0;display:block;background:#fafafa;',
         }],
       ]
     }
