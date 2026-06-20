@@ -1,6 +1,7 @@
 name = "cms-nuevos4"
 main = "src/index.js"
 compatibility_date = "2023-12-01"
+account_id = "adf5d76bca341500fec8b8c04941978a"
 workers_dev = true
 
 # Rutas para los 25 sitios Pages (subdominios .pages.dev)
@@ -13,6 +14,11 @@ workers_dev = true
 
 [vars]
 ENVIRONMENT = "production"
+# URL del Hub para que el CMS pueda validar tokens de sesión del Hub vía
+# /api/auth/validate-token. Sin esto, los tokens emitidos por el Hub son
+# rechazados por el CMS con 401, y todo el flujo de guardado desde el Hub UI
+# falla.
+HUB_API_URL = "https://nexopress-hub.sebastianvernis.workers.dev"
 
 # SECRETS / VARIABLES DE ENTORNO PENDIENTES (configurar con wrangler secret put):
 #   ADMIN_TOKEN          -> wrangler secret put ADMIN_TOKEN
@@ -25,11 +31,11 @@ ENVIRONMENT = "production"
 [[d1_databases]]
 binding = "DB"
 database_name = "news_db_cms_nuevos4"
-database_id = "3230c0c3-c1ac-4a90-b827-675222b1b878"
+database_id = "a3643283-0da0-4503-80d2-069e404f1fef"
 
 [[kv_namespaces]]
 binding = "ARTICLES_KV"
-id = "88a7e6ac68aa4baea053dac4a4227fd1"
+id = "0df031bf42ad4d37a284543fa3c9e57a"
 
 [[r2_buckets]]
 binding = "UPLOADS"

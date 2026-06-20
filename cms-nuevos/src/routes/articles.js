@@ -471,10 +471,14 @@ articles.delete('/:id', async (c) => {
   if (!await checkAuth(c)) return c.json({ error: 'Unauthorized' }, 401);
   const id = c.req.param('id');
   try {
-    // 1. Eliminar métricas (FOREIGN KEY)
-    await c.env.DB.prepare(
-      'DELETE FROM METRICAS_CONTENIDO WHERE ID_ARTICULO_PARAFRASEADO = ?'
-    ).bind(id).run();
+    // 1. Eliminar métricas (FOREIGN KEY) — tolerante si la tabla no existe
+    try {
+      await c.env.DB.prepare(
+        'DELETE FROM METRICAS_CONTENIDO WHERE ID_ARTICULO_PARAFRASEADO = ?'
+      ).bind(id).run();
+    } catch (e) {
+      console.warn('METRICAS_CONTENIDO cleanup skipped:', e.message);
+    }
 
     // 2. Eliminar de PARAFRASEADOS
     await c.env.DB.prepare(

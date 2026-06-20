@@ -2,6 +2,7 @@ name = "cms-originaux"
 main = "src/index.js"
 compatibility_date = "2023-12-01"
 workers_dev = true
+account_id = "adf5d76bca341500fec8b8c04941978a"
 
 # Rutas para inyectar OG tags en sitios Pages
 routes = [
@@ -31,6 +32,7 @@ routes = [
 [vars]
 ENVIRONMENT = "production"
 ARTICLE_PUBLISH_WEBHOOK = "https://TUN8N.tun8n.workers.dev/webhook/article-published"
+HUB_API_URL = "https://nexopress-hub.sebastianvernis.workers.dev"
 
 [[d1_databases]]
 binding = "DB"

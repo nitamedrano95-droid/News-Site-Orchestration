@@ -1252,3 +1252,195 @@ export async function processPreScrapedArticle(env, siteSlug, article) {
     throw dbErr;
   }
 }
+
+// ============================================================
+// DISTRIBUCIÓN — Shuffle + Anti-Colisión para n8n
+// ============================================================
+
+function shuffleWithSeed(arr, seed) {
+  const a = [...arr];
+  let s = hashFNV1a(seed);
+  for (let i = a.length - 1; i > 0; i--) {
+    s = (s + 0x9e3779b9) >>> 0;
+    const j = Math.floor((s / (i + 1)) * (i + 1)) % (i + 1);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function hashFNV1a(str) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
+    h ^= Math.max(0, str.charCodeAt(i));
+    h = Math.imul(h, 0x01000193);
+  }
+  return h >>> 0;
+}
+
+async function getSitiosActivosParaFuente(env, fuente) {
+  try {
+    const fuenteRow = await env.DB.prepare(
+      'SELECT * FROM FUENTES WHERE NOMBRE = ? AND ACTIVA = 1 LIMIT 1'
+    ).bind(fuente).first();
+
+    let sitios = [];
+    if (fuenteRow && fuenteRow.SITIO_SLUG) {
+      sitios = [fuenteRow.SITIO_SLUG];
+    } else {
+      const rows = await env.DB.prepare(`
+        SELECT DISTINCT s.SLUG
+        FROM SITIOS s
+        JOIN FUENTES f ON f.SITIO_SLUG = s.SLUG
+        WHERE f.NOMBRE = ? AND f.ACTIVA = 1 AND s.ACTIVO = 1 AND s.FACEBOOK_ACTIVO = 1
+      `).bind(fuente).all();
+      sitios = (rows.results || []).map(r => r.SLUG);
+    }
+    return sitios;
+  } catch (e) {
+    RSS_WARN(`[DIST] Error consultando fuentes para ${fuente}:`, e.message);
+  }
+  return [];
+}
+
+async function insertIntoArticulosFuente(env, article, fuente) {
+  const id = crypto.randomUUID();
+  const now = new Date().toISOString();
+  await env.DB.prepare(`
+    INSERT OR IGNORE INTO ARTICULOS_FUENTE
+      (ID, FUENTE, TITULO, DESCRIPCION, URL, URL_IMAGEN, CONTENIDO, CATEGORIA, FECHA_INGESTION, ESTADO)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDIENTE')
+  `).bind(
+    id, fuente,
+    article.title || '',
+    (article.description || '').substring(0, 500),
+    article.sourceUrl || article.url || '',
+    article.imageUrl || null,
+    article.content || '',
+    article.category || 'NACIONAL',
+    now
+  ).run();
+  return id;
+}
+
+async function getDistRound(env, fuente) {
+  try {
+    const key = `dist_round:${fuente}`;
+    const val = await env.ARTICLES_KV.get(key);
+    return val ? parseInt(val, 10) : 0;
+  } catch { return 0; }
+}
+
+async function incrementDistRound(env, fuente) {
+  const key = `dist_round:${fuente}`;
+  const val = await env.ARTICLES_KV.get(key);
+  const round = val ? parseInt(val, 10) : 0;
+  await env.ARTICLES_KV.put(key, (round + 1).toString());
+  return round + 1;
+}
+
+async function distributeArticle(env, articleId, fuente) {
+  const sitios = await getSitiosActivosParaFuente(env, fuente);
+  if (sitios.length === 0) {
+    RSS_LOG(`[DIST] No sitios activos para fuente: ${fuente}`);
+    return { distribuido: 0, sitios: [] };
+  }
+
+  const round = await incrementDistRound(env, fuente);
+  const seed = `${articleId}:${fuente}:${round}`;
+  const shuffledSites = shuffleWithSeed(sitios, seed);
+
+  const now = new Date();
+  const stmts = [];
+  const distEntries = [];
+
+  for (let i = 0; i < shuffledSites.length; i++) {
+    const sitioSlug = shuffledSites[i];
+    const delayMinutes = i === 0 ? 0 : (15 * i) + (Math.abs(hashFNV1a(articleId + sitioSlug) % 31));
+    const scheduledDate = new Date(now.getTime() + delayMinutes * 60 * 1000);
+    const distId = crypto.randomUUID();
+
+    stmts.push(
+      env.DB.prepare(`
+        INSERT INTO DISTRIBUCION_ARTICULOS
+          (ID, ID_ARTICULO_FUENTE, ID_SITIO, ORDEN_PUBLICACION, FECHA_PROGRAMADA, PUBLICADO)
+        VALUES (?, ?, ?, ?, ?, 0)
+      `).bind(distId, articleId, sitioSlug, i + 1, scheduledDate.toISOString())
+    );
+    distEntries.push({ sitio: sitioSlug, orden: i + 1, programado: scheduledDate.toISOString() });
+  }
+
+  try {
+    await env.DB.batch(stmts);
+  } catch (e) {
+    RSS_ERR(`[DIST] Error insertando distribución:`, e.message);
+    return { distribuido: 0, error: e.message };
+  }
+
+  try {
+    await env.DB.prepare(`UPDATE ARTICULOS_FUENTE SET ESTADO = 'DISTRIBUIDO' WHERE ID = ?`).bind(articleId).run();
+  } catch (e) {
+    RSS_WARN(`[DIST] No se pudo marcar ESTADO=DISTRIBUIDO:`, e.message);
+  }
+
+  RSS_LOG(`[DIST] Artículo ${articleId} → ${sitios.length} sitios (round ${round})`);
+  return { distribuido: sitios.length, sitios: distEntries };
+}
+
+export async function handleIngestGlobal(env, body) {
+  const { articles, fuente } = body;
+
+  if (!articles || !Array.isArray(articles) || articles.length === 0) {
+    return { success: false, error: 'Se requiere array de artículos no vacío' };
+  }
+  if (!fuente || typeof fuente !== 'string') {
+    return { success: false, error: 'Campo "fuente" requerido' };
+  }
+
+  const results = [];
+  const errors = [];
+
+  for (const article of articles) {
+    try {
+      const title = (article.title || '').trim();
+      if (!title || title.length < 5) {
+        errors.push({ titulo: title || '(sin título)', error: 'título inválido' });
+        continue;
+      }
+      // Detectar títulos de prueba/placeholder
+      const lowerTitle = title.toLowerCase();
+      if (lowerTitle.includes('test') || lowerTitle.includes('prueba') || lowerTitle.includes('sample') || lowerTitle.includes('articulo de prueba')) {
+        errors.push({ titulo: title, error: 'título de prueba detectado' });
+        continue;
+      }
+      if ((article.content || '').length < 200) {
+        errors.push({ titulo: title, error: 'contenido < 200 chars' });
+        continue;
+      }
+
+      // Verificar duplicado en fuente
+      const existing = await env.DB.prepare(
+        'SELECT ID FROM ARTICULOS_FUENTE WHERE URL = ? AND FUENTE = ?'
+      ).bind(article.sourceUrl || article.url || '', fuente).first();
+      if (existing) {
+        errors.push({ titulo: title, error: 'duplicado en fuente' });
+        continue;
+      }
+
+      const articleId = await insertIntoArticulosFuente(env, article, fuente);
+      const distResult = await distributeArticle(env, articleId, fuente);
+      results.push({ idArticulo: articleId, distribuidoA: distResult.distribuido });
+    } catch (e) {
+      errors.push({ titulo: article.title || '(sin título)', error: e.message });
+    }
+  }
+
+  return {
+    success: true,
+    fuente,
+    articlesRecibidos: articles.length,
+    articlesProcesados: results.length,
+    articulosSaltados: errors.length,
+    results,
+    errors: errors.length > 0 ? errors : undefined,
+  };
+}

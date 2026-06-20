@@ -6,6 +6,11 @@ import { articleSlugify, parseArticleRow, sanitizePublishedAt, seededShuffle } f
 
 const articles = new Hono();
 
+const safeJsonParse = (value, fallback) => {
+  if (!value) return fallback;
+  try { return JSON.parse(value); } catch { return fallback; }
+};
+
 const isValidSiteSlug = (s) => typeof s === 'string' && /^[a-z0-9_]+$/i.test(s);
 
 const splitSiteSlugs = (value) => {
@@ -99,10 +104,6 @@ articles.get('/', async (c) => {
       const existingIds = new Set(arts.map((a) => a.id));
       const extras = allArticles.filter((a) => !existingIds.has(a.id));
       arts = [...arts, ...extras].slice(0, l);
-    }
-
-    if (shuffle === 'true' && site) {
-      arts = seededShuffle(arts, site);
     }
 
     return c.json({ articles: arts });
@@ -279,27 +280,6 @@ articles.post('/', async (c) => {
 
     await c.env.DB.batch(statements);
 
-    // Fire-and-forget: notificar a n8n sobre nuevo artículo
-    try {
-      const wh = c.env.ARTICLE_PUBLISH_WEBHOOK;
-      if (wh) {
-        fetch(wh, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            event: 'article.published',
-            id: articleId,
-            slug,
-            title: article.title,
-            sites: targetSites,
-            category: (article.category || 'NACIONAL').toUpperCase(),
-            author: article.author || 'Editorial',
-            wordCount,
-          }),
-        }).catch(() => {});
-      }
-    } catch (_) { /* fire-and-forget */ }
-
     return c.json({ success: true, article: { id: articleId, slug, title: article.title, wordCount } });
   } catch (e) {
     return c.json({ error: e.message }, 500);
@@ -377,28 +357,6 @@ articles.post('/bulk', async (c) => {
         }
 
         await c.env.DB.batch(statements);
-
-        // Fire-and-forget: notificar a n8n
-        try {
-          const wh = c.env.ARTICLE_PUBLISH_WEBHOOK;
-          if (wh) {
-            const wc = article.content?.trim().split(/\s+/).length || 0;
-            fetch(wh, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                event: 'article.published',
-                id: articleId,
-                slug,
-                title: article.title,
-                sites: targetSites,
-                category: article.category?.toUpperCase() || 'NACIONAL',
-                author: article.author || 'Redacción',
-                wordCount: wc,
-              }),
-            }).catch(() => {});
-          }
-        } catch (_) { /* fire-and-forget */ }
 
         results.push({ title: article.title, slug, status: 'inserted' });
       } catch (e) {
@@ -518,10 +476,14 @@ articles.delete('/:id', async (c) => {
   if (!await checkAuth(c)) return c.json({ error: 'Unauthorized' }, 401);
   const id = c.req.param('id');
   try {
-    // 1. Eliminar métricas (FOREIGN KEY)
-    await c.env.DB.prepare(
-      'DELETE FROM METRICAS_CONTENIDO WHERE ID_ARTICULO_PARAFRASEADO = ?'
-    ).bind(id).run();
+    // 1. Eliminar métricas (FOREIGN KEY) — tolerante si la tabla no existe
+    try {
+      await c.env.DB.prepare(
+        'DELETE FROM METRICAS_CONTENIDO WHERE ID_ARTICULO_PARAFRASEADO = ?'
+      ).bind(id).run();
+    } catch (e) {
+      console.warn('METRICAS_CONTENIDO cleanup skipped:', e.message);
+    }
 
     // 2. Eliminar de PARAFRASEADOS
     await c.env.DB.prepare(
@@ -548,18 +510,43 @@ import { analyzeReadability, analyzeFocusKeyword, generateNewsArticleSchema } fr
 articles.get('/:id/seo', async (c) => {
   const id = c.req.param('id');
   try {
-    const row = await c.env.DB.prepare(
-      "SELECT ID, TITULO, SLUG, CONTENIDO, DESCRIPCION, META_TITLE, META_DESCRIPTION, FOCUS_KEYWORD, TAGS, READING_SCORE, READING_ANALYSIS, FECHA_PUBLICACION, URL_IMAGEN, AUTOR, CATEGORIA FROM ARTICULOS_CMS WHERE ID = ?"
+    // Buscar primero en ARTICULOS_CMS, luego en ARTICULOS_PARAFRASEADOS.
+    // El listado puede devolver IDs de cualquiera de las dos tablas.
+    // Usamos SELECT * porque las tablas tienen esquemas distintos según
+    // la versión (READING_SCORE/TAGS no existen en todos los deploys).
+    const cmsRow = await c.env.DB.prepare(
+      "SELECT * FROM ARTICULOS_CMS WHERE ID = ?"
     ).bind(id).first();
+
+    let row = cmsRow;
+    let fromParaphrased = false;
+    if (!row) {
+      row = await c.env.DB.prepare(
+        "SELECT * FROM ARTICULOS_PARAFRASEADOS WHERE ID = ?"
+      ).bind(id).first();
+      fromParaphrased = Boolean(row);
+    }
     if (!row) return c.json({ error: 'article not found' }, 404);
 
+    // Mapear columnas de ARTICULOS_CMS (TITULO, DESCRIPCION) o
+    // ARTICULOS_PARAFRASEADOS (TITULO_PARAFRASEADO, DESCRIPCION_PARAFRASEADA).
+    const title = row.TITULO ?? row.TITULO_PARAFRASEADO ?? '';
+    const description = row.DESCRIPCION ?? row.DESCRIPCION_PARAFRASEADA ?? '';
+    const content = row.CONTENIDO ?? row.CONTENIDO_PARAFRASEADO ?? '';
+    const metaTitle = row.META_TITLE ?? null;
+    const metaDescription = row.META_DESCRIPTION ?? null;
+    const focusKeyword = row.FOCUS_KEYWORD ?? null;
+    const tags = row.TAGS ? safeJsonParse(row.TAGS, []) : [];
+    const imageUrl = row.URL_IMAGEN ?? null;
+    const publishedAt = row.FECHA_PUBLICACION ?? row.PUBLISHED_AT ?? null;
+
     const article = {
-      id: row.ID, title: row.TITULO, slug: row.SLUG,
-      content: row.CONTENIDO, excerpt: row.DESCRIPCION,
-      metaTitle: row.META_TITLE, metaDescription: row.META_DESCRIPTION,
-      focusKeyword: row.FOCUS_KEYWORD, tags: row.TAGS ? JSON.parse(row.TAGS) : [],
-      publishedAt: row.FECHA_PUBLICACION, imageUrl: row.URL_IMAGEN,
-      author: row.AUTOR, category: row.CATEGORIA,
+      id: row.ID, title, slug: row.SLUG,
+      content, excerpt: description,
+      metaTitle, metaDescription,
+      focusKeyword, tags,
+      publishedAt, imageUrl,
+      author: null, category: null,
     };
 
     const readability = analyzeReadability(article.content);

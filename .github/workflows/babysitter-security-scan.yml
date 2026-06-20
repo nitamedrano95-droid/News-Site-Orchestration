@@ -1,0 +1,32 @@
+name: Security Scan
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # Every Monday at 6am UTC
+  workflow_dispatch:
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Security Scan with Babysitter
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          track_progress: true
+          plugin_marketplaces: |
+            https://github.com/a5c-ai/babysitter.git
+          plugins: |
+            babysitter@a5c.ai
+          prompt: |
+            Run a security audit using the codebase-security-audit process from .a5c/processes/security/.
+            Focus on: secrets in code, OWASP top 10 vulnerabilities in Cloudflare Workers endpoints,
+            dependency vulnerabilities, and insecure coding patterns.
+            Create a GitHub issue summarizing findings if critical issues are found.

@@ -1,6 +1,7 @@
 # Proxy /api/* al worker de noticias
 # Fallback para cuando el sitio corre en *.pages.dev
 # En dominios propios, las Workers Routes en src/wrangler.toml manejan esto automaticamente.
+# /sitemap.xml es manejado directamente por el Worker (src/index.js)
 
 /api/* https://cms-originaux.sebastianvernis.workers.dev/api/:splat 200
 

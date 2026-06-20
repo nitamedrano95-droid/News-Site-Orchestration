@@ -1,6 +1,7 @@
 # NexoPress — Plataforma de Noticias Multi-Sitio
 
 > **Estado:** En producción · 5 CMS Workers · ~96 sitios · Editor SEO unificado
+> **Última revisión:** 2026-06-17 — ver `docs/status/2026-06-17-status.md` para el detalle de bugs activos.
 
 ## Arquitectura (Jun 2026)
 
@@ -10,9 +11,9 @@
 |--------|--------|--------|
 | `cms-originaux` | 11 | Activo |
 | `cms-nuevos` | 18 | Activo |
-| `cms-nuevos2` | 9 | Activo |
+| `cms-admin-nuevos2` | 9 | Activo (renombrado desde `cms-nuevos2` el 2026-06-17) |
 | `cms-nuevos3` | 33 | Activo |
-| `cms-nuevos4` | 25 | Activo |
+| `cms-nuevos4` | 25 | Activo (en rediseño) |
 
 **Total:** ~96 sitios de noticias
 
@@ -51,7 +52,7 @@ El **NexoPress Hub** es un panel editorial centralizado que permite:
 | Hub API | `https://nexopress-hub.sebastianvernis.workers.dev` |
 | CMS-originaux | `https://cms-originaux.sebastianvernis.workers.dev` |
 | CMS-nuevos | `https://cms-nuevos.sebastianvernis.workers.dev` |
-| CMS-nuevos2 | `https://cms-nuevos2.sebastianvernis.workers.dev` |
+| CMS-admin-nuevos2 | `https://cms-admin-nuevos2.sebastianvernis.workers.dev` |
 | CMS-nuevos3 | `https://cms-nuevos3.sebastianvernis.workers.dev` |
 | CMS-nuevos4 | `https://cms-nuevos4.sebastianvernis.workers.dev` |
 
@@ -61,9 +62,9 @@ El **NexoPress Hub** es un panel editorial centralizado que permite:
 News-Site-Orchestration/
 ├── cms-originaux/          # CMS Worker 1 (11 sitios)
 ├── cms-nuevos/             # CMS Worker 2 (18 sitios)
-├── cms-nuevos2/            # CMS Worker 3 (9 sitios)
+├── cms-admin-nuevos2/      # CMS Worker 3 (9 sitios, renombrado desde cms-nuevos2/)
 ├── cms-nuevos3/            # CMS Worker 4 (33 sitios)
-├── cms-nuevos4/            # CMS Worker 5 (25 sitios)
+├── cms-nuevos4/            # CMS Worker 5 (25 sitios, en rediseño)
 ├── cms-selector/           # Indexador de sitios
 ├── nexopress-hub/          # Hub Worker (SSO + API cross-CMS)
 ├── nexopress-hub-ui/       # Hub Frontend (React + TipTap)
@@ -102,7 +103,7 @@ wrangler deploy
 wrangler d1 execute nexopress-hub-db --file migrations/001_init.sql
 
 # 5. Migrar los 5 CMSs
-for cms in cms-originaux cms-nuevos cms-nuevos2 cms-nuevos3 cms-nuevos4; do
+for cms in cms-originaux cms-nuevos cms-admin-nuevos2 cms-nuevos3 cms-nuevos4; do
   cd $cms
   wrangler d1 execute <DB_NAME> --file migrations/002_seo_fields.sql
   wrangler d1 execute <DB_NAME> --file migrations/003_seed_rodrigo.sql
@@ -151,5 +152,6 @@ Ver `docs/guides/nexopress-hub-deploy.md#troubleshooting`
 
 ---
 
-**Última actualización:** Junio 2026  
-**Versión:** 2.0 (con Hub unificado)
+**Última actualización:** 2026-06-17
+**Versión:** 2.1 (con nuevo Worker `cms-admin-nuevos2`)
+**Cambios recientes:** ver `docs/status/2026-06-17-status.md`

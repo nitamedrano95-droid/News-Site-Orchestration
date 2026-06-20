@@ -1,0 +1,35 @@
+name: Babysitter PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+    branches: [main]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Claude Code PR Review
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          track_progress: true
+          plugin_marketplaces: |
+            https://github.com/a5c-ai/babysitter.git
+          plugins: |
+            babysitter@a5c.ai
+          prompt: |
+            Review this pull request for the NexoPress multi-CMS platform.
+            Focus on: correctness, Cloudflare Workers constraints, D1 SQL idempotency,
+            security (no hardcoded secrets), wrangler.toml changes, and adherence to CLAUDE.md conventions.
+            Post a concise review comment.

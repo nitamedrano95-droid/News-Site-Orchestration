@@ -23,6 +23,8 @@ import tickerRoutes     from './routes/ticker.js';
 import weatherRoutes    from './routes/weather.js';
 import imageRoutes      from './routes/images.js';
 import jobsRoutes       from './routes/jobs.js';
+import embedRoutes      from './routes/embeds.js';
+import sitemapRoutes    from './routes/sitemap.js';
 
 // ── App ───────────────────────────────────────────────────────
 const app = new Hono().basePath('/api');
@@ -56,6 +58,8 @@ app.route('/ticker',     tickerRoutes);
 app.route('/weather',    weatherRoutes);
 app.route('/images',     imageRoutes);
 app.route('/jobs',       jobsRoutes);
+app.route('/embeds',     embedRoutes);
+app.route('/sitemap',    sitemapRoutes);
 
 // ── Rutas standalone ──────────────────────────────────────────
 
@@ -89,6 +93,19 @@ app.post('/upload', async (c) => {
   }
 });
 
+// Dominios custom cuyo slug no coincide con el primer segmento del hostname
+const CUSTOM_SLUG_MAP = {
+  'breakingcenter.site': 'breakingcentermexico',
+  'socialmexico.top':    'socialmexiconews',
+};
+
+function siteSlugFromHost(hostname) {
+  const bare = hostname.replace(/^www\./, '');
+  if (CUSTOM_SLUG_MAP[bare]) return CUSTOM_SLUG_MAP[bare];
+  if (bare.endsWith('.pages.dev')) return bare.replace('.pages.dev', '');
+  return bare.split('.')[0];
+}
+
 // ── Export ────────────────────────────────────────────────────
 export default {
   // Maneja peticiones HTTP
@@ -98,6 +115,13 @@ export default {
     // Rutas de la API
     if (url.pathname.startsWith('/api')) {
       return app.fetch(request, env, ctx);
+    }
+
+    // Sitemap dinámico: detecta sitio desde el hostname y delega al handler interno
+    if (url.pathname === '/sitemap.xml') {
+      const slug = siteSlugFromHost(url.hostname);
+      const sitemapReq = new Request(`${url.origin}/api/sitemap/${slug}`, request);
+      return app.fetch(sitemapReq, env, ctx);
     }
 
     // Resto: inyectar meta tags OG para SEO en páginas de sitios

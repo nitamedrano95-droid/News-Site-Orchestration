@@ -16,3 +16,5 @@ Allow: /
 
 User-agent: Slackbot
 Allow: /
+
+Sitemap: https://noticiasintegra.lat/sitemap.xml
