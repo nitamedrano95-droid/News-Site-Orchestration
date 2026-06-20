@@ -319,13 +319,15 @@ cms.post('/articles', async (c) => {
             UPDATE ARTICULOS_PARAFRASEADOS SET
               TITULO_PARAFRASEADO = ?, SLUG = ?, CONTENIDO = ?, DESCRIPCION_PARAFRASEADA = ?,
               CATEGORIA = ?, URL_IMAGEN = ?, SITIO_DESTINO = ?, DESTACADO = ?, ESTADO = ?, FB_REQUERIDO = ?,
-              META_TITLE = ?, META_DESCRIPTION = ?, FOCUS_KEYWORD = ?, TAGS = ?
+              META_TITLE = ?, META_DESCRIPTION = ?, FOCUS_KEYWORD = ?, TAGS = ?,
+              LEGACY_SLUG = COALESCE(LEGACY_SLUG, ?)
             WHERE ID = ?
           `).bind(
             titulo, slug, contenido || '', descripcion || '',
             (categoria || 'NACIONAL').toUpperCase(), url_imagen || '', sitiosStr,
             destacado || 0, estado || 'PUBLICADO', fbRequerido ? 1 : 0,
             metaTitle, metaDescription, focusKeyword, tags,
+            current?.SLUG || slug,
             id
           ).run();
 
@@ -512,6 +514,13 @@ cms.post('/publish', async (c) => {
 
     // Si es parafraseado nativo, actualizarlo directamente (y opcionalmente SEO)
     if (articlePara) {
+      const existingSites = String(articlePara.SITIO_DESTINO || '')
+        .split(',')
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean);
+      const mergedSites = [...new Set([...existingSites, ...sitios.map((s) => s.trim().toLowerCase())])];
+      const mergedSitesStr = mergedSites.join(',');
+
       const baseSlug = articlePara.SLUG || (slug ? articleSlugify(slug) : articleSlugify(articlePara.TITULO_PARAFRASEADO));
       const baseTitle = title || articlePara.TITULO_PARAFRASEADO;
       const baseContent = content || articlePara.CONTENIDO;
@@ -524,18 +533,24 @@ cms.post('/publish', async (c) => {
         UPDATE ARTICULOS_PARAFRASEADOS SET
           TITULO_PARAFRASEADO = ?, SLUG = ?, CONTENIDO = ?, DESCRIPCION_PARAFRASEADA = ?,
           CATEGORIA = ?, FECHA_PUBLICACION = ?, URL_IMAGEN = ?,
-          SITIO_DESTINO = ?, DESTACADO = ?, ESTADO = 'PUBLICADO', FB_REQUERIDO = ?
+          SITIO_DESTINO = ?, DESTACADO = ?, ESTADO = 'PUBLICADO', FB_REQUERIDO = ?,
+          META_TITLE = COALESCE(META_TITLE, ?),
+          META_DESCRIPTION = COALESCE(META_DESCRIPTION, ?),
+          FOCUS_KEYWORD = COALESCE(FOCUS_KEYWORD, ?),
+          TAGS = COALESCE(TAGS, ?)
         WHERE ID = ?
       `).bind(
         baseTitle, baseSlug, baseContent, baseExcerpt,
         baseCategory, now, baseImage,
-        sitiosStr, isFeatured ? 1 : 0, shouldPublishToFB ? 1 : 0, id
+        mergedSitesStr, isFeatured ? 1 : 0, shouldPublishToFB ? 1 : 0,
+        baseTitle, baseExcerpt, '', '',
+        id
       ).run();
 
-      await syncSiteTables(c.env.DB, id, sitios);
+      await syncSiteTables(c.env.DB, id, mergedSites);
 
       // Publicar en FB para cada sitio
-      for (const siteSlug of sitios) {
+      for (const siteSlug of mergedSites) {
         const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
         const row = await c.env.DB.prepare(`SELECT ID FROM ${tableName} WHERE ID_PARAFRASEADO = ?`).bind(id).first();
         if (!row) continue;
@@ -563,7 +578,7 @@ cms.post('/publish', async (c) => {
         }
       }
 
-      return c.json({ success: true, published: 1, updated: 1, siteCount: sitios.length, source: 'PARAFRASEADO' });
+      return c.json({ success: true, published: 1, updated: 1, siteCount: mergedSites.length, source: 'PARAFRASEADO', sites: mergedSites });
     }
 
     // ── A partir de aquí es CMS ──

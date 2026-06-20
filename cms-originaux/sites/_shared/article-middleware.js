@@ -64,7 +64,36 @@ export async function handleArticleRequest(context, siteSlug) {
 
     const response = await next();
     const title = article.title;
-    const description = (article.desc || '').substring(0, 200);
+
+    // Sanitizar la descripción para OG/Twitter cards:
+    // - Quitar tags HTML
+    // - Decodificar entidades (acentos, &amp;, etc.)
+    // - Colapsar whitespace
+    // - Cortar a 200 chars sin romper palabras
+    const stripHtml = (html) => {
+      if (!html) return '';
+      return String(html)
+        .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+        .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/&amp;/gi, '&')
+        .replace(/&lt;/gi, '<')
+        .replace(/&gt;/gi, '>')
+        .replace(/&quot;/gi, '"')
+        .replace(/&#39;/gi, "'")
+        .replace(/&#[0-9]+;/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    };
+    const truncate = (text, max) => {
+      if (!text) return '';
+      if (text.length <= max) return text;
+      const slice = text.substring(0, max);
+      const lastSpace = slice.lastIndexOf(' ');
+      return (lastSpace > 80 ? slice.substring(0, lastSpace) : slice) + '…';
+    };
+    const description = truncate(stripHtml(article.desc), 200);
     const normalizeImageUrl = (value) => {
       if (!value || typeof value !== 'string') return `${url.origin}/logo.png`;
 

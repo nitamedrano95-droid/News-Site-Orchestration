@@ -1,0 +1,92 @@
+# agentsh sandbox policy for AI agent sessions
+sandbox:
+  filesystem:
+    writable:
+      - "."
+      - "/tmp"
+      - "${HOME}/.a5c"
+      - "${HOME}/.claude"
+      - "${HOME}/.wrangler"
+    readonly:
+      - "/usr"
+      - "/etc"
+      - "${HOME}/.npm"
+      - "${HOME}/.config"
+
+  commands:
+    allow:
+      - git
+      - node
+      - npm
+      - npx
+      - pnpm
+      - bun
+      - python
+      - python3
+      - pip
+      - pip3
+      - ls
+      - cat
+      - head
+      - tail
+      - grep
+      - find
+      - sed
+      - awk
+      - curl
+      - wget
+      - jq
+      - tar
+      - gzip
+      - unzip
+      - mkdir
+      - cp
+      - mv
+      - rm
+      - touch
+      - chmod
+      - echo
+      - printf
+      - tee
+      - sort
+      - uniq
+      - wc
+      - diff
+      - which
+      - env
+      - babysitter
+      - wrangler
+      - rtk
+      - qmd
+      - dev-browser
+    prompt:
+      - docker
+      - kubectl
+      - ssh
+      - scp
+      - sudo
+    deny:
+      - reboot
+      - shutdown
+      - mkfs
+      - dd
+      - fdisk
+
+  network:
+    allow:
+      - "github.com"
+      - "api.github.com"
+      - "registry.npmjs.org"
+      - "pypi.org"
+      - "api.anthropic.com"
+      - "*.cloudflare.com"
+      - "*.workers.dev"
+      - "*.pages.dev"
+      - "localhost"
+      - "127.0.0.1"
+    default: deny
+
+  resources:
+    max_processes: 100
+    max_file_size_mb: 500
+    max_open_files: 1024

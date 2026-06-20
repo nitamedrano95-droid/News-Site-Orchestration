@@ -197,7 +197,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div>
+    <div className="dashboard-page">
       <HubNav />
 
       <header className="dashboard-header flex-between">

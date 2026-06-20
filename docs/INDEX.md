@@ -1,6 +1,6 @@
 # Índice de documentación — NexoPress
 
-> **Última actualización:** 2026-06-10
+> **Última actualización:** 2026-06-17
 > Mantenido manualmente. Si agregás un documento nuevo, anotalo acá.
 
 ## Punto de entrada
@@ -22,6 +22,12 @@
 | [`FACEBOOK_TOKEN_SETUP.md`](FACEBOOK_TOKEN_SETUP.md) | Setup de tokens de Facebook |
 | [`SYSTEM_MONITOR.md`](SYSTEM_MONITOR.md) | Diagnóstico de crons, ingesta, FB |
 | [`QUICK_START.md`](QUICK_START.md) | Onboarding rápido |
+
+## Estatus del proyecto
+
+| Archivo | Tema |
+|---|---|
+| [`status/2026-06-17-status.md`](status/2026-06-17-status.md) | Snapshot operativo al 2026-06-17: bugs activos, fixes aplicados, pendientes |
 
 ## Guías operativas
 

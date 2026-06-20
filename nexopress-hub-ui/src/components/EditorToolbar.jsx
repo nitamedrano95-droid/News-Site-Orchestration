@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { API_BASE } from '../main.jsx'
 import Tooltip from './Tooltip.jsx'
 import InternalLinkDialog from './InternalLinkDialog.jsx'
 import { isValidTweetUrl, isValidInstagramUrl } from './TweetEmbed.jsx'
@@ -15,7 +16,16 @@ import { isValidTweetUrl, isValidInstagramUrl } from './TweetEmbed.jsx'
  * Cada botón envuelve su contenido con un Tooltip que muestra descripción
  * breve y atajo de teclado cuando aplica.
  */
-export default function EditorToolbar({ editor, cms, onUploadImage }) {
+export default function EditorToolbar({ editor, cms: cmsProp, onUploadImage }) {
+  // Fallback robusto: usa el prop, o window.CMS_ID (inyectado en index.html),
+  // o import.meta.env, o 'cms-originaux' como último recurso. Esto garantiza
+  // que la URL del upload nunca quede con 'undefined' aunque el padre no
+  // pase el prop o la ruta no traiga :cms en params.
+  const cms =
+    cmsProp ||
+    (typeof window !== 'undefined' && window.CMS_ID) ||
+    (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_CMS_ID) ||
+    'cms-originaux'
   const fileInputRef = useRef(null)
   const [showLinkDialog, setShowLinkDialog] = useState(false)
   const [embedUrl, setEmbedUrl] = useState('')
@@ -57,7 +67,7 @@ export default function EditorToolbar({ editor, cms, onUploadImage }) {
   }
 
   // === EMBEDS: YOUTUBE / TWITTER / INSTAGRAM =============================
-  const submitEmbed = () => {
+  const submitEmbed = async () => {
     const url = embedUrl.trim()
     if (!url) return
     if (showEmbedInput === 'youtube') {
@@ -78,17 +88,38 @@ export default function EditorToolbar({ editor, cms, onUploadImage }) {
         }
       }
     } else if (showEmbedInput === 'twitter') {
-      // Nodo atómico TweetEmbed: ProseMirror rechaza <script> por seguridad
-      // y el <a> vacío rompía el parseo del <blockquote>. El nodo se
-      // serializa como <blockquote class="twitter-tweet"><a>URL</a></blockquote>
-      // para que el sitio público cargue widgets.js.
+      // Nodo atómico TweetEmbed con previsualización enriquecida.
+      // Pedimos /api/embeds/x del CMS ANTES de insertar. Si llega la
+      // data enriquecida, insertamos un solo nodo con tweet:data.
+      // Si falla el fetch, insertamos con failed:true para que el
+      // sitio público cargue widgets.js.
       if (!isValidTweetUrl(url)) {
         alert('La URL no parece un tuit válido. Pega un enlace del tipo https://x.com/usuario/status/1234567890')
         return
       }
-      const ok = editor.chain().focus().setTweetEmbed(url).run()
-      if (!ok) {
-        alert('No se pudo insertar el tuit. Revisa la consola para más detalles.')
+      const token = localStorage.getItem('cms_token')
+      try {
+        const res = await fetch(`${API_BASE}/embeds/x`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ url }),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          const tweetData = data?.tweet || null
+          // Insertar UNA sola vez con la data completa.
+          editor.chain().focus().setTweetEmbed({ url, tweet: tweetData, failed: false }).run()
+        } else {
+          // Fallo del backend → fallback al placeholder (sitio usa widgets.js).
+          editor.chain().focus().setTweetEmbed({ url, failed: true }).run()
+        }
+      } catch (e) {
+        console.warn('[TweetEmbed] Fallo la previsualización:', e.message)
+        // Error de red → fallback al placeholder.
+        editor.chain().focus().setTweetEmbed({ url, failed: true }).run()
       }
     } else if (showEmbedInput === 'instagram') {
       // Mismo patrón: nodo atómico para no meter <script>/<iframe> en ProseMirror.

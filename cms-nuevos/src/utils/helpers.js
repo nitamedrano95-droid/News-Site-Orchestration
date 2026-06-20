@@ -226,6 +226,9 @@ export const parseArticleRow = (row) => {
   const content = decodeHTMLEntities(row.CONTENIDO || row.content || '');
   const excerpt = decodeHTMLEntities(row.DESCRIPCION_PARAFRASEADA || row.DESCRIPCION || row.excerpt || '');
 
+  const sourceTable = row.SOURCE_TABLE || row.source_table || 'PARAFRASEADO';
+  const status = row.ESTADO || (sourceTable === 'CMS' ? 'BORRADOR' : 'PUBLICADO');
+
   return {
     id:          row.ID || row.id,
     title,
@@ -239,5 +242,7 @@ export const parseArticleRow = (row) => {
     featured:    Boolean(row.DESTACADO || row.featured || 0),
     site:        row.SITIO_DESTINO || row.SITIOS_DESTINO || row.site || '',
     fb_published: Boolean(row.FB_PUBLICADO || 0),
+    status,
+    sourceTable,
   };
 };

@@ -308,24 +308,6 @@ export default function SeoPanel({ article, seoData, onUpdate }) {
           {article.metaDescription?.length || 0} / 156 caracteres
         </div>
       </div>
-
-      {/* Vista previa en Google */}
-      <div>
-        <h4 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
-          Vista previa en Google
-        </h4>
-        <div className="serp-preview">
-          <div className="serp-preview-title">
-            {(article.metaTitle || article.title || 'Título del artículo').slice(0, 60)}
-          </div>
-          <div className="serp-preview-url">
-            https://tusitio.com/noticia/{(article.slug || 'slug').slice(0, 50)}
-          </div>
-          <div className="serp-preview-desc">
-            {(article.metaDescription || article.title || 'Descripción del artículo…').slice(0, 156)}
-          </div>
-        </div>
-      </div>
     </div>
   )
 }

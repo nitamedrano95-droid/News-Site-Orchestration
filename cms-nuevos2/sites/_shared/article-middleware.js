@@ -1,4 +1,4 @@
-async function resolveArticleBySlug(db, slug, siteSlug) {
+async function resolveArticleBySlug(db, slug) {
   let article = await db.prepare(
     "SELECT ID as para_id, SLUG as canonical_slug, LEGACY_SLUG as legacy_slug, TITULO_PARAFRASEADO as title, DESCRIPCION_PARAFRASEADA as desc, URL_IMAGEN as image FROM ARTICULOS_PARAFRASEADOS WHERE SLUG = ? LIMIT 1"
   ).bind(slug).first();
@@ -51,21 +51,8 @@ export async function handleArticleRequest(context, siteSlug) {
       return await next();
     }
 
-    const { article } = await resolveArticleBySlug(env.DB, requestedSlug, siteSlug);
+    const { article } = await resolveArticleBySlug(env.DB, requestedSlug);
     if (!article) {
-      return await next();
-    }
-
-    const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
-    try {
-      const siteAssignment = await env.DB.prepare(
-        `SELECT ID_PARAFRASEADO FROM ${tableName} WHERE ID_PARAFRASEADO = ? LIMIT 1`
-      ).bind(article.para_id).first();
-
-      if (!siteAssignment) {
-        return await next();
-      }
-    } catch (_) {
       return await next();
     }
 
@@ -77,7 +64,36 @@ export async function handleArticleRequest(context, siteSlug) {
 
     const response = await next();
     const title = article.title;
-    const description = (article.desc || '').substring(0, 200);
+
+    // Sanitizar la descripción para OG/Twitter cards:
+    // - Quitar tags HTML
+    // - Decodificar entidades (acentos, &amp;, etc.)
+    // - Colapsar whitespace
+    // - Cortar a 200 chars sin romper palabras
+    const stripHtml = (html) => {
+      if (!html) return '';
+      return String(html)
+        .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+        .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/&amp;/gi, '&')
+        .replace(/&lt;/gi, '<')
+        .replace(/&gt;/gi, '>')
+        .replace(/&quot;/gi, '"')
+        .replace(/&#39;/gi, "'")
+        .replace(/&#[0-9]+;/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    };
+    const truncate = (text, max) => {
+      if (!text) return '';
+      if (text.length <= max) return text;
+      const slice = text.substring(0, max);
+      const lastSpace = slice.lastIndexOf(' ');
+      return (lastSpace > 80 ? slice.substring(0, lastSpace) : slice) + '…';
+    };
+    const description = truncate(stripHtml(article.desc), 200);
     const normalizeImageUrl = (value) => {
       if (!value || typeof value !== 'string') return `${url.origin}/logo.png`;
 
@@ -108,6 +124,8 @@ export async function handleArticleRequest(context, siteSlug) {
 
     const image = normalizeImageUrl(article.image || '/logo.png');
 
+    const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+
     try {
       await env.DB.prepare(`
         UPDATE ${tableName}
@@ -134,6 +152,11 @@ export async function handleArticleRequest(context, siteSlug) {
      return new HTMLRewriter()
        .on('title', { element(el) { el.setInnerContent(title); } })
        .on('meta#page-desc', { element(el) { el.setAttribute('content', description); } })
+       .on('meta#og-title', { element(el) { el.setAttribute('content', title); } })
+       .on('meta#og-desc', { element(el) { el.setAttribute('content', description); } })
+       .on('meta#og-image', { element(el) { el.setAttribute('content', image); } })
+       .on('meta#og-url', { element(el) { el.setAttribute('content', canonicalUrl); } })
+       .on('meta[property="og:type"]', { element(el) { el.setAttribute('content', 'article'); } })
        .on('head', {
          element(el) {
            el.prepend(`

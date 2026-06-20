@@ -187,6 +187,8 @@ export const parseArticleRow = (row) => {
     featured:    Boolean(row.DESTACADO || row.featured || 0),
     site:        row.SITIO_DESTINO || row.SITIOS_DESTINO || row.site || '',
     fb_published: Boolean(row.FB_PUBLICADO || 0),
+    status:      row.ESTADO || row.status || 'PUBLICADO',
+    sourceTable: row.SOURCE_TABLE || row.sourceTable || 'PARAFRASEADO',
   };
 };
 

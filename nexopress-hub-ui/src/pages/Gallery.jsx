@@ -55,6 +55,9 @@ export default function Gallery() {
 
   const getSiteUrl = (site) => {
     const domain = site.DOMINIO || site.dominio || site.SLUG
+    if (!domain) return ''
+    // Si ya es un dominio completo (tiene punto), no forzar www.
+    if (domain.includes('.')) return `https://${domain}`
     return `https://www.${domain}`
   }
 
