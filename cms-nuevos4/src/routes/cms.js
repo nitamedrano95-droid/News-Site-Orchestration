@@ -1,6 +1,4 @@
 // src/routes/cms.js — Gestión de artículos CMS (borradores y publicación)
-// Adaptado para cms-nuevos4: usa la tabla consolidada ARTICULOS_SITIO
-// (con columna SITIO_SLUG) en lugar de ARTICULOS_SITIO_<SLUG>.
 
 import { Hono } from 'hono';
 import { checkAuth } from '../middleware/auth.js';
@@ -9,10 +7,6 @@ import { publishToFBIndividual } from '../cron/facebook.js';
 import { uploadToR2 } from '../utils/html.js';
 
 const cms = new Hono();
-
-// cms-nuevos4 tiene una tabla consolidada ARTICULOS_SITIO (SITIO_SLUG = ?)
-// en lugar de ARTICULOS_SITIO_<SLUG> por sitio.
-const SITE_TABLE = 'ARTICULOS_SITIO';
 
 // Normalizador de fila ARTICULOS_CMS al formato del editor
 function normalizeCMSArticle(row) {
@@ -337,7 +331,7 @@ cms.post('/articles', async (c) => {
             id
           ).run();
 
-          // Sincronizar tablas ARTICULOS_SITIO (SITIO_SLUG = ?)
+          // Sincronizar tablas ARTICULOS_SITIO_<SLUG>
           await syncSiteTables(c.env.DB, id, sitiosList);
         }
 
@@ -371,10 +365,9 @@ async function syncSiteTables(DB, paraId, newSites) {
   const allSites = new Set((SITIOS_LIST || []).map((s) => s.toLowerCase()).filter(Boolean));
 
   for (const siteSlug of allSites) {
+    const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
     try {
-      const row = await DB.prepare(
-        `SELECT ID FROM ${SITE_TABLE} WHERE ID_PARAFRASEADO = ? AND SITIO_SLUG = ?`
-      ).bind(paraId, siteSlug).first();
+      const row = await DB.prepare(`SELECT ID FROM ${tableName} WHERE ID_PARAFRASEADO = ?`).bind(paraId).first();
       if (row) existing.push({ site: siteSlug, siteTableId: row.ID });
     } catch (e) {
       // Tabla no existe: ignorar
@@ -386,12 +379,11 @@ async function syncSiteTables(DB, paraId, newSites) {
   // Eliminar sitios que ya no están asignados
   for (const { site, siteTableId } of existing) {
     if (!desired.includes(site)) {
+      const tableName = `ARTICULOS_SITIO_${site.toUpperCase()}`;
       try {
-        await DB.prepare(
-          `DELETE FROM ${SITE_TABLE} WHERE ID = ? AND SITIO_SLUG = ?`
-        ).bind(siteTableId, site).run();
+        await DB.prepare(`DELETE FROM ${tableName} WHERE ID = ?`).bind(siteTableId).run();
       } catch (e) {
-        console.error(`[syncSiteTables] Error eliminando de ${SITE_TABLE} (${site}):`, e.message);
+        console.error(`[syncSiteTables] Error eliminando de ${tableName}:`, e.message);
       }
     }
   }
@@ -399,15 +391,14 @@ async function syncSiteTables(DB, paraId, newSites) {
   // Agregar sitios nuevos
   for (const site of desired) {
     if (existingSites.has(site)) continue;
+    const tableName = `ARTICULOS_SITIO_${site.toUpperCase()}`;
     try {
       await DB.prepare(`
-        INSERT INTO ${SITE_TABLE} (
-          ID, SITIO_SLUG, ID_PARAFRASEADO, FECHA_ASIGNACION,
-          FB_PUBLICADO, FB_FECHA, FB_POST_ID
-        ) VALUES (?, ?, ?, datetime('now'), 0, NULL, NULL)
-      `).bind(crypto.randomUUID(), site, paraId).run();
+        INSERT INTO ${tableName} (ID, ID_PARAFRASEADO, FECHA_ASIGNACION, FB_PUBLICADO, FB_FECHA, FB_POST_ID)
+        VALUES (?, ?, datetime('now'), 0, NULL, NULL)
+      `).bind(crypto.randomUUID(), paraId).run();
     } catch (e) {
-      console.error(`[syncSiteTables] Error insertando en ${SITE_TABLE} (${site}):`, e.message);
+      console.error(`[syncSiteTables] Error insertando en ${tableName}:`, e.message);
     }
   }
 }
@@ -434,10 +425,9 @@ cms.delete('/articles/:id', async (c) => {
     const allSites = new Set((SITIOS_LIST || []).map((s) => s.toLowerCase()).filter(Boolean));
 
     for (const siteSlug of allSites) {
+      const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
       try {
-        const res = await DB.prepare(
-          `DELETE FROM ${SITE_TABLE} WHERE ID_PARAFRASEADO = ? AND SITIO_SLUG = ?`
-        ).bind(paraId, siteSlug).run();
+        const res = await c.env.DB.prepare(`DELETE FROM ${tableName} WHERE ID_PARAFRASEADO = ?`).bind(paraId).run();
         if (res.meta?.changes && res.meta.changes > 0) {
           results.siteTables.push(siteSlug);
         }
@@ -561,9 +551,8 @@ cms.post('/publish', async (c) => {
 
       // Publicar en FB para cada sitio
       for (const siteSlug of mergedSites) {
-        const row = await c.env.DB.prepare(
-          `SELECT ID FROM ${SITE_TABLE} WHERE ID_PARAFRASEADO = ? AND SITIO_SLUG = ?`
-        ).bind(id, siteSlug).first();
+        const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+        const row = await c.env.DB.prepare(`SELECT ID FROM ${tableName} WHERE ID_PARAFRASEADO = ?`).bind(id).first();
         if (!row) continue;
 
         if (shouldPublishToFB) {
@@ -578,8 +567,8 @@ cms.post('/publish', async (c) => {
 
             if (fbResult.success) {
               await c.env.DB.prepare(`
-                UPDATE ${SITE_TABLE} SET FB_PUBLICADO = 1, FB_FECHA = datetime('now'), FB_POST_ID = ? WHERE ID = ? AND SITIO_SLUG = ?
-              `).bind(fbResult.post_id, row.ID, siteSlug).run();
+                UPDATE ${tableName} SET FB_PUBLICADO = 1, FB_FECHA = datetime('now'), FB_POST_ID = ? WHERE ID = ?
+              `).bind(fbResult.post_id, row.ID).run();
             } else {
               console.error(`[FB] ${siteSlug} FAILED:`, JSON.stringify(fbResult.error));
             }
@@ -624,12 +613,19 @@ cms.post('/publish', async (c) => {
         UPDATE ARTICULOS_PARAFRASEADOS SET
           TITULO_PARAFRASEADO = ?, CONTENIDO = ?, DESCRIPCION_PARAFRASEADA = ?,
           CATEGORIA = ?, FECHA_PUBLICACION = ?, URL_IMAGEN = ?,
-          SITIO_DESTINO = ?, DESTACADO = ?, FB_REQUERIDO = ?
+          SITIO_DESTINO = ?, DESTACADO = ?, FB_REQUERIDO = ?,
+          META_TITLE = COALESCE(?, META_TITLE),
+          META_DESCRIPTION = COALESCE(?, META_DESCRIPTION),
+          FOCUS_KEYWORD = COALESCE(?, FOCUS_KEYWORD),
+          TAGS = COALESCE(?, TAGS)
         WHERE ID = ?
       `).bind(
         articleCMS.TITULO, articleCMS.CONTENIDO || '', articleCMS.DESCRIPCION || '',
         (articleCMS.CATEGORIA || 'NACIONAL').toUpperCase(), now,
-        processedImageUrl, sitiosStr, isFeatured ? 1 : 0, shouldPublishToFB ? 1 : 0, paraId
+        processedImageUrl, sitiosStr, isFeatured ? 1 : 0, shouldPublishToFB ? 1 : 0,
+        articleCMS.META_TITLE ?? null, articleCMS.META_DESCRIPTION ?? null,
+        articleCMS.FOCUS_KEYWORD ?? null, articleCMS.TAGS ?? null,
+        paraId
       ).run();
 
       await c.env.DB.prepare(
@@ -647,28 +643,32 @@ cms.post('/publish', async (c) => {
         INSERT INTO ARTICULOS_PARAFRASEADOS
           (ID, TITULO_PARAFRASEADO, SLUG, CONTENIDO, DESCRIPCION_PARAFRASEADA,
            CATEGORIA, AUTOR, FECHA_PUBLICACION, URL_IMAGEN, SITIO_DESTINO,
-           DESTACADO, VISTAS, ESTADO, FB_REQUERIDO)
-        VALUES (?, ?, ?, ?, ?, ?, 'Redacción CMS', ?, ?, ?, ?, 0, 'PUBLICADO', ?)
+           DESTACADO, VISTAS, ESTADO, FB_REQUERIDO,
+           META_TITLE, META_DESCRIPTION, FOCUS_KEYWORD, TAGS)
+        VALUES (?, ?, ?, ?, ?, ?, 'Redacción CMS', ?, ?, ?, ?, 0, 'PUBLICADO', ?, ?, ?, ?, ?)
       `).bind(
         paraId, articleCMS.TITULO, baseSlug,
         articleCMS.CONTENIDO || '', articleCMS.DESCRIPCION || '',
         (articleCMS.CATEGORIA || 'NACIONAL').toUpperCase(), now,
-        processedImageUrl, sitiosStr, isFeatured ? 1 : 0, shouldPublishToFB ? 1 : 0
+        processedImageUrl, sitiosStr, isFeatured ? 1 : 0, shouldPublishToFB ? 1 : 0,
+        articleCMS.META_TITLE ?? null, articleCMS.META_DESCRIPTION ?? null,
+        articleCMS.FOCUS_KEYWORD ?? null, articleCMS.TAGS ?? null
       ).run();
 
-      // DISTRIBUCIÓN: Insertar en la tabla consolidada ARTICULOS_SITIO
+      // DISTRIBUCIÓN: Insertar en cada tabla ARTICULOS_SITIO_{SLUG}
       for (const siteSlug of sitios) {
         const siteId = crypto.randomUUID();
+        const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
 
         try {
           await c.env.DB.prepare(`
-            INSERT INTO ${SITE_TABLE} (
-              ID, SITIO_SLUG, ID_PARAFRASEADO, FECHA_ASIGNACION,
+            INSERT INTO ${tableName} (
+              ID, ID_PARAFRASEADO, FECHA_ASIGNACION,
               FB_PUBLICADO, FB_FECHA, FB_POST_ID
-            ) VALUES (?, ?, ?, datetime('now'), 0, NULL, NULL)
-          `).bind(siteId, siteSlug.toLowerCase(), paraId).run();
+            ) VALUES (?, ?, datetime('now'), 0, NULL, NULL)
+          `).bind(siteId, paraId).run();
         } catch (e) {
-          console.error(`[DISTRIBUTION] Error inserting into ${SITE_TABLE} (${siteSlug}):`, e.message);
+          console.error(`[DISTRIBUTION] Error inserting into ${tableName}:`, e.message);
         }
       }
     }
@@ -676,9 +676,8 @@ cms.post('/publish', async (c) => {
     // Publicar en FB para cada sitio (CMS)
     if (shouldPublishToFB) {
       for (const siteSlug of sitios) {
-        const row = await c.env.DB.prepare(
-          `SELECT ID FROM ${SITE_TABLE} WHERE ID_PARAFRASEADO = ? AND SITIO_SLUG = ?`
-        ).bind(paraId, siteSlug).first();
+        const tableName = `ARTICULOS_SITIO_${siteSlug.toUpperCase()}`;
+        const row = await c.env.DB.prepare(`SELECT ID FROM ${tableName} WHERE ID_PARAFRASEADO = ?`).bind(paraId).first();
         if (!row) continue;
 
         try {
@@ -692,8 +691,8 @@ cms.post('/publish', async (c) => {
 
           if (fbResult.success) {
             await c.env.DB.prepare(`
-              UPDATE ${SITE_TABLE} SET FB_PUBLICADO = 1, FB_FECHA = datetime('now'), FB_POST_ID = ? WHERE ID = ? AND SITIO_SLUG = ?
-            `).bind(fbResult.post_id, row.ID, siteSlug).run();
+              UPDATE ${tableName} SET FB_PUBLICADO = 1, FB_FECHA = datetime('now'), FB_POST_ID = ? WHERE ID = ?
+            `).bind(fbResult.post_id, row.ID).run();
           } else {
             console.error(`[FB] ${siteSlug} FAILED:`, JSON.stringify(fbResult.error));
           }

@@ -378,7 +378,8 @@ articles.put('/:id', async (c) => {
   if (!await checkAuth(c)) return c.json({ error: 'Unauthorized' }, 401);
   const id = c.req.param('id');
   try {
-    const { title, slug, content, excerpt, category, author, imageUrl, featured, site, sites, status } =
+    const { title, slug, content, excerpt, category, author, imageUrl, featured, site, sites, status,
+            metaTitle, metaDescription, focusKeyword, tags } =
       await c.req.json();
 
     if (!title) return c.json({ error: 'Título requerido' }, 400);
@@ -452,12 +453,19 @@ articles.put('/:id', async (c) => {
       await c.env.DB.prepare(`
         UPDATE ARTICULOS_CMS SET
           TITULO = ?, SLUG = ?, CONTENIDO = ?, DESCRIPCION = ?,
-          CATEGORIA = ?, URL_IMAGEN = ?, DESTACADO = ?, ESTADO = ?, FECHA_PUBLICACION = ?
+          CATEGORIA = ?, URL_IMAGEN = ?, DESTACADO = ?, ESTADO = ?, FECHA_PUBLICACION = ?,
+          META_TITLE = COALESCE(?, META_TITLE),
+          META_DESCRIPTION = COALESCE(?, META_DESCRIPTION),
+          FOCUS_KEYWORD = COALESCE(?, FOCUS_KEYWORD),
+          TAGS = COALESCE(?, TAGS)
         WHERE ID = ?
       `).bind(
         title, articleSlug, content || '', excerpt || '',
         (category || 'NACIONAL').toUpperCase(), imageUrl || '',
-        featured ? 1 : 0, status || 'BORRADOR', now, id
+        featured ? 1 : 0, status || 'BORRADOR', now,
+        metaTitle ?? null, metaDescription ?? null, focusKeyword ?? null,
+        tags ? JSON.stringify(tags) : null,
+        id
       ).run();
       return c.json({ success: true, id, source: 'CMS' });
     }

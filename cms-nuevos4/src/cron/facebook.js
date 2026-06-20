@@ -196,6 +196,16 @@ export async function processFBTimer(env) {
         continue;
       }
 
+      // Claim atómico: evitar publicación duplicada en ejecuciones paralelas del cron
+      const claim = await env.DB.prepare(
+        `UPDATE ${tableName} SET FB_PUBLICADO = 2 WHERE ID = ? AND FB_PUBLICADO = 0`
+      ).bind(article.SITIO_ID).run();
+      if (claim.changes === 0) {
+        console.log(`[FB TIMER] ${siteSlug}: skipped (article already claimed)`);
+        stats.skipped++;
+        continue;
+      }
+
       stats.processed++;
 
       // Publish to Facebook
@@ -248,6 +258,9 @@ export async function processFBTimer(env) {
       } else {
         console.error(`[FB TIMER] ${siteSlug}: publish failed - ${fbResult.error}`);
         stats.failed++;
+        await env.DB.prepare(
+          `UPDATE ${tableName} SET FB_PUBLICADO = 0 WHERE ID = ? AND FB_PUBLICADO = 2`
+        ).bind(article.SITIO_ID).run();
         await enqueueFBRetry(env, siteSlug, article, fbResult.error);
         await notifyTelegram(env, {
           type: 'fb_publish_failed',

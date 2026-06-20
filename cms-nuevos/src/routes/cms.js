@@ -613,12 +613,19 @@ cms.post('/publish', async (c) => {
         UPDATE ARTICULOS_PARAFRASEADOS SET
           TITULO_PARAFRASEADO = ?, CONTENIDO = ?, DESCRIPCION_PARAFRASEADA = ?,
           CATEGORIA = ?, FECHA_PUBLICACION = ?, URL_IMAGEN = ?,
-          SITIO_DESTINO = ?, DESTACADO = ?, FB_REQUERIDO = ?
+          SITIO_DESTINO = ?, DESTACADO = ?, FB_REQUERIDO = ?,
+          META_TITLE = COALESCE(?, META_TITLE),
+          META_DESCRIPTION = COALESCE(?, META_DESCRIPTION),
+          FOCUS_KEYWORD = COALESCE(?, FOCUS_KEYWORD),
+          TAGS = COALESCE(?, TAGS)
         WHERE ID = ?
       `).bind(
         articleCMS.TITULO, articleCMS.CONTENIDO || '', articleCMS.DESCRIPCION || '',
         (articleCMS.CATEGORIA || 'NACIONAL').toUpperCase(), now,
-        processedImageUrl, sitiosStr, isFeatured ? 1 : 0, shouldPublishToFB ? 1 : 0, paraId
+        processedImageUrl, sitiosStr, isFeatured ? 1 : 0, shouldPublishToFB ? 1 : 0,
+        articleCMS.META_TITLE ?? null, articleCMS.META_DESCRIPTION ?? null,
+        articleCMS.FOCUS_KEYWORD ?? null, articleCMS.TAGS ?? null,
+        paraId
       ).run();
 
       await c.env.DB.prepare(
@@ -636,13 +643,16 @@ cms.post('/publish', async (c) => {
         INSERT INTO ARTICULOS_PARAFRASEADOS
           (ID, TITULO_PARAFRASEADO, SLUG, CONTENIDO, DESCRIPCION_PARAFRASEADA,
            CATEGORIA, AUTOR, FECHA_PUBLICACION, URL_IMAGEN, SITIO_DESTINO,
-           DESTACADO, VISTAS, ESTADO, FB_REQUERIDO)
-        VALUES (?, ?, ?, ?, ?, ?, 'Redacción CMS', ?, ?, ?, ?, 0, 'PUBLICADO', ?)
+           DESTACADO, VISTAS, ESTADO, FB_REQUERIDO,
+           META_TITLE, META_DESCRIPTION, FOCUS_KEYWORD, TAGS)
+        VALUES (?, ?, ?, ?, ?, ?, 'Redacción CMS', ?, ?, ?, ?, 0, 'PUBLICADO', ?, ?, ?, ?, ?)
       `).bind(
         paraId, articleCMS.TITULO, baseSlug,
         articleCMS.CONTENIDO || '', articleCMS.DESCRIPCION || '',
         (articleCMS.CATEGORIA || 'NACIONAL').toUpperCase(), now,
-        processedImageUrl, sitiosStr, isFeatured ? 1 : 0, shouldPublishToFB ? 1 : 0
+        processedImageUrl, sitiosStr, isFeatured ? 1 : 0, shouldPublishToFB ? 1 : 0,
+        articleCMS.META_TITLE ?? null, articleCMS.META_DESCRIPTION ?? null,
+        articleCMS.FOCUS_KEYWORD ?? null, articleCMS.TAGS ?? null
       ).run();
 
       // DISTRIBUCIÓN: Insertar en cada tabla ARTICULOS_SITIO_{SLUG}
