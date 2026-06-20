@@ -185,6 +185,7 @@ export default function Editor() {
   const previewOpenRef = useRef(false)
   const deletingRef = useRef(false)
   const mainImageInputRef = useRef(null)
+  const publishingRef = useRef(false)
   useEffect(() => { previewOpenRef.current = previewOpen }, [previewOpen])
   useEffect(() => { deletingRef.current = deleting }, [deleting])
 
@@ -412,14 +413,17 @@ export default function Editor() {
     }
 
     try {
-      const url = articleId === 'new'
-        ? `${API_BASE}/articles`
-        : `${API_BASE}/articles/${articleId}`
+      // Para artículos nuevos no existe endpoint de borrador — el flujo correcto
+      // es publicar primero. Evitamos llamar POST /articles aquí porque ese
+      // endpoint publica directamente en ARTICULOS_PARAFRASEADOS como PUBLICADO,
+      // lo que genera registros duplicados cuando el usuario después publica.
+      if (articleId === 'new') {
+        setSaving(false)
+        return
+      }
 
-      const method = articleId === 'new' ? 'POST' : 'PUT'
-
-      const res = await fetch(url, {
-        method,
+      const res = await fetch(`${API_BASE}/articles/${articleId}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
@@ -434,10 +438,9 @@ export default function Editor() {
 
       const saved = await res.json()
       setLastSaved(new Date())
-      if (articleId === 'new' && saved.id) {
-        navigate(`/editor/${saved.id}`)
-      } else if (saved.id) {
-        await fetchSeoAnalysis(saved.id)
+      const savedId = saved.article?.id || saved.id
+      if (savedId) {
+        await fetchSeoAnalysis(savedId)
       }
     } catch (err) {
       console.error('Error al guardar:', err)
@@ -485,21 +488,22 @@ export default function Editor() {
   }, [navigate])
 
   const handlePublish = useCallback(async () => {
+    // Guard síncrono via ref para evitar doble ejecución por doble click
+    if (publishingRef.current) return
     if (publishing) return
     if (selectedSites.length === 0) {
       alert('Selecciona al menos un sitio de publicación antes de publicar.')
       return
     }
-    // Confirmar si también se publica en Facebook (los sitios ya están
-    // asignados en la pestaña "Sitios" del sidebar).
     const goFb = window.confirm(
       '¿Publicar también en Facebook?\n\nAceptar = sí (se respetan las reglas de frecuencia y ventana horaria).\nCancelar = solo sitios web.'
     )
     setPublishToFacebook(goFb)
+    publishingRef.current = true
     setPublishing(true)
     const token = localStorage.getItem('cms_token')
     try {
-      // 1. Asegurarse de tener un id (guardar primero si es nuevo)
+      // 1. Si el artículo es nuevo, crearlo primero en ARTICULOS_PARAFRASEADOS
       let id = articleId
       if (id === 'new') {
         const content = editor.getHTML()
@@ -522,6 +526,10 @@ export default function Editor() {
         }
         const saved = await saveRes.json()
         id = saved.article?.id || saved.id
+        if (!id) throw new Error('No se recibió el ID del artículo creado.')
+        // Actualizar URL inmediatamente para que cualquier reintento use este ID
+        // y no genere un registro duplicado en la base de datos.
+        navigate(`/editor/${id}`, { replace: true })
       }
 
       // 2. Llamar al endpoint publish
@@ -560,6 +568,7 @@ export default function Editor() {
       console.error('Error al publicar:', err)
       alert(`No se pudo publicar el artículo: ${err.message}`)
     } finally {
+      publishingRef.current = false
       setPublishing(false)
     }
   }, [publishing, articleId, editor, selectedSites, cms, article, title, slug, imageUrl, metaTitle, metaDescription, focusKeyword, tags, navigate])
