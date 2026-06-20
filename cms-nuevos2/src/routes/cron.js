@@ -345,9 +345,12 @@ cron.post('/scrape', async (c) => {
     }
 
     const { SITIOS_LIST } = await import('../config.js');
-    const { cleanArticleContent, cleanTitle } = await import('../cron/rss-ingest.js');
+    const { cleanArticleContent, normalizeTitle } = await import('../cron/rss-ingest.js');
     const { getOGImage, uploadToR2 } = await import('../utils/html.js');
     const { articleSlugify } = await import('../utils/helpers.js');
+
+    // Alias normalizeTitle as cleanTitle for compatibility
+    const cleanTitle = normalizeTitle;
 
     const results = [];
 

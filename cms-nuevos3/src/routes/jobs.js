@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { runRSSIngest, runRSSIngestForSite, getFuentesForSite, processPreScrapedArticle } from '../cron/rss-ingest.js';
+import { runRSSIngest, runRSSIngestForSite, getFuentesForSite, processPreScrapedArticle, handleIngestGlobal } from '../cron/rss-ingest.js';
 import { processFBTimer, processFBTimerForSite, processFBRetries, processFBRetriesForSite } from '../cron/facebook.js';
 import { updateTickerData } from '../cron/ticker.js';
 import { runMasterCron } from '../cron/master.js';
@@ -84,6 +84,22 @@ jobs.post('/ingest/all', async (c) => {
     return c.json({ success: true, articlesIngested: count });
   } catch (e) {
     console.error('[JOBS] RSS ingest failed:', e.message);
+    return c.json({ success: false, error: e.message }, 500);
+  }
+});
+
+jobs.post('/ingest/global', async (c) => {
+  let body;
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ success: false, error: 'Body JSON requerido' }, 400);
+  }
+  try {
+    const result = await handleIngestGlobal(c.env, body);
+    return c.json(result);
+  } catch (e) {
+    console.error(`[JOBS] Ingest global failed:`, e.message);
     return c.json({ success: false, error: e.message }, 500);
   }
 });
