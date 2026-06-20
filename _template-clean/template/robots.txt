@@ -1,5 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /admin/
-Disallow: /api/
-Sitemap: https://PLACEHOLDER_NAME.sebastianvernis.workers.dev/sitemap.xml
