@@ -14,7 +14,12 @@
     "deploy": "wrangler pages deploy ./public",
     "build": "echo 'Building static assets...'",
     "preview": "wrangler pages dev ./public --live-reload",
-    "test": "node --test",
+    "test": "node --test tests/e2e/api.test.js tests/e2e/og-tags.test.js tests/e2e/links.test.js",
+    "test:api": "node --test tests/e2e/api.test.js",
+    "test:og": "node --test tests/e2e/og-tags.test.js",
+    "test:links": "node --test tests/e2e/links.test.js",
+    "test:editor": "npx playwright test tests/e2e/editor.spec.js --config tests/playwright.config.js",
+    "test:all": "npm test && npm run test:editor",
     "site:create": "node packages/site-builder/cli.mjs create",
     "site:validate": "node packages/site-builder/cli.mjs validate",
     "wizard": "cd deploy-wizard/wizard && node server.js"
