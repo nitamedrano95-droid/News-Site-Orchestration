@@ -11,11 +11,26 @@ import Users from './pages/Users'
 import './index.css'
 
 // CMS editor standalone: each Pages deployment points to its own CMS Worker.
-// El script de build reemplaza __CMS_ID__ por el ID real.
-export const CMS_ID = (typeof window !== 'undefined' && window.CMS_ID) || '__CMS_ID__'
+//
+// Resolución de CMS_ID (en orden de prioridad):
+//  1. window.CMS_ID           ← inyectado por build-all-admins.sh en <head>
+//  2. import.meta.env.VITE_CMS_ID ← reemplazado por Vite en build con
+//                                   --define o .env.production
+//  3. Fallback explícito ''    ← no se usa placeholder (causa 404s)
+//
+// IMPORTANTE: nunca usar el placeholder literal (formato doble guion bajo
+// + CMS_ID + doble guion bajo) en runtime; Vite lo trata como un string
+// estatico y termina en produccion generando URLs a un host inexistente
+// que devuelven 404 sin CORS.
+const RUNTIME_CMS_ID =
+  (typeof window !== 'undefined' && window.CMS_ID) ||
+  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_CMS_ID) ||
+  ''
+
+export const CMS_ID = RUNTIME_CMS_ID
 export const API_BASE =
   (typeof window !== 'undefined' && window.API_BASE) ||
-  `https://${CMS_ID}.sebastianvernis.workers.dev/api`
+  (RUNTIME_CMS_ID ? `https://${RUNTIME_CMS_ID}.sebastianvernis.workers.dev/api` : '/api')
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('cms_token')
