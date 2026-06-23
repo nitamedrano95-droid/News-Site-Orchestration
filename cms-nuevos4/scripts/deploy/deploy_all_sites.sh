@@ -7,7 +7,7 @@ set -e
 
 # Get root directory
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-SITES_DIR="$ROOT_DIR/sites"
+SITES_DIR="$ROOT_DIR/public"
 COLOR_GREEN='\033[0;32m'
 COLOR_YELLOW='\033[1;33m'
 COLOR_BLUE='\033[0;34m'
