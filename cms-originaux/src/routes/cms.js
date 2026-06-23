@@ -582,18 +582,25 @@ cms.post('/publish', async (c) => {
     }
 
     // ── A partir de aquí es CMS ──
-    // Procesar imagen a través de R2 para que sea públicamente accessible
+    // Resolver imagen: si ya está en R2 usarla directo; si es externa, subir a R2
+    // con fallback al URL original para que Meta/Facebook siempre reciba thumbnail.
+    const sourceImageUrl = (imageUrl || articleCMS.URL_IMAGEN || '').trim();
     let processedImageUrl = '';
-    if (articleCMS.URL_IMAGEN && articleCMS.URL_IMAGEN.trim() !== '') {
-      console.log(`[CMS] Procesando imagen: ${articleCMS.URL_IMAGEN.substring(0, 80)}...`);
-      try {
-        const r2Url = await uploadToR2(articleCMS.URL_IMAGEN.trim(), c.env);
-        if (r2Url) {
-          processedImageUrl = r2Url;
-          console.log(`[CMS] Imagen subida a R2: ${r2Url.substring(0, 80)}`);
+
+    if (sourceImageUrl) {
+      if (sourceImageUrl.startsWith('https://uploads.sebastianvernis.space/')) {
+        processedImageUrl = sourceImageUrl;
+        console.log(`[CMS] Imagen ya en R2: ${sourceImageUrl.substring(0, 80)}`);
+      } else if (sourceImageUrl.startsWith('http')) {
+        try {
+          console.log(`[CMS] Subiendo imagen a R2: ${sourceImageUrl.substring(0, 80)}...`);
+          const r2Url = await uploadToR2(sourceImageUrl, c.env);
+          processedImageUrl = r2Url || sourceImageUrl;
+          if (!r2Url) console.warn('[CMS] uploadToR2 falló, usando URL original como fallback');
+        } catch (imgErr) {
+          processedImageUrl = sourceImageUrl;
+          console.error(`[CMS] Error al procesar imagen: ${imgErr.message}, usando URL original`);
         }
-      } catch (imgErr) {
-        console.error(`[CMS] Error procesando imagen: ${imgErr.message}`);
       }
     }
 

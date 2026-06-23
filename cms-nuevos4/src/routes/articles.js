@@ -157,10 +157,14 @@ articles.get('/id/:id', async (c) => {
           author:      rowCMS.AUTOR || 'Redacción CMS',
           publishedAt: rowCMS.FECHA_PUBLICACION,
           imageUrl:    rowCMS.URL_IMAGEN,
-          featured:    Boolean(rowCMS.DESTACADO || 0),
-          site:        rowCMS.SITIOS_DESTINO,
-          status:      rowCMS.ESTADO,
-          sourceTable: 'CMS',
+          featured:       Boolean(rowCMS.DESTACADO || 0),
+          site:           rowCMS.SITIOS_DESTINO,
+          status:         rowCMS.ESTADO,
+          sourceTable:    'CMS',
+          metaTitle:      rowCMS.META_TITLE || '',
+          metaDescription: rowCMS.META_DESCRIPTION || '',
+          focusKeyword:   rowCMS.FOCUS_KEYWORD || '',
+          tags:           (() => { try { return rowCMS.TAGS ? JSON.parse(rowCMS.TAGS) : []; } catch { return []; } })(),
         },
       });
     }
