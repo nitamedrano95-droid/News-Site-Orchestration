@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "NexoPress — sistema multi-sitio de publicación de noticias sobre Cloudflare Workers/Pages.",
   "private": true,
+  "type": "module",
   "workspaces": [
     "packages/*"
   ],

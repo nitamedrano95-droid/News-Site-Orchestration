@@ -32,15 +32,19 @@ describe('cms-originaux', () => {
     firstSlug = body.articles[0]?.slug;
   });
 
-  test('GET /api/articles/:slug → devuelve article con campos SEO', async () => {
+  test('GET /api/articles/:slug → devuelve article con campos públicos', async () => {
     if (!firstSlug) return; // salta si el test anterior falló
     const { res, body } = await get(`${BASE}/api/articles/${encodeURIComponent(firstSlug)}`);
     assert.equal(res.status, 200);
     const a = body?.article;
     assert.ok(a, 'body.article debe existir');
-    assert.ok('metaTitle'       in a, 'article debe tener metaTitle');
-    assert.ok('metaDescription' in a, 'article debe tener metaDescription');
-    assert.ok('focusKeyword'    in a, 'article debe tener focusKeyword');
+    // Campos públicos (el renderizado de la página pública los necesita)
+    assert.ok('title'     in a, 'article debe tener title');
+    assert.ok('content'   in a || 'excerpt' in a, 'article debe tener content o excerpt');
+    assert.ok('imageUrl'  in a, 'article debe tener imageUrl');
+    assert.ok('slug'      in a, 'article debe tener slug');
+    // Nota: metaTitle/metaDescription/focusKeyword están solo en GET /articles/id/:id
+    // (endpoint de editor, requiere sesión de Hub)
   });
 
   test('GET /api/articles/:slug → responde CORS para origen permitido', async () => {
