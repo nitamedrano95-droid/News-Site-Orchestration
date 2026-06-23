@@ -432,12 +432,18 @@ articles.put('/:id', async (c) => {
             TITULO_PARAFRASEADO = ?, SLUG = ?, CONTENIDO = ?,
             DESCRIPCION_PARAFRASEADA = ?, CATEGORIA = ?, AUTOR = ?,
             FECHA_PUBLICACION = ?, URL_IMAGEN = ?, SITIO_DESTINO = COALESCE(?, SITIO_DESTINO), DESTACADO = ?,
-            LEGACY_SLUG = CASE WHEN SLUG IS NOT NULL AND SLUG != ? THEN SLUG ELSE LEGACY_SLUG END
+            LEGACY_SLUG = CASE WHEN SLUG IS NOT NULL AND SLUG != ? THEN SLUG ELSE LEGACY_SLUG END,
+            META_TITLE = COALESCE(?, META_TITLE),
+            META_DESCRIPTION = COALESCE(?, META_DESCRIPTION),
+            FOCUS_KEYWORD = COALESCE(?, FOCUS_KEYWORD),
+            TAGS = COALESCE(?, TAGS)
           WHERE ID = ?
         `).bind(
           title, articleSlug, content || '', excerpt || '',
           (category || 'NACIONAL').toUpperCase(), author || 'Redacción',
-          now, imageUrl || '', sitiosDestino, featured ? 1 : 0, articleSlug, id
+          now, imageUrl || '', sitiosDestino, featured ? 1 : 0, articleSlug, id,
+          metaTitle ?? null, metaDescription ?? null, focusKeyword ?? null,
+          tags ? JSON.stringify(tags) : null
         )
       );
 
