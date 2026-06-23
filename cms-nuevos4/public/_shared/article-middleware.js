@@ -201,8 +201,6 @@ export async function handleArticleRequest(context, siteSlug) {
             <meta property="og:description" content="${escapedDescription}" />
             <meta property="og:image" content="${escapedImage}" />
             <meta property="og:image:secure_url" content="${escapedImage}" />
-            <meta property="og:image:width" content="1200" />
-            <meta property="og:image:height" content="630" />
             <meta property="og:image:alt" content="${escapedTitle}" />
             <meta property="og:url" content="${escapedCanonicalUrl}" />
             <meta property="og:site_name" content="NexoPress" />

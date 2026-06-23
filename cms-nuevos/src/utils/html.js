@@ -62,18 +62,27 @@ export const injectMetaTags = async (request, env, response) => {
       else if (article.i.startsWith('http') && !article.i.includes('/logo.png')) ogImg = article.i;
     }
 
+    const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     return new HTMLRewriter()
       .on('title', {
-        element(el) { el.setInnerContent(article.t); }
+        element(el) { el.setInnerContent(article.t || ''); }
       })
+      .on('meta#og-image', { element(el) { el.setAttribute('content', ogImg); } })
+      .on('meta#og-url',   { element(el) { el.setAttribute('content', url.href); } })
       .on('head', {
         element(el) {
           el.prepend(
-            `<meta property="og:title" content="${article.t}" />` +
-            `<meta property="og:description" content="${article.d}" />` +
-            `<meta property="og:image" content="${ogImg}" />` +
+            `<meta property="fb:app_id" content="2726604081032124" />` +
+            `<meta property="og:title" content="${esc(article.t)}" />` +
+            `<meta property="og:description" content="${esc(article.d)}" />` +
+            `<meta property="og:image" content="${esc(ogImg)}" />` +
+            `<meta property="og:image:secure_url" content="${esc(ogImg)}" />` +
+            `<meta property="og:image:alt" content="${esc(article.t)}" />` +
+            `<meta property="og:url" content="${esc(url.href)}" />` +
             `<meta property="og:type" content="article" />` +
-            `<meta name="twitter:card" content="summary_large_image" />`,
+            `<meta property="og:locale" content="es_MX" />` +
+            `<meta name="twitter:card" content="summary_large_image" />` +
+            `<meta name="twitter:image" content="${esc(ogImg)}" />`,
             { html: true }
           );
         }
