@@ -425,9 +425,10 @@ articles.put('/:id', async (c) => {
         `).bind(
           title, articleSlug, content || '', excerpt || '',
           (category || 'NACIONAL').toUpperCase(), author || 'Redacción',
-          now, imageUrl || '', sitiosDestino, featured ? 1 : 0, articleSlug, id,
+          now, imageUrl || '', sitiosDestino, featured ? 1 : 0, articleSlug,
           metaTitle ?? null, metaDescription ?? null, focusKeyword ?? null,
-          tags ? JSON.stringify(tags) : null
+          tags ? JSON.stringify(tags) : null,
+          id
         )
       );
 
