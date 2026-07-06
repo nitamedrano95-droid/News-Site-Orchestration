@@ -27,7 +27,7 @@ export const uploadToR2 = async (url, env) => {
     const buffer = await res.arrayBuffer();
     const key = `auto/${crypto.randomUUID()}.jpg`;
     await env.UPLOADS.put(key, buffer, { httpMetadata: { contentType } });
-    return `https://uploads.sebastianvernis.space/${key}`;
+    return `https://pub-42bf42f47f554f9791e810e7d0f209d4.r2.dev/${key}`;
   } catch (e) {
     console.log('[R2] Upload error:', e.message);
     return null;

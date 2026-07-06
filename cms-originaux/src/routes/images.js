@@ -8,7 +8,7 @@ const images = new Hono();
 // ── POST /api/images/upload — Subida multipart a R2 ─────────
 // Body: multipart/form-data con campo "file" (image/*, máx 5 MB).
 // Auth: Authorization: Bearer *** (vía checkAuth).
-// Respuesta: { url: "https://uploads.sebastianvernis.space/<key>", key, contentType, size }
+// Respuesta: { url: "https://pub-42bf42f47f554f9791e810e7d0f209d4.r2.dev/<key>", key, contentType, size }
 images.post('/upload', async (c) => {
   if (!await checkAuth(c)) return c.json({ error: 'Unauthorized' }, 401);
 
@@ -49,7 +49,7 @@ images.post('/upload', async (c) => {
   }
 
   return c.json({
-    url: `https://uploads.sebastianvernis.space/${key}`,
+    url: `https://pub-42bf42f47f554f9791e810e7d0f209d4.r2.dev/${key}`,
     key,
     contentType: mime,
     size: file.size,

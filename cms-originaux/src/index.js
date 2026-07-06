@@ -85,7 +85,7 @@ app.post('/upload', async (c) => {
       httpMetadata: { contentType: file.type || 'image/jpeg' },
     });
 
-    const url = `https://uploads.sebastianvernis.space/${key}`;
+    const url = `https://pub-42bf42f47f554f9791e810e7d0f209d4.r2.dev/${key}`;
     return c.json({ success: true, url, key });
   } catch (e) {
     console.error('Upload error:', e.message);

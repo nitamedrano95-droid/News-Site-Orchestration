@@ -588,7 +588,7 @@ cms.post('/publish', async (c) => {
     let processedImageUrl = '';
 
     if (sourceImageUrl) {
-      if (sourceImageUrl.startsWith('https://uploads.sebastianvernis.space/')) {
+      if (sourceImageUrl.startsWith('https://pub-42bf42f47f554f9791e810e7d0f209d4.r2.dev/')) {
         processedImageUrl = sourceImageUrl;
         console.log(`[CMS] Imagen ya en R2: ${sourceImageUrl.substring(0, 80)}`);
       } else if (sourceImageUrl.startsWith('http')) {

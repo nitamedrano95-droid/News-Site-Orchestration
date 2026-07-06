@@ -107,7 +107,7 @@ export async function handleArticleRequest(context, siteSlug) {
         normalized = `https:${normalized}`;
       } else if (normalized.startsWith('/')) {
         normalized = `${url.origin}${normalized}`;
-      } else if (normalized.includes('uploads.sebastianvernis.space') && !/^https?:\/\//i.test(normalized)) {
+      } else if (normalized.includes('pub-42bf42f47f554f9791e810e7d0f209d4.r2.dev') && !/^https?:\/\//i.test(normalized)) {
         normalized = `https://${normalized.replace(/^\/+/, '')}`;
       }
 
