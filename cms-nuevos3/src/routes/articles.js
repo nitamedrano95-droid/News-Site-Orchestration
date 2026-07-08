@@ -35,24 +35,24 @@ articles.get('/', async (c) => {
 
   try {
     const fetchArticles = async (siteFilter, applyOffset = true) => {
+      // Si hay sitio específico, consultar ARTICULOS_PARAFRASEADOS y filtrar por SITIO_DESTINO.
+      // La fuente de verdad de la asignación sitio→artículo es la columna SITIO_DESTINO que
+      // escribe n8n al insertar. Las tablas ARTICULOS_SITIO_* se mantienen solo para control
+      // de Facebook (FB_PUBLICADO / FB_FECHA / FB_POST_ID) y no son necesarias para el feed.
       if (siteFilter) {
-        const tableName = `ARTICULOS_SITIO_${siteFilter.toUpperCase()}`;
         let query = `
-          SELECT p.*, s.FB_PUBLICADO, s.FB_FECHA, s.FB_POST_ID
-          FROM ${tableName} s
-          JOIN ARTICULOS_PARAFRASEADOS p ON s.ID_PARAFRASEADO = p.ID
-          WHERE p.ESTADO = 'PUBLICADO'
+          SELECT * FROM ARTICULOS_PARAFRASEADOS
+          WHERE ESTADO = 'PUBLICADO'
+            AND (',' || SITIO_DESTINO || ',') LIKE ?
         `;
-        const params = [];
+        const params = [`%,${siteFilter.toLowerCase()},%`];
 
         if (category) {
-          query += ' AND LOWER(p.CATEGORIA) = LOWER(?)';
+          query += ' AND LOWER(CATEGORIA) = LOWER(?)';
           params.push(category);
         }
 
-        // Image filter removed - articles without images will be included and frontend handles fallback
-
-        query += ' ORDER BY p.FECHA_PUBLICACION DESC LIMIT ? OFFSET ?';
+        query += ' ORDER BY FECHA_PUBLICACION DESC LIMIT ? OFFSET ?';
         params.push(l, applyOffset ? o : 0);
 
         const res = await c.env.DB.prepare(query).bind(...params).all();
