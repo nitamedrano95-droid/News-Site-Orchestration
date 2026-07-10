@@ -40,6 +40,7 @@ backups/archive/
 *.sql
 !cms-nuevos4/migrations/*.sql
 !scripts/sites/sample-data/*.sql
+!scripts/fixes/*/cms-*-migrate-domain.sql
 *.log
 *.csv
 *.json
