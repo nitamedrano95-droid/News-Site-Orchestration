@@ -225,7 +225,7 @@ cms.post('/articles', async (c) => {
     const descripcion = body.descripcion || body.excerpt;
     const categoria  = body.categoria  || body.category;
     const url_imagen = body.url_imagen || body.imageUrl;
-    const sitiosDestino = body.sitios_destino || body.site || body.sitios;
+    const sitiosDestino = body.sitios_destino || body.site || body.sitios || body.sites;
     const destacado  = body.destacado !== undefined ? body.destacado : (body.featured ? 1 : 0);
     const estado     = body.estado     || body.status;
     const fbRequerido = body.fb_requerido !== undefined ? body.fb_requerido : body.fbRequired;
