@@ -38,6 +38,10 @@ src/setup_fb_tokens.sh
 # Project Data & Backups (Local only)
 backups/archive/
 *.sql
+!cms-originaux/migrations/*.sql
+!cms-nuevos/migrations/*.sql
+!cms-nuevos2/migrations/*.sql
+!cms-nuevos3/migrations/*.sql
 !cms-nuevos4/migrations/*.sql
 !scripts/sites/sample-data/*.sql
 !scripts/fixes/*/cms-*-migrate-domain.sql

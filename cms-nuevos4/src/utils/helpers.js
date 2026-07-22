@@ -121,10 +121,10 @@ export const decodeHTMLEntities = (text) => {
     /TE PUEDE INTERESAR[:\s]*/gi,
     /MÁS INFORMACIÓN[:\s]*/gi,
     /VER TAMBIÉN[:\s]*/gi,
-    /PUBLICIDAD/gi,
-    /ANUNCIO/gi,
-    /SPONSORED/gi,
-    /PATROCINADO/gi,
+    /\bPUBLICIDAD\b/gi,
+    /\bANUNCIO\b/gi,
+    /\bSPONSORED\b/gi,
+    /\bPATROCINADO\b/gi,
     /\[.*?PUBLICIDAD.*?\]/gi,
     /\[.*?ANUNCIO.*?\]/gi,
     /Suscríbete/gi,
@@ -187,6 +187,10 @@ export const parseArticleRow = (row) => {
     featured:    Boolean(row.DESTACADO || row.featured || 0),
     site:        row.SITIO_DESTINO || row.SITIOS_DESTINO || row.site || '',
     fb_published: Boolean(row.FB_PUBLICADO || 0),
+    metaTitle:       row.META_TITLE || '',
+    metaDescription: row.META_DESCRIPTION || '',
+    focusKeyword:    row.FOCUS_KEYWORD || '',
+    tags:            (() => { try { return row.TAGS ? JSON.parse(row.TAGS) : []; } catch { return []; } })(),
   };
 };
 
