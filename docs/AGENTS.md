@@ -9,7 +9,7 @@
 **Última revisión:** 2026-06-10
 **Stack activo:** Cloudflare Workers (Hono) + D1 + KV + R2 + Pages ·
 Ollama Cloud (paraphrasing + supervision) · n8n (orquestación de ingesta)
-**Sitios en producción:** ~96 sitios distribuidos en 5 CMS Workers
+**Sitios en producción:** 92 sitios distribuidos en 5 CMS Workers (verificado contra el árbol 2026-10-02)
 **Sitio en rediseño:** `cms-nuevos4` (pendiente nueva plantilla)
 
 ---
@@ -17,7 +17,7 @@ Ollama Cloud (paraphrasing + supervision) · n8n (orquestación de ingesta)
 ## 1. Identidad y objetivos del proyecto
 
 **NexoPress** es una plataforma de noticias multi-sitio sobre Cloudflare.
-Orquesta ~96 sitios de noticias en español (México) desde un único
+Orquesta 92 sitios de noticias en español (México) desde un único
 panel editorial y un núcleo distribuido.
 
 **Características invariantes (no cambiar sin discusión previa):**
@@ -42,8 +42,8 @@ panel editorial y un núcleo distribuido.
 | `cms-originaux`     | 11     | `news_db_cms_originaux`   | `ARTICLES_KV`   | `cms-news`|
 | `cms-nuevos`        | 18     | `news_db_cms_nuevos`      | `ARTICLES_KV`   | `cms-news`|
 | `cms-nuevos2`       | 9      | `news_db_cms_nuevos2`     | `ARTICLES_KV`   | `cms-news`|
-| `cms-nuevos3`       | 33     | `news_db_cms_nuevos3`     | `ARTICLES_KV`   | `cms-news`|
-| `cms-nuevos4`       | 25 (a redefinir) | `news_db_cms_nuevos4` | `ARTICLES_KV` | `cms-news` |
+| `cms-nuevos3`       | 26     | `news_db_cms_nuevos3`     | `ARTICLES_KV`   | `cms-news`|
+| `cms-nuevos4`       | 28     | `news_db_cms_nuevos4`     | `ARTICLES_KV`   | `cms-news` |
 
 Todos usan el mismo stack: **Hono** + **D1** (SQLite) + **KV** + **R2**.
 
@@ -95,13 +95,15 @@ News-Site-Orchestration/
 ├── cms-originaux/              # CMS Worker 1 (11 sitios)
 ├── cms-nuevos/                 # CMS Worker 2 (18 sitios)
 ├── cms-nuevos2/                # CMS Worker 3 (9 sitios)
-├── cms-nuevos3/                # CMS Worker 4 (33 sitios)
-├── cms-nuevos4/                # CMS Worker 5 (25 sitios, en rediseño)
-├── cms-selector/               # Indexador de sitios (legacy, conservado)
+├── cms-nuevos3/                # CMS Worker 4 (26 sitios)
+├── cms-nuevos4/                # CMS Worker 5 (28 sitios, en rediseño, usa public/ en vez de sites/)
+├── d1-rest2/                   # Worker agregador cross-CMS (/insert, /batch-insert, /query)
 │
-├── nexopress-hub/              # Worker del Hub (orquestación + SSO)
 ├── nexopress-hub-ui/           # Frontend del Hub (React + TipTap)
 ├── nexopress-portal/           # Portal unificado legacy
+│
+├── packages/
+│   └── site-builder/           # CLI para crear/validar sitios
 │
 ├── docs/                       # Esta normativa + guías operativas
 │   ├── AGENTS.md               # ← este archivo (single source of truth)
